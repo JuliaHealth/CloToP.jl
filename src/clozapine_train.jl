@@ -1,0 +1,354 @@
+println("Importing packages")
+using CSV
+using DataFrames
+using MLJ
+using MLJDecisionTreeInterface
+using Random
+using StatsBase
+using JLD2
+using Plots
+
+# load training data
+if isfile("data/clozapine_train.csv")
+    println("Loading raw data: clozapine_train.csv")
+    train_raw_data = CSV.read("data/clozapine_train.csv", header=true, DataFrame)
+else
+    error("File data/clozapine_train.csv cannot be opened!")
+    exit(-1)
+end
+
+# preprocess
+y1 = train_raw_data[:, 1]
+y2 = repeat(["norm"], length(y1))
+y2[y1 .> 550] .= "high"
+x = Matrix(train_raw_data[:, 3:end])
+
+# add zero-dose data
+#=
+n = 10_000
+y1_z = zeros(n)
+y2_z = repeat(["norm"], n)
+age_z = rand(18:100, n)
+sex_z = rand(0:1, n)
+dose_z = zeros(n)
+bmi_z = rand(12:100, n)
+weight_z = rand(10:100, n)
+duration_z = rand(1:1000, n)
+crp_z = rand(0:0.1:20, n)
+cyp_z = rand(0:3, n, 6)
+x_z = hcat(sex_z, age_z, dose_z, bmi_z, weight_z, duration_z, crp_z, cyp_z)
+x = vcat(x, x_z)
+y1 = vcat(y1, y1_z)
+y2 = vcat(y2, y2_z)
+=#
+
+println("Number of entries: $(size(y1, 1))")
+
+# standardize
+println("Processing: standardize")
+data = x[:, 2:7]
+scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
+data = StatsBase.transform(scaler, data)
+data[isnan.(data)] .= 0
+x_gender = Bool.(x[:, 1])
+x_cont = data[:, :]
+x_rest = x[:, 8:end]
+x1 = DataFrame(:male=>x_gender)
+# x2 = DataFrame(x_cont, ["age", "dose", "bmi", "weight", "duration", "crp"])
+x2 = DataFrame(x_cont[:, [1, 2, 3, 6]], ["age", "dose", "bmi", "crp"])
+x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
+x = hcat(x1, x2, x3)
+x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+y = DataFrame(group=y2)
+y = coerce(y.group, OrderedFactor{2})
+# scitype(y)
+# levels(y)
+
+# train_idx, test_idx = partition(eachindex(y), 0.7, rng=123) # 70:30 split
+
+println("Creating classifier model: RandomForestClassifier")
+rfc = @MLJ.load RandomForestClassifier pkg=DecisionTree verbosity=0
+#=
+info(RandomForestClassifier)
+evaluate(model,
+         x, y,
+         resampling=CV(nfolds=10),
+         measures=[log_loss, accuracy, f1score, misclassification_rate, cross_entropy])
+n_trees_range = range(Int, :n_trees, lower=1, upper=1000)
+max_depth_range = range(Int, :max_depth, lower=1, upper=100)
+min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
+min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
+min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
+sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
+p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, min_purity_increase_range, sampling_fraction_range]
+p = [n_trees_range]
+m = [log_loss, auc, accuracy, f1score, misclassification_rate, cross_entropy]
+m = [log_loss]
+
+# split
+# Evaluating over 78125 metamodels
+self_tuning_rfc1 = TunedModel(model=rfc(max_depth = -1, 
+                                        min_samples_leaf = 1, 
+                                        min_samples_split = 2, 
+                                        min_purity_increase = 0.0, 
+                                        n_subfeatures = -1, 
+                                        sampling_fraction = 0.999, 
+                                        feature_importance=:split),
+                              resampling=CV(nfolds=10),
+                              tuning=Grid(resolution=100),
+                              range=p,
+                              measure=m)
+m_self_tuning_rfc1 = machine(self_tuning_rfc1, x, y)
+MLJ.fit!(m_self_tuning_rfc1)
+fitted_params(m_self_tuning_rfc1).best_model
+report(m_self_tuning_rfc1).best_history_entry
+
+# impurity
+self_tuning_rfc2 = TunedModel(model=rfc(max_depth = -1, 
+                                        min_samples_leaf = 1, 
+                                        min_samples_split = 2, 
+                                        min_purity_increase = 0.0, 
+                                        n_subfeatures = -1, 
+                                        sampling_fraction = 0.999, 
+                                        feature_importance=:impurity),
+                              resampling=CV(nfolds=10),
+                              tuning=Grid(resolution=5),
+                              range=p,
+                              measure=m)
+m_self_tuning_rfc2 = machine(self_tuning_rfc2, x, y)
+MLJ.fit!(m_self_tuning_rfc2)
+fitted_params(m_self_tuning_rfc2).best_model
+report(m_self_tuning_rfc2).best_history_entry
+
+MLJ.fit!(m_self_tuning_rfc, rows=train_idx)
+MLJ.fit!(m_self_tuning_rfc, rows=test_idx)
+
+model = fitted_params(m_self_tuning_rfc1).best_model
+model = fitted_params(m_self_tuning_rfc2).best_model
+
+report(m_self_tuning_rfc).best_history_entry
+=#
+Random.seed!(123)
+model = rfc(max_depth = -1, 
+            min_samples_leaf = 1, 
+            min_samples_split = 2, 
+            min_purity_increase = 0.0, 
+            n_subfeatures = -1, 
+            n_trees = 172, 
+            sampling_fraction = 0.999, 
+            feature_importance = :split)
+mach = machine(model, x, y)
+MLJ.fit!(mach, force=true, verbosity=0)
+yhat = MLJ.predict(mach, x)
+
+println("RandomForestClassifier model accuracy report:")
+println("\tlog_loss: ", round(log_loss(yhat, y) |> mean, digits=4))
+println("\tAUC: ", round(auc(yhat, y), digits=4))
+println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat), y), digits=2))
+println("\taccuracy: ", 1 - round(misclassification_rate(mode.(yhat), y), digits=2))
+println("confusion matrix:")
+cm = confusion_matrix(mode.(yhat), y)
+println("\tsensitivity (TP): ", round(count(mode.(yhat) .== "high") / count(y .== "high"), digits=2))
+println("\tspecificity (TN): ", round(count(mode.(yhat) .== "norm") / count(y .== "norm"), digits=2))
+println("""
+                     group
+                  norm   high   
+                ┌──────┬──────┐
+           norm │ $(lpad(cm[4], 4, " ")) │ $(lpad(cm[2], 4, " ")) │
+prediction      ├──────┼──────┤
+           high │ $(lpad(cm[3], 4, " ")) │ $(lpad(cm[1], 4, " ")) │
+                └──────┴──────┘
+         """)
+println("Saving model: clozapine_classifier_model.jlso")
+MLJ.save("models/clozapine_classifier_model.jlso", mach)
+
+println("Saving: scaler.jld")
+JLD2.save_object("models/scaler.jld", scaler)
+
+println("Creating regressor model: RandomForestRegressor")
+
+println("Processing: CLOZAPINE")
+y = train_raw_data[:, 1]
+
+rfr = @MLJ.load RandomForestRegressor pkg=DecisionTree
+
+#=
+info(RandomForestRegressor)
+evaluate(model,
+         x, y,
+         resampling=CV(nfolds=10),
+         measure=[rsq, root_mean_squared_error])
+n_trees_range = range(Int, :n_trees, lower=1, upper=10000)
+max_depth_range = range(Int, :max_depth, lower=1, upper=100)
+min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
+min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
+n_subfeatures_range = range(Int, :n_subfeatures, lower=1, upper=11)
+min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
+sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
+p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, min_purity_increase_range, sampling_fraction_range]
+p = [n_trees_range]
+m = [root_mean_squared_error]
+self_tuning_rfr1 = TunedModel(model=rfr(max_depth = -1, 
+                                        min_samples_leaf = 1, 
+                                        min_samples_split = 2, 
+                                        min_purity_increase = 0.0, 
+                                        n_subfeatures = -1, 
+                                        sampling_fraction = 0.999, 
+                                        feature_importance=:split),
+                              resampling=CV(nfolds=10),
+                              tuning=Grid(resolution=100),
+                              range=p,
+                              measure=m)
+self_tuning_rfr2 = TunedModel(model=rfr(max_depth = -1, 
+                                        min_samples_leaf = 1, 
+                                        min_samples_split = 2, 
+                                        min_purity_increase = 0.0, 
+                                        n_subfeatures = -1, 
+                                        sampling_fraction = 0.999, 
+                                        feature_importance=:impurity),
+                              resampling=CV(nfolds=10),
+                              tuning=Grid(resolution=100),
+                              range=p,
+                              measure=m)
+m_self_tuning_rfr1 = machine(self_tuning_rfr1, x, y)
+MLJ.fit!(m_self_tuning_rfr1)
+fitted_params(m_self_tuning_rfr1).best_model
+
+m_self_tuning_rfr2 = machine(self_tuning_rfr2, x, y)
+MLJ.fit!(m_self_tuning_rfr2)
+fitted_params(m_self_tuning_rfr2).best_model
+
+MLJ.fit!(m_self_tuning_rfr, rows=train_idx)
+MLJ.fit!(m_self_tuning_rfr, rows=test_idx)
+
+report(m_self_tuning_rfr1).best_history_entry
+report(m_self_tuning_rfr2).best_history_entry
+
+model = fitted_params(m_self_tuning_rfr1).best_model
+model = fitted_params(m_self_tuning_rfr2).best_model
+=#
+
+Random.seed!(123)
+model_clo = rfr(max_depth = -1, 
+                min_samples_leaf = 1, 
+                min_samples_split = 2, 
+                min_purity_increase = 0.0, 
+                n_subfeatures = -1, 
+                n_trees = 203, 
+                sampling_fraction = 0.999, 
+                feature_importance = :impurity)
+
+mach_clo = machine(model_clo, x, y, scitype_check_level=0)
+MLJ.fit!(mach_clo, force=true, verbosity=0)
+yhat = MLJ.predict(mach_clo, x)
+#yhat_reconstructed = round.(((yhat .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
+#y_reconstructed = round.(((y .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
+p1 = Plots.plot(y, label="CLO: data")
+p1 = Plots.plot!(yhat, label="CLO: prediction", line=:dot, lw=2)
+# regression parameters
+# params = fitted_params(mach_clo)
+# params.coefs # coefficient of the regression with names
+# params.intercept # intercept
+println("RandomForestRegressor accuracy report:")
+m = RSquared()
+println("\tR²: ", round(m(yhat, y), digits=4))
+m = RootMeanSquaredError()
+println("\tRMSE: ", round(m(yhat, y), digits=4))
+println()
+println("Saving model: clozapine_regressor_model.jlso")
+MLJ.save("data/clozapine_regressor_model.jlso", mach_clo)
+println()
+
+println("Processing: NORCLOZAPINE")
+y = train_raw_data[:, 2]
+
+#=
+info(RandomForestRegressor)
+evaluate(model,
+         x, y,
+         resampling=CV(nfolds=10),
+         measure=[rsq, root_mean_squared_error])
+n_trees_range = range(Int, :n_trees, lower=1, upper=10000)
+max_depth_range = range(Int, :max_depth, lower=1, upper=100)
+min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
+min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
+n_subfeatures_range = range(Int, :n_subfeatures, lower=1, upper=11)
+min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
+sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
+p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, min_purity_increase_range, sampling_fraction_range]
+p = [n_trees_range]
+m = [root_mean_squared_error]
+self_tuning_rfr1 = TunedModel(model=rfr(max_depth = -1, 
+                                        min_samples_leaf = 1, 
+                                        min_samples_split = 2, 
+                                        min_purity_increase = 0.0, 
+                                        n_subfeatures = -1, 
+                                        sampling_fraction = 0.999, 
+                                        feature_importance=:split),
+                              resampling=CV(nfolds=10),
+                              tuning=Grid(resolution=100),
+                              range=p,
+                              measure=m)
+self_tuning_rfr2 = TunedModel(model=rfr(max_depth = -1, 
+                                        min_samples_leaf = 1, 
+                                        min_samples_split = 2, 
+                                        min_purity_increase = 0.0, 
+                                        n_subfeatures = -1, 
+                                        sampling_fraction = 0.999, 
+                                        feature_importance=:impurity),
+                              resampling=CV(nfolds=10),
+                              tuning=Grid(resolution=100),
+                              range=p,
+                              measure=m)
+m_self_tuning_rfr1 = machine(self_tuning_rfr1, x, y)
+MLJ.fit!(m_self_tuning_rfr1)
+fitted_params(m_self_tuning_rfr1).best_model
+
+m_self_tuning_rfr2 = machine(self_tuning_rfr2, x, y)
+MLJ.fit!(m_self_tuning_rfr2)
+fitted_params(m_self_tuning_rfr2).best_model
+
+MLJ.fit!(m_self_tuning_rfr, rows=train_idx)
+MLJ.fit!(m_self_tuning_rfr, rows=test_idx)
+
+report(m_self_tuning_rfr1).best_history_entry
+report(m_self_tuning_rfr2).best_history_entry
+
+model = fitted_params(m_self_tuning_rfr1).best_model
+model = fitted_params(m_self_tuning_rfr2).best_model
+=#
+
+Random.seed!(123)
+model_nclo = rfr(max_depth = -1, 
+                 min_samples_leaf = 1, 
+                 min_samples_split = 2, 
+                 min_purity_increase = 0.0, 
+                 n_subfeatures = -1, 
+                 n_trees = 809, 
+                 sampling_fraction = 0.999, 
+                 feature_importance = :impurity)
+
+mach_nclo = machine(model_nclo, x, y, scitype_check_level=0)
+MLJ.fit!(mach_nclo, force=true, verbosity=0)
+yhat = MLJ.predict(mach_nclo, x)
+# yhat_reconstructed = round.(((yhat .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
+# y_reconstructed = round.(((y .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
+p2 = Plots.plot(y, label="NCLO: data")
+p2 = Plots.plot!(yhat, label="NCLO: prediction", line=:dot, lw=2)
+# regression parametersmach_nclo)
+# params.coefs # coefficient of the regression with names
+# params.intercept # intercept
+println("RidgeRegressor accuracy report:")
+m = RSquared()
+println("\tR²: ", round(m(yhat, y), digits=4))
+m = RootMeanSquaredError()
+println("\tRMSE: ", round(m(yhat, y), digits=4))
+println()
+println("Saving model: norclozapine_regressor_model.jlso")
+MLJ.save("data/norclozapine_regressor_model.jlso", mach_nclo)
+println()
+
+p = Plots.plot(p1, p2, layout=(2, 1))
+savefig(p, "rr_train_accuracy.png")
+
+println("Training completed.")

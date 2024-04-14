@@ -34,180 +34,34 @@ else
 end
 
 # load models
-if isfile("clozapine_classifier_model.jlso")
+if isfile("data/clozapine_classifier_model.jlso")
     println("Loading model: clozapine_classifier_model.jlso")
-    model_rfc = machine("clozapine_classifier_model.jlso")
+    model_rfc = machine("data/clozapine_classifier_model.jlso")
 else
-    error("File clozapine_classifier_model.jlso cannot be opened!")
+    error("File data/clozapine_classifier_model.jlso cannot be opened!")
     exit(-1)
 end
-if isfile("clozapine_regressor_model.jlso")
+if isfile("data/clozapine_regressor_model.jlso")
     println("Loading model: clozapine_regressor_model.jlso")
-    clo_model_rfr = machine("clozapine_regressor_model.jlso")
+    clo_model_rfr = machine("data/clozapine_regressor_model.jlso")
 else
-    error("File clozapine_regressor_model.jlso cannot be opened!")
+    error("File data/clozapine_regressor_model.jlso cannot be opened!")
     exit(-1)
 end
-if isfile("norclozapine_regressor_model.jlso")
+if isfile("data/norclozapine_regressor_model.jlso")
     println("Loading model: norclozapine_regressor_model.jlso")
-    nclo_model_rfr = machine("norclozapine_regressor_model.jlso")
+    nclo_model_rfr = machine("data/norclozapine_regressor_model.jlso")
 else
-    error("File norclozapine_regressor_model.jlso cannot be opened!")
+    error("File data/norclozapine_regressor_model.jlso cannot be opened!")
     exit(-1)
 end
-if isfile("scaler.jld")
+if isfile("data/scaler.jld")
     println("Loading: scaler.jld")
-    scaler = JLD2.load_object("scaler.jld")
+    scaler = JLD2.load_object("data/scaler.jld")
 else
-    error("File scaler.jld cannot be opened!")
+    error("File data/scaler.jld cannot be opened!")
     exit(-1)
 end
-
-function preprocess(predict_raw_data)
-    y1 = predict_raw_data[:, 1]
-    y2 = repeat(["norm"], length(y1))
-    y2[y1 .> 550] .= "high"
-    y3 = predict_raw_data[:, 2]
-    x = Matrix(predict_raw_data[:, 3:end])
-    return x, y1, y2, y3
-end
-
-function print_confusion_matrix(cm)
-    println("""
-                     group
-                   norm   high
-                 ┌──────┬──────┐
-            norm │ $(lpad(cm[4], 4, " ")) │ $(lpad(cm[3], 4, " ")) │
- prediction      ├──────┼──────┤
-            high │ $(lpad(cm[2], 4, " ")) │ $(lpad(cm[1], 4, " ")) │
-                 └──────┴──────┘
-             """)
-end
-
-x, y1, y2, y3 = preprocess(predict_raw_data)
-
-# standardize
-println("Processing: standardize")
-# data = hcat(y, x[:, 2:end])
-data = x[:, 2:7]
-# scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
-# data = StatsBase.transform(scaler, data)
-# or
-m = scaler.mean
-s = scaler.scale
-for idx in 1:size(data, 1)
-    data[idx, :] = (data[idx, :] .- m) ./ s
-end
-data[isnan.(data)] .= 0
-x_gender = Bool.(x[:, 1])
-x_cont = data
-x_rest = x[:, 8:end]
-x1 = DataFrame(:male=>x_gender)
-x2 = DataFrame(x_cont, ["age", "dose", "bmi", "weight", "duration", "crp"])
-# x2 = DataFrame(x_cont[:, [1, 2, 3, 6]], ["age", "dose", "bmi", "crp"])
-x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
-x = hcat(x1, x2, x3)
-# x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :weight=>Continuous, :duration=>Continuous, :crp=>Continuous, :inducers_3a4=>Count,  :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-y2 = DataFrame(group=y2)
-y2 = coerce(y2.group, OrderedFactor{2})
-# scitype(y)
-# levels(y)
-println("Number of entries: $(size(y1, 1))")
-println("")
-println("Calculating predictions")
-println("-----------------------")
-println("")
-println("Regressor:")
-yhat1 = MLJ.predict(clo_model_rfr, x)
-yhat3 = MLJ.predict(nclo_model_rfr, x)
-yhat1 = round.(yhat1, digits=1)
-yhat3 = round.(yhat3, digits=1)
-rmse_clo = zeros(length(yhat1))
-rmse_nclo = zeros(length(yhat3))
-for idx in eachindex(yhat1)
-    rmse_clo[idx] = round.(sqrt((y1[idx] - yhat1[idx])^2), digits=2)
-    rmse_nclo[idx] = round.(sqrt((y3[idx] - yhat3[idx])^2), digits=2)
-    println("Subject ID: $idx \t CLO level: $(y1[idx]) \t prediction: $(yhat1[idx]) \t RMSE: $(rmse_clo[idx])")
-    println("Subject ID: $idx \t NCLO level: $(y3[idx]) \t prediction: $(yhat3[idx]) \t RMSE: $(rmse_nclo[idx])")
-    println()
-end
-println()
-yhat2 = MLJ.predict(model_rfc, x)
-subj1 = 0
-subj2 = 0
-subj3 = 0
-subj4 = 0
-println("Classifier:")
-for idx in eachindex(yhat2)
-    print("Subject ID: $idx \t level: $(uppercase(String(y2[idx]))) \t")
-    p_high = broadcast(pdf, yhat2[idx], "high")
-    p_norm = broadcast(pdf, yhat2[idx], "norm")
-    if p_norm > p_high
-        print("prediction: NORM, prob = $(round(p_norm, digits=2)) \t")
-        if String(y2[idx]) == "norm"
-            global subj1 += 1
-        elseif String(y2[idx]) == "high"
-            global subj2 += 1
-        end
-    else
-        print("prediction: HIGH, prob = $(round(p_high, digits=2)) \t")
-        if String(y2[idx]) == "high"
-            global subj4 += 1
-        elseif String(y2[idx]) == "norm"
-            global subj3 += 1
-        end
-    end
-    if yhat1[idx] > 550
-        p_high += 0.5
-        p_norm -= 0.5
-    elseif yhat1[idx] <= 550
-        p_norm += 0.5
-        p_high -= 0.5
-    end
-    if yhat3[idx] > 400
-        p_high += 0.5
-        p_norm -= 0.5
-    elseif yhat3[idx] <= 400
-        p_norm += 0.5
-        p_high -= 0.5
-    end
-    p_high > 1.0 && (p_high = 1.0)
-    p_high < 0.0 && (p_high = 0.0)
-    p_norm > 1.0 && (p_norm = 1.0)
-    p_norm < 0.0 && (p_norm = 0.0)
-    if p_norm > p_high
-        println("adj. prediction: NORM, prob = $(round(p_norm, digits=2))")
-        if String(y2[idx]) == "norm"
-            global subj1 += 1
-        elseif String(y2[idx]) == "high"
-            global subj2 += 1
-        end
-    else
-        println("adj. prediction: HIGH, prob = $(round(p_high, digits=2))")
-        if String(y2[idx]) == "high"
-            global subj4 += 1
-        elseif String(y2[idx]) == "norm"
-            global subj3 += 1
-        end
-    end
-end
-
-println()
-println("Prediction accuracy:")
-m = RSquared()
-println("R²: ", round(m(yhat1, y1), digits=4))
-m = RootMeanSquaredError()
-println("RMSE: ", round(m(yhat1, y1), digits=4))
-mcr = round(100 * ((subj2 + subj3) / 10), digits=2)
-println("Miss-classification rate: $mcr %")
-println("Regressor execution time and memory use:")
-@time yhat = MLJ.predict(clo_model_rfr, x)
-println("Classifier execution time and memory use:")
-@time yhat2 = MLJ.predict(model_rfc, x)
-println()
-print_confusion_matrix([subj1 subj2; subj3 subj4])
-println("Analysis completed.")
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
@@ -360,8 +214,11 @@ end
 
 function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)
 
-    if minimum(clo_concentration) < 350
-        min_dose_idx = findfirst(x -> x > 350, clo_concentration)
+    # 220-550
+    # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
+
+    if minimum(clo_concentration) < 220
+        min_dose_idx = findfirst(x -> x > 220, clo_concentration)
     else
         min_dose_idx = 1
     end
@@ -376,7 +233,7 @@ function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo
     println("Maximum recommended dose: $(doses[max_dose_idx]) mg/day")
 
     plot(doses, clo_concentration, ylims=(0, maximum(clo_concentration) > 550 ? maximum(clo_concentration) + 200 : 600), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]")
-    hline!([350], lc=:green, ls=:dot)
+    hline!([220], lc=:green, ls=:dot)
     hline!([550], lc=:red, ls=:dot)
     vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
     vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
@@ -402,4 +259,3 @@ predict_single_patient([0,58,150,23.18,67,93,3,0,0,0,0,0,1], scaler)
 doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p = recommended_dose([0,58,23.18,1,1,3,0,0,0,0,0,1], scaler)
 
 dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)
-
