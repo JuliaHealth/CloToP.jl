@@ -20,14 +20,32 @@ end
 
 function preprocess(train_raw_data)
     y1 = train_raw_data[:, 1]
-    y2 = string.(train_raw_data[:, 2])
-    replace!(y2, "0" => "norm")
-    replace!(y2, "1" => "high")
-    x = Matrix(train_raw_data[:, 5:end])
+    y2 = repeat(["norm"], length(y1))
+    y2[y1 .> 550] .= "high"
+    x = Matrix(train_raw_data[:, 3:end])
     return x, y1, y2
 end
 
 x, y1, y2 = preprocess(train_raw_data)
+
+# add zero-dose data
+#=
+n = 10_000
+y1_z = zeros(n)
+y2_z = repeat(["norm"], n)
+age_z = rand(18:100, n)
+sex_z = rand(0:1, n)
+dose_z = zeros(n)
+bmi_z = rand(12:100, n)
+weight_z = rand(10:100, n)
+duration_z = rand(1:1000, n)
+crp_z = rand(0:0.1:20, n)
+cyp_z = rand(0:3, n, 6)
+x_z = hcat(sex_z, age_z, dose_z, bmi_z, weight_z, duration_z, crp_z, cyp_z)
+x = vcat(x, x_z)
+y1 = vcat(y1, y1_z)
+y2 = vcat(y2, y2_z)
+=#
 
 println("Number of entries: $(size(y1, 1))")
 
@@ -73,16 +91,16 @@ sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.
 params = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, min_purity_increase_range, sampling_fraction_range]
 measures = [log_loss, accuracy, f1score, misclassification_rate, cross_entropy]
 measures = [log_loss, auc]
-self_tuning_rfc1 = TunedModel(model=rfc(feature_importance=:split), 
-                            resampling=CV(nfolds=5),
-                            tuning=Grid(resolution=5),
-                            range=params,
-                            measure=measures)
-self_tuning_rfc2 = TunedModel(model=rfc(feature_importance=:impurity), 
-                            resampling=CV(nfolds=5),
-                            tuning=Grid(resolution=5),
-                            range=params,
-                            measure=measures)
+self_tuning_rfc1 = TunedModel(model=rfc(feature_importance=:split),
+                              resampling=CV(nfolds=5),
+                              tuning=Grid(resolution=5),
+                              range=params,
+                              measure=measures)
+self_tuning_rfc2 = TunedModel(model=rfc(feature_importance=:impurity),
+                              resampling=CV(nfolds=5),
+                              tuning=Grid(resolution=5),
+                              range=params,
+                              measure=measures)
 m_self_tuning_rfc1 = machine(self_tuning_rfc1, x, y)
 m_self_tuning_rfc2 = machine(self_tuning_rfc2, x, y)
 MLJ.fit!(m_self_tuning_rfc1)
@@ -132,16 +150,16 @@ cm = confusion_matrix(mode.(yhat), y)
 println("\tsensitivity (TP): ", round(count(mode.(yhat) .== "high") / count(y .== "high"), digits=2))
 println("\tspecificity (TN): ", round(count(mode.(yhat) .== "norm") / count(y .== "norm"), digits=2))
 println("""
-                 group
-                0     1   
-             ┌──────┬──────┐
-           0 │ $(lpad(cm[1], 4, " ")) │ $(lpad(cm[3], 4, " ")) │
-prediction   ├──────┼──────┤
-           1 │ $(lpad(cm[2], 4, " ")) │ $(lpad(cm[4], 4, " ")) │
-             └──────┴──────┘
+                    group
+                  norm   high   
+                ┌──────┬──────┐
+           norm │ $(lpad(cm[4], 4, " ")) │ $(lpad(cm[3], 4, " ")) │
+prediction      ├──────┼──────┤
+           high │ $(lpad(cm[2], 4, " ")) │ $(lpad(cm[1], 4, " ")) │
+                └──────┴──────┘
          """)
 println("Saving model: clozapine_classifier_model.jlso")
-MLJ.save("clozapine_classifier_model.jlso", model)
+MLJ.save("clozapine_classifier_model.jlso", mach)
 
 println("Saving: scaler.jld")
 JLD2.save_object("scaler.jld", scaler)

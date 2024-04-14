@@ -22,6 +22,7 @@ using MLJLinearModels
 using Random
 using StatsBase
 using JLD2
+using Plots
 
 # load training data
 if isfile("clozapine_test.csv")
@@ -64,11 +65,10 @@ end
 
 function preprocess(predict_raw_data)
     y1 = predict_raw_data[:, 1]
-    y2 = string.(predict_raw_data[:, 2])
-    y3 = predict_raw_data[:, 3]
-    replace!(y2, "0" => "norm")
-    replace!(y2, "1" => "high")
-    x = Matrix(predict_raw_data[:, 5:end])
+    y2 = repeat(["norm"], length(y1))
+    y2[y1 .> 550] .= "high"
+    y3 = predict_raw_data[:, 2]
+    x = Matrix(predict_raw_data[:, 3:end])
     return x, y1, y2, y3
 end
 
@@ -77,9 +77,9 @@ function print_confusion_matrix(cm)
                      group
                    norm   high
                  ┌──────┬──────┐
-            norm │ $(lpad(cm[1], 4, " ")) │ $(lpad(cm[3], 4, " ")) │
+            norm │ $(lpad(cm[4], 4, " ")) │ $(lpad(cm[3], 4, " ")) │
  prediction      ├──────┼──────┤
-            high │ $(lpad(cm[2], 4, " ")) │ $(lpad(cm[4], 4, " ")) │
+            high │ $(lpad(cm[2], 4, " ")) │ $(lpad(cm[1], 4, " ")) │
                  └──────┴──────┘
              """)
 end
@@ -104,7 +104,7 @@ x_cont = data
 x_rest = x[:, 8:end]
 x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "weight", "duration", "crp"])
-x2 = DataFrame(x_cont[:, [1, 2, 3, 6]], ["age", "dose", "bmi", "crp"])
+# x2 = DataFrame(x_cont[:, [1, 2, 3, 6]], ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = hcat(x1, x2, x3)
 # x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :weight=>Continuous, :duration=>Continuous, :crp=>Continuous, :inducers_3a4=>Count,  :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
@@ -209,7 +209,9 @@ println()
 print_confusion_matrix([subj1 subj2; subj3 subj4])
 println("Analysis completed.")
 
-function predict_single_patient(patient_data::Vector{Float64})
+vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
+
+function predict_single_patient(patient_data::Vector{Float64}, scaler)
 
     m = scaler.mean
     s = scaler.scale
@@ -267,7 +269,7 @@ function predict_single_patient(patient_data::Vector{Float64})
     end
 end
 
-function recommended_dose(patient_data::Vector{Float64})
+function recommended_dose(patient_data::Vector{Float64}, scaler)
     # - male: 0/1
     # - age: Float
     # + dose: Float
@@ -282,11 +284,19 @@ function recommended_dose(patient_data::Vector{Float64})
     # - inhibitors_1a2: Int
     # - substrates_1a2: Int
 
-    doses = 12.5:12.5:1000
+    doses = 0:12.5:1000
+    clo_concentration = zeros(length(doses))
+    nclo_concentration = zeros(length(doses))
+    clo_group = zeros(Int64, length(doses))
+    clo_group_p = zeros(length(doses))
+    clo_group_adjusted= zeros(Int64, length(doses))
+    clo_group_adjusted_p = zeros(length(doses))
 
     for idx in eachindex(doses)
         data = patient_data
         data = vcat(data[1:2], doses[idx], data[3:end])
+        m = scaler.mean
+        s = scaler.scale
         data[2:7] = (data[2:7] .- m) ./ s
         data[isnan.(data)] .= 0
         x_gender = Bool(data[1])
@@ -300,22 +310,21 @@ function recommended_dose(patient_data::Vector{Float64})
         x = hcat(x1, x2, x3)
         # x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :weight=>Continuous, :duration=>Continuous, :crp=>Continuous, :inducers_3a4=>Count,  :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
         x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-
         yhat1 = MLJ.predict(clo_model_rfr, x)[1]
         yhat1 = round(yhat1, digits=1)
+        clo_concentration[idx] = yhat1
         yhat3 = MLJ.predict(nclo_model_rfr, x)[1]
         yhat3 = round(yhat3, digits=1)
-        println("CLO dose: $(doses[idx]) mg/d")
-        println("\t Predicted CLO level: $(yhat1)")
-        println("\t Predicted NCLO level: $(yhat3)")
+        nclo_concentration[idx] = yhat3
         yhat2 = MLJ.predict(model_rfc, x)[1]
-        print("\t Predicted group: ")
         p_high = broadcast(pdf, yhat2, "high")
         p_norm = broadcast(pdf, yhat2, "norm")
         if p_norm > p_high
-            println("NORM, prob = $(round(p_norm, digits=2))")
+            clo_group[idx] = 0
+            clo_group_p[idx] = round(p_norm, digits=2)
         else
-            println("HIGH, prob = $(round(p_high, digits=2))")
+            clo_group[idx] = 1
+            clo_group_p[idx] = round(p_high, digits=2)
         end
         if yhat1 > 550
             p_high += 0.5
@@ -335,14 +344,62 @@ function recommended_dose(patient_data::Vector{Float64})
         p_high < 0.0 && (p_high = 0.0)
         p_norm > 1.0 && (p_norm = 1.0)
         p_norm < 0.0 && (p_norm = 0.0)
+
         if p_norm > p_high
-            println("\t Adjusted prediction: NORM, prob = $(round(p_norm, digits=2))")
+            clo_group_adjusted[idx] = 0
+            clo_group_adjusted_p[idx] = round(p_norm, digits=2)
         else
-            println("\t Adjusted prediction: HIGH, prob = $(round(p_high, digits=2))")
+            clo_group_adjusted[idx] = 1
+            clo_group_adjusted_p[idx] = round(p_high, digits=2)
         end
     end
+
+    return collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p
+
 end
 
-predict_single_patient([0,58,150,23.18,67,93,3,0,0,0,0,0,1])
-predict_single_patient([0,60,400,25,84.5,16,2.3,0,2,2,0,0,1])
-recommended_dose([1,90,25,84.5,16,2.3,0,2,2,0,0,1])
+function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)
+
+    if minimum(clo_concentration) < 350
+        min_dose_idx = findfirst(x -> x > 350, clo_concentration)
+    else
+        min_dose_idx = 1
+    end
+
+    if maximum(clo_concentration) > 550
+        max_dose_idx = findfirst(x -> x > 550, clo_concentration)
+    else
+        max_dose_idx = length(doses)
+    end
+
+    println("Minimum recommended dose: $(doses[min_dose_idx]) mg/day")
+    println("Maximum recommended dose: $(doses[max_dose_idx]) mg/day")
+
+    plot(doses, clo_concentration, ylims=(0, maximum(clo_concentration) > 550 ? maximum(clo_concentration) + 200 : 600), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]")
+    hline!([350], lc=:green, ls=:dot)
+    hline!([550], lc=:red, ls=:dot)
+    vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
+    vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
+
+end
+
+# - male: 0/1
+# - age: Float
+# - dose: Float
+# - bmi: Float
+# - weight: Float
+# - duration of clozapine treatment [days]: Float
+# - crp: Float
+# - inducers_3a4: Int
+# - inhibitors_3a4: Int
+# - substrates_3a4: Int
+# - inducers_1a2: Int
+# - inhibitors_1a2: Int
+# - substrates_1a2: Int
+
+predict_single_patient([0,58,150,23.18,67,93,3,0,0,0,0,0,1], scaler)
+
+doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p = recommended_dose([0,58,23.18,1,1,3,0,0,0,0,0,1], scaler)
+
+dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)
+
