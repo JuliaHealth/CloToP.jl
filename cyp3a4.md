@@ -187,7 +187,7 @@
 |                                       **Strong inhibitors**                                       |
 | ------------------------------------------------------------------------------------------------- |
 | protease inhibitors:                                                                              |
-| - boceprevir                                                                                        |
+| - boceprevir                                                                                      |
 | - ritonavir                                                                                       |
 | - indinavir                                                                                       |
 | - nelfinavir                                                                                      |
