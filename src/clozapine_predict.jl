@@ -207,7 +207,7 @@ end
 # - inhibitors_1a2: Int
 # - substrates_1a2: Int
 
-pt = [0, 60, 250, 26, 2.3, 0, 2, 2, 0, 0, 1]
+pt = [0, 60, 450, 17, 0.5, 0, 0, 2, 0, 0, 1]
 
 predict_single_patient(pt, scaler)
 
