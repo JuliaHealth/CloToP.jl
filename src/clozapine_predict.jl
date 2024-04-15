@@ -43,10 +43,13 @@ vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
 function predict_single_patient(patient_data::Vector{Float64}, scaler)
 
-    m = scaler.mean
-    s = scaler.scale
-    patient_data[2:5] = (patient_data[2:5] .- m) ./ s
-    patient_data[isnan.(patient_data)] .= 0
+    # m = scaler.mean
+    # s = scaler.scale
+    data = patient_data[2:5]
+    data = StatsBase.transform(scaler, reshape(data, 1, length(data)))
+    patient_data[2:5] = data
+    # patient_data[2:5] = (patient_data[2:5] .- m) ./ s
+    # patient_data[isnan.(patient_data)] .= 0
     x_gender = Bool(patient_data[1])
     x_cont = patient_data[2:5]
     x_rest = patient_data[6:end]
@@ -207,7 +210,7 @@ end
 # - inhibitors_1a2: Int
 # - substrates_1a2: Int
 
-pt = [0, 60, 50, 17, 0.5, 0, 0, 2, 0, 0, 1]
+pt = [0, 60, 12.5, 27, 0.5, 0, 0, 0, 0, 0, 0]
 predict_single_patient(pt, scaler)
 
 # - male: 0/1
@@ -221,7 +224,6 @@ predict_single_patient(pt, scaler)
 # - inhibitors_1a2: Int
 # - substrates_1a2: Int
 
-pt = [0, 60, 26, 2.3, 0, 2, 2, 0, 0, 1]
-
+pt = [0, 20, 26, 0, 0, 0, 0, 0, 0, 1]
 doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p = recommended_dose(pt, scaler)
 dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)

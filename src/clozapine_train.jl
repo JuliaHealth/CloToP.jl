@@ -48,8 +48,9 @@ println("Number of entries: $(size(y1, 1))")
 println("Processing: standardize")
 data = x[:, 2:5]
 scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
+# scaler = StatsBase.fit(UnitRangeTransform, data, dims=1)
 data = StatsBase.transform(scaler, data)
-data[isnan.(data)] .= 0
+# data[isnan.(data)] .= 0
 x_gender = Bool.(x[:, 1])
 x_cont = data[:, :]
 x_rest = x[:, 6:end]

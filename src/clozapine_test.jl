@@ -59,14 +59,14 @@ x = Matrix(test_raw_data[:, 3:end])
 println("Processing: standardize")
 data = x[:, 2:5]
 # scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
-# data = StatsBase.transform(scaler, data)
+data = StatsBase.transform(scaler, data)
 # or
-m = scaler.mean
-s = scaler.scale
-for idx in 1:size(data, 1)
-    data[idx, :] = (data[idx, :] .- m) ./ s
-end
-data[isnan.(data)] .= 0
+# m = scaler.mean
+# s = scaler.scale
+# for idx in 1:size(data, 1)
+#     data[idx, :] = (data[idx, :] .- m) ./ s
+# end
+# data[isnan.(data)] .= 0
 x_gender = Bool.(x[:, 1])
 x_cont = data
 x_rest = x[:, 6:end]
@@ -170,7 +170,7 @@ end
 yhat2_adj = coerce(yhat2_adj, OrderedFactor{2})
 
 println()
-println("Classifier model prediction accuracy:")
+println("Classifier prediction accuracy:")
 println("\tlog_loss: ", round(log_loss(yhat2, y2) |> mean, digits=4))
 println("\tAUC: ", round(auc(yhat2, y2), digits=4))
 println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2), y2), digits=2))
@@ -205,7 +205,7 @@ println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2
 println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println()
 
-println("Regressor model prediction accuracy:")
+println("Regressor prediction accuracy:")
 println("CLOZAPINE:")
 m = RSquared()
 println("\tR²:\t", round(m(yhat1, y1), digits=4))
