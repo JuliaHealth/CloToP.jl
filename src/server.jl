@@ -40,6 +40,8 @@ else
     exit(-1)
 end
 
+vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
+
 function ctp(patient_data::Vector{<:Real}, scaler)
 
     clo_group = 0
@@ -111,6 +113,44 @@ function ctp(patient_data::Vector{<:Real}, scaler)
     return clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level
 end
 
+function recommended_dose(patient_data::Vector{<:Real}, scaler)
+
+    # 220-550 ng/mL
+    # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
+
+    doses = 0:12.5:1000
+    clo_concentration = zeros(length(doses))
+    nclo_concentration = zeros(length(doses))
+    clo_group = zeros(Int64, length(doses))
+    clo_group_p = zeros(length(doses))
+    clo_group_adj= zeros(Int64, length(doses))
+    clo_group_adj_p = zeros(length(doses))
+
+    for idx in eachindex(doses)
+        data = patient_data
+        data = vcat(data[1:2], doses[idx], data[3:end])
+        clo_group[idx], clo_group_p[idx], clo_group_adj[idx], clo_group_adj_p[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler)
+    end
+
+    if minimum(clo_concentration) < 220
+        min_dose_idx = findfirst(x -> x > 220, clo_concentration) - 1
+        min_dose_idx < 1 && (min_dose_idx = 1)
+    else
+        min_dose_idx = 1
+    end
+
+    if maximum(clo_concentration) > 550
+        max_dose_idx = findfirst(x -> x > 550, clo_concentration) - 1
+        max_dose_idx < 1 && (max_dose_idx = 1)
+    else
+        max_dose_idx = length(doses)
+    end
+
+    dose_range = (doses[min_dose_idx], doses[max_dose_idx])
+
+    return dose_range
+end
+
 function handle(req)
     if req.method == "POST"
         form = JSON3.read(String(req.body))
@@ -126,7 +166,8 @@ function handle(req)
         a2_inh = Float64(form.a2_inh)
         a2_s = Float64(form.a2_s)
         clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
-        return HTTP.Response(200, "$(clo_group) $(clo_group_p) $(clo_group_adj) $(clo_group_adj_p) $(clo_level) $(nclo_level)")
+        doses = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
+        return HTTP.Response(200, "$(clo_group) $(clo_group_p) $(clo_group_adj) $(clo_group_adj_p) $(clo_level) $(nclo_level) $(doses[1]) $(doses[2])")
     end
     return HTTP.Response(200, read("./index.html"))
 end
