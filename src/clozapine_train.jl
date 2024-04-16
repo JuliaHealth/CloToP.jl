@@ -64,12 +64,12 @@ y = coerce(y.group, OrderedFactor{2})
 # scitype(y)
 # levels(y)
 
-# train_idx, test_idx = partition(eachindex(y), 0.7, rng=123) # 70:30 split
-
 println()
 
 println("Creating classifier model: RandomForestClassifier")
 rfc = @MLJ.load RandomForestClassifier pkg=DecisionTree verbosity=0
+train_idx, test_idx = partition(eachindex(y), 0.7, rng=123) # 70:30 split
+
 #=
 info(RandomForestClassifier)
 
@@ -79,6 +79,7 @@ min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
 min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
 min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
 sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
+p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, min_purity_increase_range]
 p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, min_purity_increase_range, sampling_fraction_range]
 p = [n_trees_range]
 p = [n_trees_range, max_depth_range, sampling_fraction_range]
@@ -94,6 +95,8 @@ self_tuning_rfc1 = TunedModel(model=rfc(feature_importance=:split),
                               range=p,
                               measure=m)
 m_self_tuning_rfc1 = machine(self_tuning_rfc1, x, y)
+MLJ.fit!(m_self_tuning_rfc1, rows=train_idx)
+MLJ.fit!(m_self_tuning_rfc1, rows=test_idx)
 MLJ.fit!(m_self_tuning_rfc1)
 fitted_params(m_self_tuning_rfc1).best_model
 report(m_self_tuning_rfc1).best_history_entry
@@ -109,9 +112,6 @@ m_self_tuning_rfc2 = machine(self_tuning_rfc2, x, y)
 MLJ.fit!(m_self_tuning_rfc2)
 fitted_params(m_self_tuning_rfc2).best_model
 report(m_self_tuning_rfc2).best_history_entry
-
-MLJ.fit!(m_self_tuning_rfc, rows=train_idx)
-MLJ.fit!(m_self_tuning_rfc, rows=test_idx)
 
 model = fitted_params(m_self_tuning_rfc1).best_model
 model = fitted_params(m_self_tuning_rfc2).best_model

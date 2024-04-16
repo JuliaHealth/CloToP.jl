@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Clozapine Toxicity Predictor</title>
+  </head>
+
+  <body>
+
+  <h1>Clozapine Toxicity Predictor</h1>
+
+  <form action="/action_page.php">
+  <table>
+    <tr>
+      <td colspan=2>
+        <center>
+          <h2>Enter patient's data</h2>
+        </center>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="sex">Sex:</label>
+      </td>
+      <td>
+        <select id="sex">
+          <option value="0">female</option>                        
+          <option value="1">male</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="age">Age [years]:</label>
+      </td>
+      <td>
+        <input type="number" id="age" name="age" min="1" max="200" value="18">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="clo_dose">Total clozapine dose [mg/day]:</label>
+      </td>
+      <td>
+        <input type="number" id="clo_dose" name="clo_dose" min="0" max="2000" value="0" step="12.5">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="bmi">BMI [kg/m^2]:</label>
+      </td>
+      <td>
+        <input type="number" id="bmi" name="bmi" min="0" max="100" value="25" step="0.1">
+      </td>
+      <tr>
+        <td>
+          <label for="crp">CRP [mg/L]:</label>
+        </td>
+        <td>
+          <input type="number" id="crp" name="crp" min="0" max="200" value="0.0" step="0.1">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="1a2_s">Number of CYP1A2 substrates:</label>
+        </td>
+        <td>
+          <input type="number" id="1a2_s" name="1a2_s" min="0" max="10" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="1a2_inh">Number of CYP1A2 inhibitors:</label>
+        </td>
+        <td>
+          <input type="number" id="1a2_inh" name="1a2_inh" min="0" max="10" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="1a2_ind">Number of CYP1A2 inducers:</label>
+        </td>
+        <td>
+          <input type="number" id="1a2_ind" name="1a2_ind" min="0" max="10" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="3a4_s">Number of CYP3A4 substrates:</label>
+        </td>
+        <td>
+          <input type="number" id="3a4_s" name="3a4_s" min="0" max="10" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="3a4_inh">Number of CYP3A4 inhibitors:</label>
+        </td>
+        <td>
+          <input type="number" id="3a4_inh" name="3a4_inh" min="0" max="10" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="3a4_ind">Number of CYP3A4 inducers:</label>
+        </td>
+        <td>
+          <input type="number" id="3a4_ind" name="3a4_ind" min="0" max="10" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td colspan=2>
+          <br>
+        </td>
+      </tr>
+      <tr>
+        <td colspan=2>
+          <center>
+              <button id="submit" type="button">PREDICT</button>
+          </center>
+        </td>
+      </tr>
+      <tr>
+        <td colspan=2>
+          <br>
+        </td>
+      </tr>
+      <tr>
+        <td>Predicted clozapine level:</td>
+        <td id="clo_group"></td>
+      </tr>
+      <tr>
+        <td>Probability:</td>
+        <td id="clo_group_p"></td>
+      </tr>
+      <tr>
+        <td>Predicted clozapine level (adj.):</td>
+        <td id="clo_group_adj"></td>
+      </tr>
+      <tr>
+        <td>Probability:</td>
+        <td id="clo_group_adj_p"></td>
+      </tr>
+      <tr>
+        <td>Predicted clozapine concentration [ng/mL]:</td>
+        <td id="clo_level"></td>
+      </tr>
+      <tr>
+        <td>Predicted norclozapine concentration [ng/mL]:</td>
+        <td id="nclo_level"></td>
+      </tr>
+    </table>
+  </form>
+
+  <script>
+    document.getElementById("clo_group").innerHTML = "";
+    document.getElementById("clo_group_p").innerHTML = "";
+    document.getElementById("clo_group_adj").innerHTML = "";
+    document.getElementById("clo_group_adj_p").innerHTML = "";
+    document.getElementById("clo_level").innerHTML = "";
+    document.getElementById("nclo_level").innerHTML = "";
+    document.getElementById("submit").addEventListener("click",async() => {
+      response = await fetch("http://localhost:8080",{
+        method:"POST",
+        body: JSON.stringify({
+          "sex":parseInt(document.getElementById("sex").value),
+          "age":parseFloat(document.getElementById("age").value),
+          "clo_dose":parseFloat(document.getElementById("clo_dose").value),
+          "bmi":parseInt(document.getElementById("bmi").value),
+          "crp":parseInt(document.getElementById("crp").value),
+          "a2_s":parseFloat(document.getElementById("1a2_s").value),
+          "a2_inh":parseFloat(document.getElementById("1a2_inh").value),
+          "a2_ind":parseFloat(document.getElementById("1a2_ind").value),
+          "a4_s":parseFloat(document.getElementById("3a4_s").value),
+          "a4_inh":parseFloat(document.getElementById("3a4_inh").value),
+          "a4_ind":parseFloat(document.getElementById("3a4_ind").value),
+        })
+      });
+      const clo_prediction_response = await response.text();
+      clo_group = clo_prediction_response.split(" ")[0];
+      clo_group_p = clo_prediction_response.split(" ")[1];
+      clo_group_adj = clo_prediction_response.split(" ")[2];
+      clo_group_adj_p = clo_prediction_response.split(" ")[3];
+      clo_level = clo_prediction_response.split(" ")[4];
+      nclo_level = clo_prediction_response.split(" ")[5];
+      document.getElementById("clo_group").innerHTML = clo_group ? "TOXIC" : "NORMAL"
+      document.getElementById("clo_group_p").innerHTML = clo_group_p
+      document.getElementById("clo_group_adj").innerHTML = clo_group_adj ? "TOXIC" : "NORMAL"
+      document.getElementById("clo_group_adj_p").innerHTML = clo_group_adj_p
+      document.getElementById("clo_level").innerHTML = clo_level
+      document.getElementById("nclo_level").innerHTML = nclo_level
+    })
+  </script>
+  </body>
+</html>

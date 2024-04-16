@@ -43,6 +43,14 @@ vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
 function predict_single_patient(patient_data::Vector{Float64}, scaler)
 
+    clo_group = 0
+    clo_group_p = 0
+    clo_group_adj = 0
+    clo_group_p = 0
+    clo_group_adj_p = 0
+    clo_level = 0
+    nclo_level = 0
+
     # m = scaler.mean
     # s = scaler.scale
     data = patient_data[2:5]
@@ -64,15 +72,21 @@ function predict_single_patient(patient_data::Vector{Float64}, scaler)
     yhat3 = MLJ.predict(nclo_model_rfr, x)[1]
     yhat3 = round(yhat3, digits=1)
     println("Predicted CLO level: $(yhat1)")
+    clo_level = yhat1
     println("Predicted NCLO level: $(yhat3)")
+    nclo_level = yhat3
     yhat2 = MLJ.predict(model_rfc, x)[1]
     print("Predicted group: ")
     p_high = broadcast(pdf, yhat2, "high")
     p_norm = broadcast(pdf, yhat2, "norm")
     if p_norm > p_high
         println("NORM, prob = $(round(p_norm, digits=2))")
+        clo_group = 0
+        clo_group_p = p_norm
     else
         println("HIGH, prob = $(round(p_high, digits=2))")
+        clo_group = 1
+        clo_group_p = p_high
     end
     if yhat1 > 550
         p_high += 0.2
@@ -94,9 +108,14 @@ function predict_single_patient(patient_data::Vector{Float64}, scaler)
     p_norm < 0.0 && (p_norm = 0.0)
     if p_norm > p_high
         println("Adjusted prediction: NORM, prob = $(round(p_norm, digits=2))")
+        clo_group_adj = 0
+        clo_group_adj_p = p_norm
     else
         println("Adjusted prediction: HIGH, prob = $(round(p_high, digits=2))")
+        clo_group_adj = 0
+        clo_group_adj_p = p_high
     end
+    return clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level
 end
 
 function recommended_dose(patient_data::Vector{Float64}, scaler)
