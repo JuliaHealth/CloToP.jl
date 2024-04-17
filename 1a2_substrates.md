@@ -1,43 +1,43 @@
-|                                         **CYP1A2 substrates**                                        |
-| ------------------------------------------------------------------------------------------------- |
-| antidepressants:                                                                                  |
-| - fluvoxamine                                                                                     |
-| - amitriptyline                                                                                   |
-| - clomipramine                                                                                    |
-| - imipramine                                                                                      |
-| - agomelatine                                                                                     |
-| - duloxetine                                                                                      |
-| antipsychotics:                                                                                   |
-| - clozapine                                                                                       |
-| - olanzapine                                                                                      |
-| - haloperidol                                                                                     |
-| caffeine                                                                                          |
-| dietary flavonoids                                                                                |
-| - naringenin                                                                                      |
-| - naringin                                                                                        |
-| - quercetin                                                                                       |
-| - rutin                                                                                           |
-| paracetamol                                                                                       |
-| propranolol                                                                                       |
-| ramelteon                                                                                         |
-| alosetron                                                                                         |
-| clopidogrel                                                                                       |
-| ropivacaine                                                                                       |
-| theophylline                                                                                      |
-| zolmitriptan                                                                                      |
-| melatonin                                                                                         |
-| tamoxifen                                                                                         |
-| erlotinib                                                                                         |
-| cyclobenzaprine                                                                                   |
-| estradiol                                                                                         |
-| mexiletine                                                                                        |
-| naproxen                                                                                          |
-| ondansetron                                                                                       |
-| phenacetin                                                                                        |
-| riluzole                                                                                          |
-| tacrine                                                                                           |
-| tasimelteon                                                                                       |
-| tizanidine                                                                                        |
-| verapamil                                                                                         |
-| warfarin                                                                                          |
-| zileuton                                                                                          |
+# CYP1A2 substrates
+
+- antidepressants
+    - fluvoxamine
+    - amitriptyline
+    - clomipramine
+    - imipramine
+    - agomelatine
+    - duloxetine
+- antipsychotics
+    - clozapine
+    - olanzapine
+    - haloperidol
+- caffeine
+- dietary flavonoids
+    - naringenin
+    - naringin
+    - quercetin
+    - rutin
+- paracetamol
+- propranolol
+- ramelteon
+- alosetron
+- clopidogrel
+- ropivacaine
+- theophylline
+- zolmitriptan
+- melatonin
+- tamoxifen
+- erlotinib
+- cyclobenzaprine
+- estradiol
+- mexiletine
+- naproxen
+- ondansetron
+- phenacetin
+- riluzole
+- tacrine
+- tasimelteon
+- tizanidine
+- verapamil
+- warfarin
+- zileuton
