@@ -113,12 +113,6 @@ function ctp(patient_data::Vector{<:Real}, scaler)
         clo_group_adj = 1
         clo_group_adj_p = round(p_high, digits=2)
     end
-    @show clo_group
-    @show clo_group_p
-    @show clo_group_adj
-    @show clo_group_adj_p
-    @show clo_level
-    @show nclo_level
     return clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level
 end
 

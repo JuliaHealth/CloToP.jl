@@ -197,8 +197,9 @@ m_self_tuning_rfr2 = machine(self_tuning_rfr2, x, y)
 MLJ.fit!(m_self_tuning_rfr2)
 fitted_params(m_self_tuning_rfr2).best_model
 
-MLJ.fit!(m_self_tuning_rfr, rows=train_idx)
-MLJ.fit!(m_self_tuning_rfr, rows=test_idx)
+MLJ.fit!(m_self_tuning_rfr1, rows=train_idx)
+MLJ.fit!(m_self_tuning_rfr1, rows=test_idx)
+MLJ.fit!(m_self_tuning_rfr1)
 
 report(m_self_tuning_rfr1).best_history_entry
 report(m_self_tuning_rfr2).best_history_entry
@@ -222,7 +223,6 @@ evaluate(model_clo,
          resampling=CV(nfolds=10),
          measure=[rsq, root_mean_squared_error])
 =#
-
 mach_clo = machine(model_clo, x, y, scitype_check_level=0)
 MLJ.fit!(mach_clo, force=true, verbosity=0)
 yhat = MLJ.predict(mach_clo, x)

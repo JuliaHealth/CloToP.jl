@@ -150,7 +150,7 @@
         <td id="clo_group_p"></td>
       </tr>
       <tr>
-        <td>Predicted clozapine level (adj.):</td>
+        <td>Predicted clozapine level (adjusted):</td>
         <td id="clo_group_adj"></td>
       </tr>
       <tr>
@@ -163,11 +163,11 @@
         </td>
       </tr>
       <tr>
-        <td>Recommended lower safe dose [mg/day]:</td>
+        <td>Predicted minimum therapeutic dose [mg/day]:</td>
         <td id="dose1"></td>
       </tr>
       <tr>
-        <td>Recommended upper safe dose [mg/day]:</td>
+        <td>Predicted upper safe dose [mg/day]:</td>
         <td id="dose2"></td>
       </tr>
     </table>
@@ -206,9 +206,17 @@
       nclo_level = clo_prediction_response.split(" ")[5];
       dose1 = clo_prediction_response.split(" ")[6];
       dose2 = clo_prediction_response.split(" ")[7];
-      document.getElementById("clo_group").innerHTML = clo_group ? "NORMAL" : "TOXIC"
+      console.log(clo_group);
+      console.log(clo_group_adj);
+      if (clo_group == 0)
+        document.getElementById("clo_group").innerHTML = "NORMAL"
+      else
+        document.getElementById("clo_group").innerHTML = "TOXIC"
       document.getElementById("clo_group_p").innerHTML = clo_group_p
-      document.getElementById("clo_group_adj").innerHTML = clo_group_adj ? "NORMAL" : "TOXIC"
+      if (clo_group_adj == 0)
+        document.getElementById("clo_group_adj").innerHTML = "NORMAL"
+      else
+        document.getElementById("clo_group_adj").innerHTML = "TOXIC"
       document.getElementById("clo_group_adj_p").innerHTML = clo_group_adj_p
       document.getElementById("clo_level").innerHTML = clo_level
       document.getElementById("nclo_level").innerHTML = nclo_level
