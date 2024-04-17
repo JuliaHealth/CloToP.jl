@@ -129,6 +129,19 @@
         </td>
       </tr>
       <tr>
+        <td>Predicted clozapine concentration [ng/mL]:</td>
+        <td id="clo_level"></td>
+      </tr>
+      <tr>
+        <td>Predicted norclozapine concentration [ng/mL]:</td>
+        <td id="nclo_level"></td>
+      </tr>
+      <tr>
+        <td colspan=2>
+          <br>
+        </td>
+      </tr>
+      <tr>
         <td>Predicted clozapine level:</td>
         <td id="clo_group"></td>
       </tr>
@@ -145,12 +158,17 @@
         <td id="clo_group_adj_p"></td>
       </tr>
       <tr>
-        <td>Predicted clozapine concentration [ng/mL]:</td>
-        <td id="clo_level"></td>
+        <td colspan=2>
+          <br>
+        </td>
       </tr>
       <tr>
-        <td>Predicted norclozapine concentration [ng/mL]:</td>
-        <td id="nclo_level"></td>
+        <td>Recommended lower safe dose [mg/day]:</td>
+        <td id="dose1"></td>
+      </tr>
+      <tr>
+        <td>Recommended upper safe dose [mg/day]:</td>
+        <td id="dose2"></td>
       </tr>
     </table>
   </form>
@@ -186,12 +204,16 @@
       clo_group_adj_p = clo_prediction_response.split(" ")[3];
       clo_level = clo_prediction_response.split(" ")[4];
       nclo_level = clo_prediction_response.split(" ")[5];
-      document.getElementById("clo_group").innerHTML = clo_group ? "TOXIC" : "NORMAL"
+      dose1 = clo_prediction_response.split(" ")[6];
+      dose2 = clo_prediction_response.split(" ")[7];
+      document.getElementById("clo_group").innerHTML = clo_group ? "NORMAL" : "TOXIC"
       document.getElementById("clo_group_p").innerHTML = clo_group_p
-      document.getElementById("clo_group_adj").innerHTML = clo_group_adj ? "TOXIC" : "NORMAL"
+      document.getElementById("clo_group_adj").innerHTML = clo_group_adj ? "NORMAL" : "TOXIC"
       document.getElementById("clo_group_adj_p").innerHTML = clo_group_adj_p
       document.getElementById("clo_level").innerHTML = clo_level
       document.getElementById("nclo_level").innerHTML = nclo_level
+      document.getElementById("dose1").innerHTML = dose1
+      document.getElementById("dose2").innerHTML = dose2
     })
   </script>
   </body>
