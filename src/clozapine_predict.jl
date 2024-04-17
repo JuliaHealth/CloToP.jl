@@ -53,11 +53,11 @@ function predict_single_patient(patient_data::Vector{Float64}, scaler)
 
     # m = scaler.mean
     # s = scaler.scale
-    data = patient_data[2:5]
+    data = patient_data[2:end]
     data = StatsBase.transform(scaler, reshape(data, 1, length(data)))
-    patient_data[2:5] = data
+    data[isnan.(data)] .= 0
+    patient_data[2:end] = data
     # patient_data[2:5] = (patient_data[2:5] .- m) ./ s
-    # patient_data[isnan.(patient_data)] .= 0
     x_gender = Bool(patient_data[1])
     x_cont = patient_data[2:5]
     x_rest = patient_data[6:end]
@@ -65,7 +65,7 @@ function predict_single_patient(patient_data::Vector{Float64}, scaler)
     x2 = DataFrame(reshape(x_cont, 1, length(x_cont)), ["age", "dose", "bmi", "crp"])
     x3 = DataFrame(reshape(x_rest, 1, length(x_rest)), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
     x = hcat(x1, x2, x3)
-    x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+    x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 
     yhat1 = MLJ.predict(clo_model_rfr, x)[1]
     yhat1 = round(yhat1, digits=1)
@@ -229,7 +229,7 @@ end
 # - inhibitors_1a2: Int
 # - substrates_1a2: Int
 
-pt = [0, 60, 12.5, 27, 0.5, 0, 0, 0, 0, 0, 0]
+pt = [0, 60, 412.5, 27, 0.5, 0, 0, 0, 0, 0, 0]
 predict_single_patient(pt, scaler)
 
 # - male: 0/1

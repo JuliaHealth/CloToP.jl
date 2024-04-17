@@ -52,11 +52,11 @@ function ctp(patient_data::Vector{<:Real}, scaler)
 
     # m = scaler.mean
     # s = scaler.scale
-    data = patient_data[2:5]
+    data = patient_data[2:end]
     data = StatsBase.transform(scaler, reshape(data, 1, length(data)))
-    patient_data[2:5] = data
+    data[isnan.(data)] .= 0
+    patient_data[2:end] = data
     # patient_data[2:5] = (patient_data[2:5] .- m) ./ s
-    # patient_data[isnan.(patient_data)] .= 0
     x_gender = Bool(patient_data[1])
     x_cont = patient_data[2:5]
     x_rest = patient_data[6:end]
@@ -64,35 +64,38 @@ function ctp(patient_data::Vector{<:Real}, scaler)
     x2 = DataFrame(reshape(x_cont, 1, length(x_cont)), ["age", "dose", "bmi", "crp"])
     x3 = DataFrame(reshape(x_rest, 1, length(x_rest)), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
     x = hcat(x1, x2, x3)
-    x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+    x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 
+    Random.seed!(123)
     yhat1 = MLJ.predict(clo_model_rfr, x)[1]
     yhat1 = round(yhat1, digits=1)
+    Random.seed!(123)
     yhat3 = MLJ.predict(nclo_model_rfr, x)[1]
     yhat3 = round(yhat3, digits=1)
     clo_level = yhat1
     nclo_level = yhat3
     
+    Random.seed!(123)
     yhat2 = MLJ.predict(model_rfc, x)[1]
-    p_high = broadcast(pdf, yhat2, "high")
     p_norm = broadcast(pdf, yhat2, "norm")
+    p_high = broadcast(pdf, yhat2, "high")
     if p_norm > p_high
         clo_group = 0
         clo_group_p = round(p_norm, digits=2)
     else
-        clo_group = 0
+        clo_group = 1
         clo_group_p = round(p_high, digits=2)
     end
     if yhat1 > 550
-        p_high += 0.2
         p_norm -= 0.2
+        p_high += 0.2
     elseif yhat1 <= 550
         p_norm += 0.2
         p_high -= 0.2
     end
     if yhat3 > 400
-        p_high += 0.1
         p_norm -= 0.1
+        p_high += 0.1
     elseif yhat3 <= 400
         p_norm += 0.1
         p_high -= 0.1
@@ -105,9 +108,15 @@ function ctp(patient_data::Vector{<:Real}, scaler)
         clo_group_adj = 0
         clo_group_adj_p = round(p_norm, digits=2)
     else
-        clo_group_adj = 0
+        clo_group_adj = 1
         clo_group_adj_p = round(p_high, digits=2)
     end
+    @show clo_group
+    @show clo_group_p
+    @show clo_group_adj
+    @show clo_group_adj_p
+    @show clo_level
+    @show nclo_level
     return clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level
 end
 

@@ -46,19 +46,19 @@ println("Number of entries: $(size(y1, 1))")
 
 # standardize
 println("Processing: standardize")
-data = x[:, 2:5]
+data = x[:, 2:end]
 scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
 # scaler = StatsBase.fit(UnitRangeTransform, data, dims=1)
 data = StatsBase.transform(scaler, data)
-# data[isnan.(data)] .= 0
+data[isnan.(data)] .= 0
 x_gender = Bool.(x[:, 1])
-x_cont = data[:, :]
-x_rest = x[:, 6:end]
+x_cont = data[:, 1:4]
+x_rest = data[:, 5:end]
 x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = hcat(x1, x2, x3)
-x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 y = DataFrame(group=y2)
 y = coerce(y.group, OrderedFactor{2})
 # scitype(y)
