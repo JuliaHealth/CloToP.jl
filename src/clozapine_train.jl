@@ -79,10 +79,7 @@ min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
 min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
 min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
 sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
-p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, min_purity_increase_range]
 p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, min_purity_increase_range, sampling_fraction_range]
-p = [n_trees_range]
-p = [n_trees_range, max_depth_range, sampling_fraction_range]
 m = [log_loss, auc, accuracy, f1score, misclassification_rate, cross_entropy]
 m = [log_loss]
 
@@ -166,19 +163,21 @@ rfr = @MLJ.load RandomForestRegressor pkg=DecisionTree verbosity=0
 #=
 info(RandomForestRegressor)
 
-n_trees_range = range(Int, :n_trees, lower=1, upper=10000)
+n_trees_range = range(Int, :n_trees, lower=1, upper=1000)
 max_depth_range = range(Int, :max_depth, lower=1, upper=100)
 min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
 min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
 n_subfeatures_range = range(Int, :n_subfeatures, lower=1, upper=11)
-min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
-sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
-p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, min_purity_increase_range, sampling_fraction_range]
+min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0, scale=:log)
+sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0, scale=:log)
+feature_importance_range = range(rfr(), FeatureSelector(), :feature_importance, values = [[:split], [:impurity]])
+iterator(feature_importance_range)
+p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, min_purity_increase_range, sampling_fraction_range, feature_importance_range]
 p = [n_trees_range]
 p = [n_trees_range, max_depth_range, sampling_fraction_range]
-m = [root_mean_squared_error]
+m = [root_mean_squared_error, rms]
 Random.seed!(123)
-self_tuning_rfr1 = TunedModel(model=rfr(feature_importance=:split, sampling_fraction=1.0),
+self_tuning_rfr1 = TunedModel(model=rfr(),
                               resampling=CV(nfolds=5),
                               tuning=Grid(resolution=5),
                               range=p,
@@ -250,7 +249,7 @@ evaluate(model,
          x, y,
          resampling=CV(nfolds=10),
          measure=[rsq, root_mean_squared_error])
-n_trees_range = range(Int, :n_trees, lower=1, upper=10000)
+n_trees_range = range(Int, :n_trees, lower=1, upper=1000)
 max_depth_range = range(Int, :max_depth, lower=1, upper=100)
 min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
 min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
