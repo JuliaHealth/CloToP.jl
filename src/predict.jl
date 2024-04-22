@@ -118,7 +118,7 @@ function predict_single_patient(patient_data::Vector{Float64}, scaler)
     return clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level
 end
 
-function recommended_dose(patient_data::Vector{Float64}, scaler)
+function recommended_dose(patient_data::Vector{<:Real}, scaler)
 
     doses = 0:12.5:1000
     clo_concentration = zeros(length(doses))
@@ -133,7 +133,7 @@ function recommended_dose(patient_data::Vector{Float64}, scaler)
         data = vcat(data[1:2], doses[idx], data[3:end])
         m = scaler.mean
         s = scaler.scale
-        data[2:5] = (data[2:5] .- m) ./ s
+        data[2:end] = (data[2:end] .- m) ./ s
         data[isnan.(data)] .= 0
         x_gender = Bool(data[1])
         x_cont = data[2:5]
@@ -142,7 +142,7 @@ function recommended_dose(patient_data::Vector{Float64}, scaler)
         x2 = DataFrame(reshape(x_cont, 1, length(x_cont)), ["age", "dose", "bmi", "crp"])
         x3 = DataFrame(reshape(x_rest, 1, length(x_rest)), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
         x = hcat(x1, x2, x3)
-        x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+        x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
         yhat1 = MLJ.predict(clo_model_rfr, x)[1]
         yhat1 = round(yhat1, digits=1)
         clo_concentration[idx] = yhat1
