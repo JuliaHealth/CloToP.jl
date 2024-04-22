@@ -24,25 +24,15 @@ y2[y1 .> 550] .= "high"
 x = Matrix(train_raw_data[:, 3:end])
 
 # add zero-dose data
-#=
-n = 10_000
-y1_z = zeros(n)
-y2_z = repeat(["norm"], n)
-age_z = rand(18:100, n)
-sex_z = rand(0:1, n)
-dose_z = zeros(n)
-bmi_z = rand(12:100, n)
-weight_z = rand(10:100, n)
-duration_z = rand(1:1000, n)
-crp_z = rand(0:0.1:20, n)
-cyp_z = rand(0:3, n, 6)
-x_z = hcat(sex_z, age_z, dose_z, bmi_z, weight_z, duration_z, crp_z, cyp_z)
-x = vcat(x, x_z)
+y1_z = zeros(length(y1))
+y2_z = repeat(["norm"], length(y1))
+x_z = deepcopy(x)
+x_z[:, 3] .= 0
 y1 = vcat(y1, y1_z)
 y2 = vcat(y2, y2_z)
-=#
+x = vcat(x, x_z)
 
-println("Number of entries: $(size(y1, 1))")
+println("Number of entries: $(length(y1))")
 
 # standardize
 println("Processing: standardize")
@@ -157,6 +147,8 @@ println("Creating regressor model: RandomForestRegressor")
 
 println("Processing: CLOZAPINE")
 y = train_raw_data[:, 1]
+y_z = zeros(length(y))
+y = vcat(y, y_z)
 
 rfr = @MLJ.load RandomForestRegressor pkg=DecisionTree verbosity=0
 
@@ -227,8 +219,9 @@ MLJ.fit!(mach_clo, force=true, verbosity=0)
 yhat = MLJ.predict(mach_clo, x)
 #yhat_reconstructed = round.(((yhat .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
 #y_reconstructed = round.(((y .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
-p1 = Plots.plot(y, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]", )
-p1 = Plots.plot!(yhat, label="prediction", line=:dot, lw=2)
+sorting_idx = sortperm(y)
+p1 = Plots.plot(y[sorting_idx], label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]", )
+p1 = Plots.plot!(yhat[sorting_idx], label="prediction", line=:dot, lw=2)
 # regression parameters
 # params = fitted_params(mach_clo)
 # params.coefs # coefficient of the regression with names
@@ -242,6 +235,8 @@ println()
 
 println("Processing: NORCLOZAPINE")
 y = train_raw_data[:, 2]
+y_z = zeros(length(y))
+y = vcat(y, y_z)
 
 #=
 info(RandomForestRegressor)
@@ -314,8 +309,9 @@ MLJ.fit!(mach_nclo, force=true, verbosity=0)
 yhat = MLJ.predict(mach_nclo, x)
 # yhat_reconstructed = round.(((yhat .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
 # y_reconstructed = round.(((y .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
-p2 = Plots.plot(y, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", )
-p2 = Plots.plot!(yhat, label="prediction", line=:dot, lw=2)
+sorting_idx = sortperm(y)
+p2 = Plots.plot(y[sorting_idx], label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", )
+p2 = Plots.plot!(yhat[sorting_idx], label="prediction", line=:dot, lw=2)
 # regression parametersmach_nclo)
 # params.coefs # coefficient of the regression with names
 # params.intercept # intercept

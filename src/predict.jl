@@ -41,7 +41,7 @@ end
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
-function predict_single_patient(patient_data::Vector{Float64}, scaler)
+function predict_single_patient(patient_data::Vector{<:Real}, scaler)
 
     clo_group = 0
     clo_group_p = 0
