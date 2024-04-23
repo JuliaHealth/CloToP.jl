@@ -64,7 +64,7 @@ Next, go to the local website at [http://localhost:8080](http://localhost:8080),
 
 (!) Adjusted clozapine level is the classifier prediction modified by predicted concentration.
 
-Toxic clozapine level has been defined as 550 ng/mL. Recommended therapeutic concentration is defined as > 220 ng/mL. Source: DOI [10.1192/bjp.2023.27](https://doi.org/10.1192/bjp.2023.27).
+Toxic clozapine level has been defined as 550 ng/mL, recommended therapeutic concentration is defined as > 220 ng/mL. Source: DOI [10.1192/bjp.2023.27](https://doi.org/10.1192/bjp.2023.27).
 
 ## How to Cite
 
