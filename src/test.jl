@@ -58,7 +58,6 @@ x = Matrix(test_raw_data[:, 3:end])
 # standardize
 println("Processing: standardize")
 data = x[:, 2:end]
-# scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
 data = StatsBase.transform(scaler, data)
 data[isnan.(data)] .= 0
 # or

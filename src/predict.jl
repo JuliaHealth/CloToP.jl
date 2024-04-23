@@ -57,7 +57,8 @@ function predict_single_patient(patient_data::Vector{<:Real}, scaler)
     data = StatsBase.transform(scaler, reshape(data, 1, length(data)))
     data[isnan.(data)] .= 0
     patient_data[2:end] = data
-    # patient_data[2:5] = (patient_data[2:5] .- m) ./ s
+    # or
+    # patient_data[2:end] = (patient_data[2:end] .- m) ./ s
     x_gender = Bool(patient_data[1])
     x_cont = patient_data[2:5]
     x_rest = patient_data[6:end]
@@ -192,7 +193,7 @@ end
 
 function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)
 
-    # 220-550
+    # therapeutic concentration range: 220-550 ng/mL
     # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
 
     if minimum(clo_concentration) < 220
@@ -217,31 +218,31 @@ function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo
     vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
 end
 
-# - male: 0/1
-# - age: Float
-# - dose: Float
-# - bmi: Float
-# - crp: Float
-# - inducers_3a4: Int
-# - inhibitors_3a4: Int
-# - substrates_3a4: Int
-# - inducers_1a2: Int
-# - inhibitors_1a2: Int
-# - substrates_1a2: Int
+# male: 0/1
+# age: Float
+# dose: Float
+# bmi: Float
+# crp: Float
+# inducers_3a4: Int
+# inhibitors_3a4: Int
+# substrates_3a4: Int
+# inducers_1a2: Int
+# inhibitors_1a2: Int
+# substrates_1a2: Int
 
 pt = [0, 60, 412.5, 27, 0.5, 0, 0, 0, 0, 0, 0]
 predict_single_patient(pt, scaler)
 
-# - male: 0/1
-# - age: Float
-# - bmi: Float
-# - crp: Float
-# - inducers_3a4: Int
-# - inhibitors_3a4: Int
-# - substrates_3a4: Int
-# - inducers_1a2: Int
-# - inhibitors_1a2: Int
-# - substrates_1a2: Int
+# male: 0/1
+# age: Float
+# bmi: Float
+# crp: Float
+# inducers_3a4: Int
+# inhibitors_3a4: Int
+# substrates_3a4: Int
+# inducers_1a2: Int
+# inhibitors_1a2: Int
+# substrates_1a2: Int
 
 pt = [0, 20, 26, 0, 0, 0, 0, 0, 0, 1]
 doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p = recommended_dose(pt, scaler)

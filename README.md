@@ -68,7 +68,7 @@ Toxic clozapine level has been defined as 550 ng/mL, recommended therapeutic con
 
 ## How to Cite
 
-If you use this package please acknowledge us by citing our [paper](https://zenodo.org/records/11048224).
+If you use this tool, please acknowledge us by citing our [paper](https://zenodo.org/records/11048224).
 
 ## Contributors
 

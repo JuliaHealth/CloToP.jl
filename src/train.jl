@@ -23,7 +23,8 @@ y2 = repeat(["norm"], length(y1))
 y2[y1 .> 550] .= "high"
 x = Matrix(train_raw_data[:, 3:end])
 
-# add zero-dose data
+# add zero-dose data for each patient
+# we need artificial zero-dose data to force the lowest concentration to equal 0, as the notion of intercept does not exist in trees
 y1_z = zeros(length(y1))
 y2_z = repeat(["norm"], length(y1))
 x_z = deepcopy(x)
@@ -38,7 +39,6 @@ println("Number of entries: $(length(y1))")
 println("Processing: standardize")
 data = x[:, 2:end]
 scaler = StatsBase.fit(ZScoreTransform, data, dims=1)
-# scaler = StatsBase.fit(UnitRangeTransform, data, dims=1)
 data = StatsBase.transform(scaler, data)
 data[isnan.(data)] .= 0
 x_gender = Bool.(x[:, 1])
