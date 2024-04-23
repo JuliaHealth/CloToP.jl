@@ -9,6 +9,7 @@ using Random
 using StatsBase
 using JLD2
 using Plots
+using Base64
 
 # load models
 if isfile("models/clozapine_classifier_model.jlso")
@@ -151,7 +152,32 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler)
 
     dose_range = (doses[min_dose_idx], doses[max_dose_idx])
 
-    return dose_range
+    return dose_range, collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p
+end
+
+function plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
+
+    # 220-550
+    # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
+
+    if minimum(clo_concentration) < 220
+        min_dose_idx = findfirst(x -> x > 220, clo_concentration)
+    else
+        min_dose_idx = 1
+    end
+
+    if maximum(clo_concentration) > 550
+        max_dose_idx = findfirst(x -> x > 550, clo_concentration)
+    else
+        max_dose_idx = length(doses)
+    end
+
+    p = plot(doses, clo_concentration, ylims=(0, 1000), xlims=(0, 1000), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
+    p = hline!([220], lc=:green, ls=:dot)
+    p = hline!([550], lc=:red, ls=:dot)
+    p = vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
+    p = vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
+    return p
 end
 
 function handle(req)
@@ -168,9 +194,16 @@ function handle(req)
         a2_ind = Float64(form.a2_ind)
         a2_inh = Float64(form.a2_inh)
         a2_s = Float64(form.a2_s)
+        @info "Running predictions.."
+        dose_range, doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
+        p = plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
+        io = IOBuffer()
+        iob64_encode = Base64EncodePipe(io)
+        show(iob64_encode, MIME("image/png"), p)
+        close(iob64_encode)
+        p = String(take!(io))
         clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
-        doses = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
-        return HTTP.Response(200, "$(clo_group) $(clo_group_p) $(clo_group_adj) $(clo_group_adj_p) $(clo_level) $(nclo_level) $(doses[1]) $(doses[2])")
+        return HTTP.Response(200, "$(clo_group) $(clo_group_p) $(clo_group_adj) $(clo_group_adj_p) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
     end
     return HTTP.Response(200, read("./index.html"))
 end

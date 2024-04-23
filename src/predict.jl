@@ -210,7 +210,7 @@ function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo
     println("Minimum recommended dose: $(doses[min_dose_idx]) mg/day")
     println("Maximum recommended dose: $(doses[max_dose_idx]) mg/day")
 
-    plot(doses, clo_concentration, ylims=(0, 2000), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]")
+    plot(doses, clo_concentration, ylims=(0, 1000), xlims=(0, 1000), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
     hline!([220], lc=:green, ls=:dot)
     hline!([550], lc=:red, ls=:dot)
     vline!([doses[min_dose_idx]], lc=:green, ls=:dot)

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
   <head>
       <meta charset="UTF-8">
@@ -10,52 +9,53 @@
 
   <body>
 
-  <h1>Clozapine Toxicity Predictor</h1>
-
-  <form action="/action_page.php">
-  <table>
-    <tr>
-      <td colspan=2>
-        <center>
-          <h2>Enter patient's data</h2>
-        </center>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <label for="sex">Sex:</label>
-      </td>
-      <td>
-        <select id="sex">
-          <option value="0">female</option>                        
-          <option value="1">male</option>
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <label for="age">Age [years]:</label>
-      </td>
-      <td>
-        <input type="number" id="age" name="age" min="1" max="200" value="18">
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <label for="clo_dose">Total clozapine dose [mg/day]:</label>
-      </td>
-      <td>
-        <input type="number" id="clo_dose" name="clo_dose" min="0" max="2000" value="0" step="12.5">
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <label for="bmi">BMI [kg/m^2]:</label>
-      </td>
-      <td>
-        <input type="number" id="bmi" name="bmi" min="0" max="100" value="25" step="0.1">
-      </td>
+  <center>
+    <form>
+    <table>
       <tr>
+        <td colspan=4>
+          <center>
+            <h3>Clozapine Toxicity Predictor</h3>
+            <h3>Enter patient's data</h3>
+          </center>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="sex">Sex:</label>
+        </td>
+        <td>
+          <select id="sex">
+            <option value="0">female</option>                        
+            <option value="1">male</option>
+          </select>
+        </td>
+        <td>
+        </td>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="clo_dose">Total clozapine dose [mg/day]:</label>
+        </td>
+        <td>
+          <input type="number" id="clo_dose" name="clo_dose" min="0" max="2000" value="0" step="12.5">
+        </td>
+        <td>
+          <label for="age">Age [years]:</label>
+        </td>
+        <td>
+          <input type="number" id="age" name="age" min="1" max="200" value="18">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="bmi">BMI [kg/m^2]:</label>
+        </td>
+        <td>
+          <input type="number" id="bmi" name="bmi" min="0" max="100" value="25" step="0.1">
+        </td>
         <td>
           <label for="crp">CRP [mg/L]:</label>
         </td>
@@ -70,24 +70,6 @@
         <td>
           <input type="number" id="1a2_s" name="1a2_s" min="0" max="10" value="0">
         </td>
-      </tr>
-      <tr>
-        <td>
-          <label for="1a2_inh">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/1a2_inhibitors.md" target=_blank>CYP1A2 inhibitors</a>:</label>
-        </td>
-        <td>
-          <input type="number" id="1a2_inh" name="1a2_inh" min="0" max="10" value="0">
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <label for="1a2_ind">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/1a2_inducers.md" target=_blank>CYP1A2 inducers</a>:</label>
-        </td>
-        <td>
-          <input type="number" id="1a2_ind" name="1a2_ind" min="0" max="10" value="0">
-        </td>
-      </tr>
-      <tr>
         <td>
           <label for="3a4_s">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/3a4_substrates.md" target=_blank>CYP3A4 substrates</a>:</label>
         </td>
@@ -95,83 +77,95 @@
           <input type="number" id="3a4_s" name="3a4_s" min="0" max="10" value="0">
         </td>
       </tr>
-      <tr>
-        <td>
-          <label for="3a4_inh">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/3a4_inhibitors.md" target=_blank>CYP3A4 inhibitors</a>:</label>
-        </td>
-        <td>
-          <input type="number" id="3a4_inh" name="3a4_inh" min="0" max="10" value="0">
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <label for="3a4_ind">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/3a4_inducers.md" target=_blank>CYP3A4 inducers</a>:</label>
-        </td>
-        <td>
-          <input type="number" id="3a4_ind" name="3a4_ind" min="0" max="10" value="0">
-        </td>
-      </tr>
-      <tr>
-        <td colspan=2>
-          <br>
-        </td>
-      </tr>
-      <tr>
-        <td colspan=2>
-          <center>
-              <button id="submit" type="button">PREDICT</button>
-          </center>
-        </td>
-      </tr>
-      <tr>
-        <td colspan=2>
-          <br>
-        </td>
-      </tr>
-      <tr>
-        <td>Predicted clozapine concentration [ng/mL]:</td>
-        <td id="clo_level"></td>
-      </tr>
-      <tr>
-        <td>Predicted norclozapine concentration [ng/mL]:</td>
-        <td id="nclo_level"></td>
-      </tr>
-      <tr>
-        <td colspan=2>
-          <br>
-        </td>
-      </tr>
-      <tr>
-        <td>Predicted clozapine level:</td>
-        <td id="clo_group"></td>
-      </tr>
-      <tr>
-        <td>Probability:</td>
-        <td id="clo_group_p"></td>
-      </tr>
-      <tr>
-        <td>Predicted clozapine level (adjusted):</td>
-        <td id="clo_group_adj"></td>
-      </tr>
-      <tr>
-        <td>Probability:</td>
-        <td id="clo_group_adj_p"></td>
-      </tr>
-      <tr>
-        <td colspan=2>
-          <br>
-        </td>
-      </tr>
-      <tr>
-        <td>Predicted minimum therapeutic dose [mg/day]:</td>
-        <td id="dose1"></td>
-      </tr>
-      <tr>
-        <td>Predicted upper safe dose [mg/day]:</td>
-        <td id="dose2"></td>
-      </tr>
-    </table>
-  </form>
+        <tr>
+          <td>
+            <label for="1a2_inh">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/1a2_inhibitors.md" target=_blank>CYP1A2 inhibitors</a>:</label>
+          </td>
+          <td>
+            <input type="number" id="1a2_inh" name="1a2_inh" min="0" max="10" value="0">
+          </td>
+          <td>
+            <label for="3a4_inh">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/3a4_inhibitors.md" target=_blank>CYP3A4 inhibitors</a>:</label>
+          </td>
+          <td>
+            <input type="number" id="3a4_inh" name="3a4_inh" min="0" max="10" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="1a2_ind">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/1a2_inducers.md" target=_blank>CYP1A2 inducers</a>:</label>
+          </td>
+          <td>
+            <input type="number" id="1a2_ind" name="1a2_ind" min="0" max="10" value="0">
+          </td>
+          <td>
+            <label for="3a4_ind">Number of <a href="https://codeberg.org/AdamWysokinski/CTP.jl/src/branch/main/3a4_inducers.md" target=_blank>CYP3A4 inducers</a>:</label>
+          </td>
+          <td>
+            <input type="number" id="3a4_ind" name="3a4_ind" min="0" max="10" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td colspan=4>
+            <br>
+          </td>
+        </tr>
+        <tr>
+          <td colspan=4>
+            <center>
+                <button id="submit" type="button">PREDICT</button>
+            </center>
+          </td>
+        </tr>
+        <tr>
+          <td colspan=4>
+            <br>
+            <center>
+              <b>Predictions</b>
+            </center>
+          </td>
+        </tr>
+        <tr>
+          <td>Clozapine [ng/mL]:</td>
+          <td id="clo_level" style="font-weight:bold"></td>
+          <td>Norclozapine [ng/mL]:</td>
+          <td id="nclo_level" style="font-weight:bold"></td>
+        </tr>
+        <tr>
+          <td>Clozapine level:</td>
+          <td id="clo_group" style="font-weight:bold"></td>
+          <td>Clozapine level (adjusted):</td>
+          <td id="clo_group_adj" style="font-weight:bold"></td>
+        </tr>
+        <tr>
+          <td>Probability:</td>
+          <td id="clo_group_p" style="font-weight:bold"></td>
+          <td>Probability:</td>
+          <td id="clo_group_adj_p" style="font-weight:bold"></td>
+        </tr>
+        <tr>
+          <td colspan=4>
+            <center>
+              <b>Recommended clozapine doses:</b>
+            </center>
+          </td>
+        </tr>
+        <tr>
+          <td>Minimum [mg/day]:</td>
+          <td id="dose1" style="color:Green; font-weight:bold"></td>
+          <td>Maximum [mg/day]:</td>
+          <td id="dose2" style="color:Green; font-weight:bold"></td>
+        </tr>
+        <tr>      
+          <td colspan=4>
+            <center>
+              <img id="imgPlot" width="500"></img>
+            </center>
+            </td>
+        </tr>
+      </table>
+    </form>
+  </center>
 
   <script>
     document.getElementById("clo_group").innerHTML = "";
@@ -198,6 +192,7 @@
         })
       });
       const clo_prediction_response = await response.text();
+      console.log(clo_prediction_response);
       clo_group = clo_prediction_response.split(" ")[0];
       clo_group_p = clo_prediction_response.split(" ")[1];
       clo_group_adj = clo_prediction_response.split(" ")[2];
@@ -206,22 +201,28 @@
       nclo_level = clo_prediction_response.split(" ")[5];
       dose1 = clo_prediction_response.split(" ")[6];
       dose2 = clo_prediction_response.split(" ")[7];
+      plot = clo_prediction_response.split(" ")[8];
       console.log(clo_group);
       console.log(clo_group_adj);
-      if (clo_group == 0)
-        document.getElementById("clo_group").innerHTML = "NORMAL"
-      else
-        document.getElementById("clo_group").innerHTML = "TOXIC"
-      document.getElementById("clo_group_p").innerHTML = clo_group_p
-      if (clo_group_adj == 0)
-        document.getElementById("clo_group_adj").innerHTML = "NORMAL"
-      else
-        document.getElementById("clo_group_adj").innerHTML = "TOXIC"
-      document.getElementById("clo_group_adj_p").innerHTML = clo_group_adj_p
-      document.getElementById("clo_level").innerHTML = clo_level
-      document.getElementById("nclo_level").innerHTML = nclo_level
-      document.getElementById("dose1").innerHTML = dose1
-      document.getElementById("dose2").innerHTML = dose2
+      if (clo_group == 0) {
+        document.getElementById("clo_group").style.color="green"
+        document.getElementById("clo_group").innerHTML = "NORMAL"; }
+      else {
+        document.getElementById("clo_group").style.color="red"
+        document.getElementById("clo_group").innerHTML = "TOXIC"; }
+      document.getElementById("clo_group_p").innerHTML = clo_group_p;
+      if (clo_group_adj == 0) {
+        document.getElementById("clo_group_adj").style.color="green"
+        document.getElementById("clo_group_adj").innerHTML = "NORMAL"; }
+      else {
+        document.getElementById("clo_group_adj").style.color="red"
+        document.getElementById("clo_group_adj").innerHTML = "TOXIC"; }
+      document.getElementById("clo_group_adj_p").innerHTML = clo_group_adj_p;
+      document.getElementById("clo_level").innerHTML = clo_level;
+      document.getElementById("nclo_level").innerHTML = nclo_level;
+      document.getElementById("dose1").innerHTML = dose1;
+      document.getElementById("dose2").innerHTML = dose2;
+      imgPlot.setAttribute('src', "data:image/jpg;base64," + plot);
     })
   </script>
   </body>

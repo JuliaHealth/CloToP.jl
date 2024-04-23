@@ -8,6 +8,10 @@ Current status of the regressor model testing accuracy:
 
 ![](rr_test_accuracy.png)
 
+Individual recommended save dose range is also predicted:
+
+![](dose-level.png)
+
 ## Quickstart
 
 ```sh
