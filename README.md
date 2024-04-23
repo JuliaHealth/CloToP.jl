@@ -1,24 +1,62 @@
 # Clozapine Toxicity Predictor
 
-Current status of the regressor model training accuracy:
+This [Julia](https://julialang.org/) toolbox allows predicting [clozapine](https://en.wikipedia.org/wiki/Clozapine) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) blood concentrations using RandomForestClassifier and RandomForestRegressor models.
 
-![](rr_train_accuracy.png)
-
-Current status of the regressor model testing accuracy:
-
-![](rr_test_accuracy.png)
-
-Individual recommended safe dose range is also predicted:
+Individual recommended safe dose range can also be predicted:
 
 ![](dose-level.png)
 
+## Performance
+
+The model is actively developed and its accuracy is improving.
+
+### Classifier
+
+    RandomForestClassifier accuracy report:                   
+            log_loss: 0.0873
+            AUC: 1.0                                                 
+            misclassification rate: 0.0                                              
+            accuracy: 1.0
+    confusion matrix:
+            sensitivity (TP): 1.0
+            specificity (TP): 1.0
+                         group
+                      norm   high   
+                    ┌──────┬──────┐
+               norm │   89 │    0 │
+    prediction      ├──────┼──────┤
+               high │    0 │   29 │
+                    └──────┴──────┘
+
+### Regressor
+
+Current regressor model training accuracy:
+
+    Predicting: CLOZAPINE
+    RandomForestRegressor accuracy report:
+            R²: 0.9582
+            RMSE: 72.07
+    
+    Predicting: NORCLOZAPINE
+    RandomForestRegressor accuracy report:
+            R²: 0.9625
+            RMSE: 33.7286
+
+![](rr_train_accuracy.png)
+
+Current regressor model testing accuracy:
+
+![](rr_test_accuracy.png)
+
 ## Quickstart
+
+Clone this repository, go to its folder and run:
 
 ```sh
 julia src/server.jl
 ```
 
-Next, go to the local website at [http://localhost:8080](http://localhost:8080), enter patients data and click the "PREDICT" button.
+Next, go to the local website at [http://localhost:8080](http://localhost:8080), enter patient's data and click the "PREDICT" button.
 
 ![](webpage.png)
 
