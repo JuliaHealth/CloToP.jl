@@ -19,3 +19,5 @@ julia src/server.jl
 ```
 
 Next, go to the local website at [http://localhost:8080](http://localhost:8080), enter patients data and click the "PREDICT" button.
+
+![](webpage.png)
