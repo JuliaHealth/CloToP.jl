@@ -194,7 +194,6 @@ function handle(req)
         a2_ind = Float64(form.a2_ind)
         a2_inh = Float64(form.a2_inh)
         a2_s = Float64(form.a2_s)
-        @info "Running predictions.."
         dose_range, doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
         p = plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
         io = IOBuffer()
