@@ -6,7 +6,7 @@ This [Julia](https://julialang.org/) toolbox allows predicting [clozapine](https
 
 Individual recommended safe dose range can also be predicted:
 
-![](dose-level.png)
+![](images/dose-level.png)
 
 ## Performance
 
