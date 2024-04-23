@@ -62,7 +62,7 @@ Next, go to the local website at [http://localhost:8080](http://localhost:8080),
 
 ## How to Cite
 
-If you use this package please acknowledge us by citing our [paper](https://neuroanalyzer.org#how-to-cite).
+If you use this package please acknowledge us by citing our [paper](https://zenodo.org/records/11048224).
 
 ## Contributors
 
