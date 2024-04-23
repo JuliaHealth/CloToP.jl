@@ -1,5 +1,7 @@
 # Clozapine Toxicity Predictor
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11048224.svg)](https://doi.org/10.5281/zenodo.11048224)
+
 This [Julia](https://julialang.org/) toolbox allows predicting [clozapine](https://en.wikipedia.org/wiki/Clozapine) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) blood concentrations using RandomForestClassifier and RandomForestRegressor models.
 
 Individual recommended safe dose range can also be predicted:
