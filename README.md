@@ -1,6 +1,6 @@
 # Clozapine Toxicity Predictor
 
-[![DOI](zenodo.11048224.png)](https://doi.org/10.5281/zenodo.11048224)
+[![DOI](images/zenodo.11048224.png)](https://doi.org/10.5281/zenodo.11048224)
 
 This [Julia](https://julialang.org/) toolbox allows predicting [clozapine](https://en.wikipedia.org/wiki/Clozapine) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) blood concentrations using RandomForestClassifier and RandomForestRegressor models.
 
@@ -10,7 +10,7 @@ Individual recommended safe dose range can also be predicted:
 
 ## Performance
 
-The model is actively developed and its accuracy is improving.
+The models are actively developed and its accuracy is improving.
 
 ### Classifier
 
@@ -44,11 +44,11 @@ Current regressor model training accuracy:
             R²: 0.9625
             RMSE: 33.7286
 
-![](rr_train_accuracy.png)
+![](images/rr_train_accuracy.png)
 
 Current regressor model testing accuracy:
 
-![](rr_test_accuracy.png)
+![](images/rr_test_accuracy.png)
 
 ## Quickstart
 
@@ -60,7 +60,7 @@ julia src/server.jl
 
 Next, go to the local website at [http://localhost:8080](http://localhost:8080), enter patient's data and click the "PREDICT" button.
 
-![](webpage.png)
+![](images/webpage.png)
 
 (!) Adjusted clozapine level is the classifier prediction modified by predicted concentration.
 

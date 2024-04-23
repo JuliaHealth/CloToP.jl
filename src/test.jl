@@ -228,6 +228,6 @@ p1 = Plots.plot!(yhat1, label="prediction", line=:dot, lw=2)
 p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", )
 p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
-savefig(p, "rr_test_accuracy.png")
+savefig(p, "images/rr_test_accuracy.png")
 
 println("Analysis completed.")

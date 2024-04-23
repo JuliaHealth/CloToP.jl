@@ -332,6 +332,6 @@ JLD2.save_object("models/scaler.jld", scaler)
 println()
 
 p = Plots.plot(p1, p2, layout=(2, 1))
-savefig(p, "rr_train_accuracy.png")
+savefig(p, "images/rr_train_accuracy.png")
 
 println("Training completed.")
