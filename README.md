@@ -68,7 +68,7 @@ If you use this package please acknowledge us by citing our [paper](https://neur
 
 Below is the list of contributors and their affiliations.
 
-[Adam Wysokiński](mailto:adam.wysokinski@neuroanalyzer.org) [![ORCID](images/orcid.png)](https://orcid.org/0000-0002-6159-6579)
+[Adam Wysokiński](mailto:adam.wysokinski@umed.lodz.pl) [![ORCID](images/orcid.png)](https://orcid.org/0000-0002-6159-6579)
 
 [Joanna Dreczka](mailto:jdreczka@csk.umed.pl)
 
