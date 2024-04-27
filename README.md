@@ -80,7 +80,7 @@ Below is the list of contributors and their affiliations.
 
 [![Medical University of Lodz](images/umed.png)](https://en.umed.pl)
 
-# License
+## License
 
 This software is licensed under [The 2-Clause BSD License](LICENSE).
 
