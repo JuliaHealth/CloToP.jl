@@ -1,13 +1,14 @@
 println("Importing packages")
 
 using Pkg
-packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots"]
+packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots", "MLJDecisionTreeInterface"]
 Pkg.add(packages)
 
 using HTTP
 using JSON3
 using DataFrames
 using MLJ
+using MLJDecisionTreeInterface
 using Random
 using StatsBase
 using JLD2
