@@ -1,9 +1,0 @@
-[Unit]
-Description=Start CTP server after reboot.
-
-[Service]
-Type=simple
-ExecStart=/bin/bash /home/ctp/start_server.sh
-
-[Install]
-WantedBy=multi-user.target
