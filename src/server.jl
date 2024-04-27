@@ -186,6 +186,7 @@ end
 
 function handle(req)
     if req.method == "POST"
+        @info "Calculating predictions.."
         form = JSON3.read(String(req.body))
         sex = form.sex
         age = form.age
@@ -211,4 +212,10 @@ function handle(req)
     return HTTP.Response(200, read("./index.html"))
 end
 
+@info "Precompiling.."
+dose_range, doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([0, 18, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler)
+p = plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
+clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler)
+
+@info "Starting server.."
 HTTP.serve(handle, 8080)
