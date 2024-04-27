@@ -1,7 +1,7 @@
 println("Importing packages")
 
 using Pkg
-packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "Plots"]
+packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots"]
 Pkg.add(packages)
 
 using HTTP
