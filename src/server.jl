@@ -1,4 +1,4 @@
-println("Importing packages")
+@info "Importing packages.."
 
 using Pkg
 packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots", "MLJDecisionTreeInterface"]
@@ -14,6 +14,8 @@ using StatsBase
 using JLD2
 using Plots
 using Base64
+
+@info "Loading data.."
 
 # load models
 if isfile("models/clozapine_classifier_model.jlso")
