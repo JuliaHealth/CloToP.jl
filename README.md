@@ -84,8 +84,12 @@ Below is the list of contributors and their affiliations.
 
 This software is licensed under [The 2-Clause BSD License](LICENSE).
 
-## Disclaimer
+## Disclaimers
+
+**DISCLAIMER: THIS TOOL HAS THE RESEARCH USE ONLY (RUO) STATUS**
+
+This tool and all associated information, including but not limited to, text, graphics, images and other material contained on this website, has the Research Use Only (RUO) status. It is intended for scientific research only. It must not be used for diagnostic or medical purposes.
 
 **DISCLAIMER: THIS WEBSITE DOES NOT PROVIDE MEDICAL ADVICE**
 
-The information, including but not limited to, text, graphics, images and other material contained on this website are for informational purposes only. No material on this site is intended to be a substitute for professional medical advice, diagnosis or treatment. Always seek the advice of your physician or other qualified health care provider with any questions you may have regarding a medical condition or treatment and before undertaking a new health care regimen, and never disregard professional medical advice or delay in seeking it because of something you have read on this website.
+This tool and all associated information, including but not limited to, text, graphics, images and other material contained on this website are for informational purposes only. No material on this site is intended to be a substitute for professional medical advice, diagnosis or treatment. Always seek the advice of your physician or other qualified health care provider with any questions you may have regarding a medical condition or treatment and before undertaking a new health care regimen, and never disregard professional medical advice or delay in seeking it because of something you have read on this website.
