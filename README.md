@@ -15,7 +15,7 @@ The models are actively developed and its accuracy is improving.
 ### Classifier
 
     RandomForestClassifier accuracy report:                   
-            log_loss: 0.0873
+            log_loss: 0.0568
             AUC: 1.0                                                 
             misclassification rate: 0.0                                              
             accuracy: 1.0
@@ -25,7 +25,7 @@ The models are actively developed and its accuracy is improving.
                          group
                       norm   high   
                     ┌──────┬──────┐
-               norm │   89 │    0 │
+               norm │  148 │    0 │
     prediction      ├──────┼──────┤
                high │    0 │   29 │
                     └──────┴──────┘
@@ -36,13 +36,13 @@ Current regressor model training accuracy:
 
     Predicting: CLOZAPINE
     RandomForestRegressor accuracy report:
-            R²: 0.9582
-            RMSE: 72.07
+            R²: 0.9637
+            RMSE: 60.44
     
     Predicting: NORCLOZAPINE
     RandomForestRegressor accuracy report:
-            R²: 0.9625
-            RMSE: 33.7286
+            R²: 0.9666
+            RMSE: 28.6654
 
 ![](images/rr_train_accuracy.png)
 
