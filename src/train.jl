@@ -25,13 +25,17 @@ x = Matrix(train_raw_data[:, 3:end])
 
 # add zero-dose data for each patient
 # we need artificial zero-dose data to force the lowest concentration to equal 0, as the notion of intercept does not exist in trees
-y1_z = zeros(length(y1))
-y2_z = repeat(["norm"], length(y1))
-x_z = deepcopy(x)
-x_z[:, 3] .= 0
-y1 = vcat(y1, y1_z)
-y2 = vcat(y2, y2_z)
-x = vcat(x, x_z)
+y1_z1 = zeros(length(y1))
+y1_z2 = zeros(length(y1))
+y2_z1 = repeat(["norm"], length(y1))
+y2_z2 = repeat(["norm"], length(y1))
+x_z1 = deepcopy(x)
+x_z2 = deepcopy(x)
+x_z1[:, 3] .= 0
+x_z2[:, 2:end] .= 0
+y1 = vcat(y1, [y1_z1; y1_z2])
+y2 = vcat(y2, [y2_z1; y2_z2])
+x = vcat(x, [x_z1; x_z2])
 
 println("Number of entries: $(length(y1))")
 
@@ -147,8 +151,9 @@ println("Creating regressor model: RandomForestRegressor")
 
 println("Predicting: CLOZAPINE")
 y = train_raw_data[:, 1]
-y_z = zeros(length(y))
-y = vcat(y, y_z)
+y_z1 = zeros(length(y))
+y_z2 = zeros(length(y))
+y = vcat(y, [y_z1; y_z2])
 
 rfr = @MLJ.load RandomForestRegressor pkg=DecisionTree verbosity=0
 
@@ -235,8 +240,9 @@ println()
 
 println("Predicting: NORCLOZAPINE")
 y = train_raw_data[:, 2]
-y_z = zeros(length(y))
-y = vcat(y, y_z)
+y_z1 = zeros(length(y))
+y_z2 = zeros(length(y))
+y = vcat(y, [y_z1; y_z2])
 
 #=
 info(RandomForestRegressor)

@@ -244,6 +244,6 @@ predict_single_patient(pt, scaler)
 # inhibitors_1a2: Int
 # substrates_1a2: Int
 
-pt = [0, 20, 26, 0, 0, 0, 0, 0, 0, 1]
+pt = [0, 60, 26, 0, 0, 0, 0, 0, 0, 1]
 doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p = recommended_dose(pt, scaler)
 dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adjusted, clo_group_adjusted_p)
