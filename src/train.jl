@@ -135,8 +135,8 @@ println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat), 
 println("\taccuracy: ", 1 - round(misclassification_rate(mode.(yhat), y), digits=2))
 println("confusion matrix:")
 cm = confusion_matrix(mode.(yhat), y)
-println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
+println("\tsensitivity (TPR): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
+println("\tspecificity (TNR): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println("""
                      group
                   norm   high   

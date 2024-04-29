@@ -20,8 +20,8 @@ The models are actively developed and its accuracy is improving.
             misclassification rate: 0.0                                              
             accuracy: 1.0
     confusion matrix:
-            sensitivity (TP): 1.0
-            specificity (TP): 1.0
+            sensitivity (TPR): 1.0
+            specificity (TNR): 1.0
                          group
                       norm   high   
                     ┌──────┬──────┐
