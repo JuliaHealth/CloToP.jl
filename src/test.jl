@@ -12,7 +12,7 @@ using Plots
 # load training data
 if isfile("data/clozapine_test.csv")
     println("Loading: clozapine_test.csv")
-    test_raw_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
+    test_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
 else
     error("File data/clozapine_test.csv cannot be opened!")
     exit(-1)
@@ -49,11 +49,11 @@ else
 end
 
 # preprocess
-y1 = test_raw_data[:, 1]
+y1 = test_data[:, 1]
 y2 = repeat(["norm"], length(y1))
 y2[y1 .> 550] .= "high"
-y3 = test_raw_data[:, 2]
-x = Matrix(test_raw_data[:, 3:end])
+y3 = test_data[:, 2]
+x = Matrix(test_data[:, 3:end])
 
 # standardize
 println("Processing: standardize")
