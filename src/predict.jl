@@ -1,13 +1,29 @@
-println("Importing packages")
+@info "Importing packages.."
+
+using Pkg
+
+# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
+# Pkg.add(packages)
+
 using CSV
 using DataFrames
+using JLD2
 using MLJ
 using MLJDecisionTreeInterface
-using MLJLinearModels
 using Random
-using StatsBase
-using JLD2
 using Plots
+using StatsBase
+
+m = Pkg.Operations.Context().env.manifest
+println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
+println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println()
+
+@info "Loading data.."
 
 # load models
 if isfile("models/clozapine_classifier_model.jlso")
