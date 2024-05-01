@@ -15,6 +15,16 @@ using JLD2
 using Plots
 using Base64
 
+m = Pkg.Operations.Context().env.manifest
+println("      HTTP $(m[findfirst(v -> v.name == "HTTP", m)].version)")
+println("     JSON3 $(m[findfirst(v -> v.name == "JSON3", m)].version)")
+println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println()
+
 @info "Loading data.."
 
 # load models

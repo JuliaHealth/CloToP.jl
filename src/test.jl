@@ -1,18 +1,33 @@
-println("Importing packages")
+@info "Importing packages.."
+
+using Pkg
+packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
+Pkg.add(packages)
+
 using CSV
 using DataFrames
+using JLD2
 using MLJ
 using MLJDecisionTreeInterface
-using MLJLinearModels
 using Random
-using StatsBase
-using JLD2
 using Plots
+using StatsBase
+
+m = Pkg.Operations.Context().env.manifest
+println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
+println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println()
+
+@info "Loading data.."
 
 # load training data
 if isfile("data/clozapine_test.csv")
     println("Loading: clozapine_test.csv")
-    test_raw_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
+    test_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
 else
     error("File data/clozapine_test.csv cannot be opened!")
     exit(-1)
@@ -49,11 +64,11 @@ else
 end
 
 # preprocess
-y1 = test_raw_data[:, 1]
+y1 = test_data[:, 1]
 y2 = repeat(["norm"], length(y1))
 y2[y1 .> 550] .= "high"
-y3 = test_raw_data[:, 2]
-x = Matrix(test_raw_data[:, 3:end])
+y3 = test_data[:, 2]
+x = Matrix(test_data[:, 3:end])
 
 # standardize
 println("Processing: standardize")
@@ -179,9 +194,9 @@ println("""
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │ $(lpad(cm[4], 4, " ")) │ $(lpad(cm[2], 4, " ")) │
+           norm │ $(lpad(cm.mat[4], 4, " ")) │ $(lpad(cm.mat[2], 4, " ")) │
 prediction      ├──────┼──────┤
-           high │ $(lpad(cm[3], 4, " ")) │ $(lpad(cm[1], 4, " ")) │
+           high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
                 └──────┴──────┘
          """)
 println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
@@ -195,9 +210,9 @@ println("""
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │ $(lpad(cm[4], 4, " ")) │ $(lpad(cm[2], 4, " ")) │
+           norm │ $(lpad(cm.mat[4], 4, " ")) │ $(lpad(cm.mat[2], 4, " ")) │
 prediction      ├──────┼──────┤
-           high │ $(lpad(cm[3], 4, " ")) │ $(lpad(cm[1], 4, " ")) │
+           high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
                 └──────┴──────┘
          """)
 println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
