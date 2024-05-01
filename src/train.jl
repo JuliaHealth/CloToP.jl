@@ -107,8 +107,14 @@ report(m_self_tuning_rfc2).best_history_entry
 model = fitted_params(m_self_tuning_rfc1).best_model
 model = fitted_params(m_self_tuning_rfc2).best_model
 
+evaluate(model,
+         x, y,
+         resampling=CV(nfolds=10),
+         measures=[log_loss, accuracy, f1score, misclassification_rate, cross_entropy])
+
 report(m_self_tuning_rfc).best_history_entry
 =#
+
 Random.seed!(123)
 model = rfc(max_depth = 26, 
             min_samples_leaf = 1, 
@@ -118,12 +124,6 @@ model = rfc(max_depth = 26,
             n_trees = 750, 
             sampling_fraction = 1.0, 
             feature_importance = :split)
-#=
-evaluate(model,
-         x, y,
-         resampling=CV(nfolds=10),
-         measures=[log_loss, accuracy, f1score, misclassification_rate, cross_entropy])
-=#
 mach = machine(model, x, y, scitype_check_level=0)
 MLJ.fit!(mach, force=true, verbosity=0)
 yhat = MLJ.predict(mach, x)
@@ -202,6 +202,11 @@ report(m_self_tuning_rfr2).best_history_entry
 
 model = fitted_params(m_self_tuning_rfr1).best_model
 model = fitted_params(m_self_tuning_rfr2).best_model
+
+evaluate(model_clo,
+         x, y,
+         resampling=CV(nfolds=10),
+         measure=[rsq, root_mean_squared_error])
 =#
 
 Random.seed!(123)
@@ -213,12 +218,6 @@ model_clo = rfr(max_depth = -1,
                 n_trees = 500, 
                 sampling_fraction = 1.0, 
                 feature_importance = :split)
-#=
-evaluate(model_clo,
-         x, y,
-         resampling=CV(nfolds=10),
-         measure=[rsq, root_mean_squared_error])
-=#
 mach_clo = machine(model_clo, x, y, scitype_check_level=0)
 MLJ.fit!(mach_clo, force=true, verbosity=0)
 yhat = MLJ.predict(mach_clo, x)
