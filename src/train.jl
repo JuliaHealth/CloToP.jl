@@ -164,7 +164,8 @@ prediction      ├──────┼──────┤
          """)
 
 println("Creating regressor model: RandomForestRegressor")
-
+println()
+println("Regressor prediction accuracy:")
 println("Predicting: CLOZAPINE")
 y = train_raw_data[:, 1]
 y_z1 = zeros(length(y))
@@ -250,7 +251,6 @@ m = RSquared()
 println("\tR²: ", round(m(yhat, y), digits=4))
 m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y), digits=4))
-println()
 
 println("Predicting: NORCLOZAPINE")
 y = train_raw_data[:, 2]

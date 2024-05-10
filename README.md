@@ -73,10 +73,10 @@ Current classifier model testing accuracy:
 
 Current regressor model training accuracy:
 
+    Regressor prediction accuracy:
     Predicting: CLOZAPINE
         R²: 0.9637
         RMSE: 60.44
-    
     Predicting: NORCLOZAPINE
         R²: 0.9666
         RMSE: 28.6654
