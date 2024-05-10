@@ -1,8 +1,8 @@
 @info "Importing packages.."
 
 using Pkg
-packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
-Pkg.add(packages)
+# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
+# Pkg.add(packages)
 
 using CSV
 using DataFrames
@@ -113,6 +113,18 @@ for idx in eachindex(yhat1)
     println("Subject ID: $idx \t NCLO level: $(y3[idx]) \t prediction: $(yhat3[idx]) \t RMSE: $(rmse_nclo[idx])")
     println()
 end
+println("Regressor prediction accuracy:")
+println("Predicting: CLOZAPINE")
+m = RSquared()
+println("\tR²:\t", round(m(yhat1, y1), digits=4))
+m = RootMeanSquaredError()
+println("\tRMSE:\t", round(m(yhat1, y1), digits=4))
+println("Predicting: NORCLOZAPINE")
+m = RSquared()
+println("\tR²:\t", round(m(yhat3, y3), digits=4))
+m = RootMeanSquaredError()
+println("\tRMSE:\t", round(m(yhat3, y3), digits=4))
+println()
 
 Random.seed!(123)
 yhat2 = MLJ.predict(model_rfc, x)
@@ -189,7 +201,10 @@ println("\tlog_loss: ", round(log_loss(yhat2, y2) |> mean, digits=4))
 println("\tAUC: ", round(auc(yhat2, y2), digits=4))
 println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2), y2), digits=2))
 println("\taccuracy: ", 1 - round(misclassification_rate(mode.(yhat2), y2), digits=2))
+println("confusion matrix:")
 cm = confusion_matrix(mode.(yhat2), y2)
+println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
+println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println("""
                      group
                   norm   high   
@@ -199,13 +214,13 @@ prediction      ├──────┼──────┤
            high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
                 └──────┴──────┘
          """)
-println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
-println()
-println("Adjusted classifier:")
+println("Adjusted classifier prediction accuracy:")
 println("\tmisclassification rate: ", round(misclassification_rate(yhat2_adj, y2), digits=2))
 println("\taccuracy: ", 1 - round(misclassification_rate(yhat2_adj, y2), digits=2))
+println("confusion matrix:")
 cm = confusion_matrix(yhat2_adj, y2)
+println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
+println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println("""
                      group
                   norm   high   
@@ -215,27 +230,6 @@ prediction      ├──────┼──────┤
            high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
                 └──────┴──────┘
          """)
-println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
-println()
-
-println("Regressor prediction accuracy:")
-println("CLOZAPINE:")
-m = RSquared()
-println("\tR²:\t", round(m(yhat1, y1), digits=4))
-m = RootMeanSquaredError()
-println("\tRMSE:\t", round(m(yhat1, y1), digits=4))
-println("NORCLOZAPINE:")
-m = RSquared()
-println("\tR²:\t", round(m(yhat3, y3), digits=4))
-m = RootMeanSquaredError()
-println("\tRMSE:\t", round(m(yhat3, y3), digits=4))
-println()
-print("Regressor execution time and memory use:\t")
-@time yhat = MLJ.predict(clo_model_rfr, x)
-print("Classifier execution time and memory use:\t")
-@time yhat2 = MLJ.predict(model_rfc, x)
-println()
 
 p1 = Plots.plot(y1, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]", )
 p1 = Plots.plot!(yhat1, label="prediction", line=:dot, lw=2)
@@ -243,5 +237,11 @@ p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="no
 p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_test_accuracy.png")
+
+print("Regressor execution time and memory use:\t")
+@time yhat = MLJ.predict(clo_model_rfr, x)
+print("Classifier execution time and memory use:\t")
+@time yhat2 = MLJ.predict(model_rfc, x)
+println()
 
 println("Analysis completed.")

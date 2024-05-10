@@ -1,7 +1,6 @@
 @info "Importing packages.."
 
 using Pkg
-
 # packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
 # Pkg.add(packages)
 
@@ -145,7 +144,7 @@ mach = machine(model, x, y, scitype_check_level=0)
 MLJ.fit!(mach, force=true, verbosity=0)
 yhat = MLJ.predict(mach, x)
 
-println("RandomForestClassifier accuracy report:")
+println("Classifier prediction accuracy:")
 println("\tlog_loss: ", round(log_loss(yhat, y) |> mean, digits=4))
 println("\tAUC: ", round(auc(yhat, y), digits=4))
 println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat), y), digits=2))
@@ -247,7 +246,6 @@ p1 = Plots.plot!(yhat[sorting_idx], label="prediction", line=:dot, lw=2)
 # params = fitted_params(mach_clo)
 # params.coefs # coefficient of the regression with names
 # params.intercept # intercept
-println("RandomForestRegressor accuracy report:")
 m = RSquared()
 println("\tR²: ", round(m(yhat, y), digits=4))
 m = RootMeanSquaredError()
@@ -337,7 +335,6 @@ p2 = Plots.plot!(yhat[sorting_idx], label="prediction", line=:dot, lw=2)
 # regression parametersmach_nclo)
 # params.coefs # coefficient of the regression with names
 # params.intercept # intercept
-println("RandomForestRegressor accuracy report:")
 m = RSquared()
 println("\tR²: ", round(m(yhat, y), digits=4))
 m = RootMeanSquaredError()

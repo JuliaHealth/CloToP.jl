@@ -1,8 +1,8 @@
 @info "Importing packages.."
 
 using Pkg
-packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots", "MLJDecisionTreeInterface"]
-Pkg.add(packages)
+# packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots", "MLJDecisionTreeInterface"]
+# Pkg.add(packages)
 
 using HTTP
 using JSON3

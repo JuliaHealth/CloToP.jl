@@ -2,7 +2,7 @@
 
 [![DOI](images/zenodo.11048224.png)](https://doi.org/10.5281/zenodo.11048224)
 
-This [Julia](https://julialang.org/) toolbox allows predicting [clozapine](https://en.wikipedia.org/wiki/Clozapine) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) blood concentrations using RandomForestClassifier and RandomForestRegressor models.
+This [Julia](https://julialang.org/) toolbox allows predicting [clozapine](https://en.wikipedia.org/wiki/Clozapine) (CLO) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) (NCLO) blood concentrations using RandomForestClassifier and RandomForestRegressor models.
 
 Individual recommended safe dose range can also be predicted:
 
@@ -10,18 +10,20 @@ Individual recommended safe dose range can also be predicted:
 
 ## Performance
 
-The models are actively developed and its accuracy is improving.
+The models are actively developed and we expect their accuracy to improve.
 
 ### Classifier
 
-    RandomForestClassifier accuracy report:                   
-            log_loss: 0.0568
-            AUC: 1.0                                                 
-            misclassification rate: 0.0                                              
-            accuracy: 1.0
+Current classifier model training accuracy:
+
+    Classifier prediction accuracy:
+        log_loss: 0.0568
+        AUC: 1.0                                                 
+        misclassification rate: 0.0                                              
+        accuracy: 1.0
     confusion matrix:
-            sensitivity (TPR): 1.0
-            specificity (TNR): 1.0
+        sensitivity (TPR): 1.0
+        specificity (TNR): 1.0
                          group
                       norm   high   
                     ┌──────┬──────┐
@@ -30,23 +32,78 @@ The models are actively developed and its accuracy is improving.
                high │    0 │   29 │
                     └──────┴──────┘
 
+Current classifier model testing accuracy:
+
+    Subject ID: 1   group: NORM     prediction: NORM, prob = 0.8    adj. prediction: NORM, prob = 1.0
+    Subject ID: 2   group: HIGH     prediction: HIGH, prob = 0.96   adj. prediction: HIGH, prob = 1.0
+    Subject ID: 3   group: HIGH     prediction: HIGH, prob = 0.64   adj. prediction: NORM, prob = 0.66
+    Subject ID: 4   group: HIGH     prediction: HIGH, prob = 0.82   adj. prediction: HIGH, prob = 0.92
+
+    Classifier prediction accuracy:
+        log_loss: 0.2251
+        AUC: 1.0
+        misclassification rate: 0.0
+        accuracy: 1.0
+    confusion matrix:
+        sensitivity (TP): 1.0
+        specificity (TP): 1.0
+                         group
+                      norm   high   
+                    ┌──────┬──────┐
+               norm │    1 │    0 │
+    prediction      ├──────┼──────┤
+               high │    0 │    3 │
+                    └──────┴──────┘
+    
+    Adjusted classifier prediction accuracy:
+        misclassification rate: 0.25
+        accuracy: 0.75
+    confusion matrix:
+        sensitivity (TP): 0.67
+        specificity (TP): 1.0
+                         group
+                      norm   high   
+                    ┌──────┬──────┐
+               norm │    1 │    1 │
+    prediction      ├──────┼──────┤
+               high │    0 │    2 │
+                    └──────┴──────┘
+
 ### Regressor
 
 Current regressor model training accuracy:
 
     Predicting: CLOZAPINE
-    RandomForestRegressor accuracy report:
-            R²: 0.9637
-            RMSE: 60.44
+        R²: 0.9637
+        RMSE: 60.44
     
     Predicting: NORCLOZAPINE
-    RandomForestRegressor accuracy report:
-            R²: 0.9666
-            RMSE: 28.6654
+        R²: 0.9666
+        RMSE: 28.6654
 
 ![](images/rr_train_accuracy.png)
 
 Current regressor model testing accuracy:
+
+    Subject ID: 1   CLO level: 278.1    prediction: 390.2   RMSE: 112.1
+    Subject ID: 1   NCLO level: 145.9   prediction: 199.6   RMSE: 53.7
+    
+    Subject ID: 2   CLO level: 563.0    prediction: 637.9   RMSE: 74.9
+    Subject ID: 2   NCLO level: 241.7   prediction: 285.4   RMSE: 43.7
+    
+    Subject ID: 3   CLO level: 556.3    prediction: 517.0   RMSE: 39.3
+    Subject ID: 3   NCLO level: 222.7   prediction: 214.3   RMSE: 8.4
+    
+    Subject ID: 4   CLO level: 847.9    prediction: 720.1   RMSE: 127.8
+    Subject ID: 4   NCLO level: 272.4   prediction: 267.8   RMSE: 4.6
+    
+    Regressor prediction accuracy:
+    Predicting: CLOZAPINE
+        R²: 0.778
+        RMSE:   94.9391
+    Predicting: NORCLOZAPINE
+        R²: 0.4393
+        RMSE:   34.9467
 
 ![](images/rr_test_accuracy.png)
 
