@@ -17,9 +17,9 @@ The models are actively developed and we expect their accuracy to improve.
 Current classifier model training accuracy:
 
     Classifier prediction accuracy:
-        log_loss: 0.0568
-        AUC: 1.0                                                 
-        misclassification rate: 0.0                                              
+        log_loss: 0.0576
+        AUC: 1.0
+        misclassification rate: 0.0
         accuracy: 1.0
     confusion matrix:
         sensitivity (TPR): 1.0
@@ -27,46 +27,46 @@ Current classifier model training accuracy:
                          group
                       norm   high   
                     ┌──────┬──────┐
-               norm │  148 │    0 │
+               norm │  153 │    0 │
     prediction      ├──────┼──────┤
-               high │    0 │   29 │
+               high │    0 │   30 │
                     └──────┴──────┘
 
 Current classifier model testing accuracy:
 
-    Subject ID: 1   group: NORM     prediction: NORM, prob = 0.8    adj. prediction: NORM, prob = 1.0
-    Subject ID: 2   group: HIGH     prediction: HIGH, prob = 0.96   adj. prediction: HIGH, prob = 1.0
-    Subject ID: 3   group: HIGH     prediction: HIGH, prob = 0.64   adj. prediction: NORM, prob = 0.66
-    Subject ID: 4   group: HIGH     prediction: HIGH, prob = 0.82   adj. prediction: HIGH, prob = 0.92
+    Subject ID: 1   group: HIGH     prediction: HIGH, prob = 0.59   adj. prediction: HIGH, prob = 0.69
+    Subject ID: 2   group: NORM     prediction: NORM, prob = 0.6    adj. prediction: NORM, prob = 0.5
+    Subject ID: 3   group: HIGH     prediction: HIGH, prob = 0.66   adj. prediction: HIGH, prob = 0.96
+    Subject ID: 4   group: NORM     prediction: NORM, prob = 0.67   adj. prediction: NORM, prob = 0.97
 
     Classifier prediction accuracy:
-        log_loss: 0.2251
+        log_loss: 0.5029
         AUC: 1.0
-        misclassification rate: 0.0
-        accuracy: 1.0
+        misclassification rate: 0.33
+        accuracy: 0.67
     confusion matrix:
         sensitivity (TP): 1.0
-        specificity (TP): 1.0
+        specificity (TP): 0.5
                          group
                       norm   high   
                     ┌──────┬──────┐
                norm │    1 │    0 │
     prediction      ├──────┼──────┤
-               high │    0 │    3 │
+               high │    1 │    1 │
                     └──────┴──────┘
-    
+             
     Adjusted classifier prediction accuracy:
-        misclassification rate: 0.25
-        accuracy: 0.75
+        misclassification rate: 0.33
+        accuracy: 0.67
     confusion matrix:
-        sensitivity (TP): 0.67
-        specificity (TP): 1.0
+        sensitivity (TP): 1.0
+        specificity (TP): 0.5
                          group
                       norm   high   
                     ┌──────┬──────┐
-               norm │    1 │    1 │
+               norm │    1 │    0 │
     prediction      ├──────┼──────┤
-               high │    0 │    2 │
+               high │    1 │    1 │
                     └──────┴──────┘
 
 ### Regressor
@@ -75,35 +75,32 @@ Current regressor model training accuracy:
 
     Regressor prediction accuracy:
     Predicting: CLOZAPINE
-        R²: 0.9637
-        RMSE: 60.44
+        R²: 0.9643
+        RMSE: 60.0249
     Predicting: NORCLOZAPINE
-        R²: 0.9666
-        RMSE: 28.6654
+        R²: 0.9686
+        RMSE: 27.5317
 
 ![](images/rr_train_accuracy.png)
 
 Current regressor model testing accuracy:
 
-    Subject ID: 1   CLO level: 278.1    prediction: 390.2   RMSE: 112.1
-    Subject ID: 1   NCLO level: 145.9   prediction: 199.6   RMSE: 53.7
+    Subject ID: 1   CLO level: 270.9    prediction: 653.1   RMSE: 382.2
+    Subject ID: 1   NCLO level: 388.5   prediction: 220.1   RMSE: 168.4
     
-    Subject ID: 2   CLO level: 563.0    prediction: 637.9   RMSE: 74.9
-    Subject ID: 2   NCLO level: 241.7   prediction: 285.4   RMSE: 43.7
+    Subject ID: 2   CLO level: 603.6    prediction: 688.4   RMSE: 84.8
+    Subject ID: 2   NCLO level: 325.0   prediction: 393.7   RMSE: 68.7
     
-    Subject ID: 3   CLO level: 556.3    prediction: 517.0   RMSE: 39.3
-    Subject ID: 3   NCLO level: 222.7   prediction: 214.3   RMSE: 8.4
-    
-    Subject ID: 4   CLO level: 847.9    prediction: 720.1   RMSE: 127.8
-    Subject ID: 4   NCLO level: 272.4   prediction: 267.8   RMSE: 4.6
-    
+    Subject ID: 3   CLO level: 375.2    prediction: 499.4   RMSE: 124.2
+    Subject ID: 3   NCLO level: 160.7   prediction: 234.8   RMSE: 74.1
+
     Regressor prediction accuracy:
     Predicting: CLOZAPINE
-        R²: 0.778
-        RMSE:   94.9391
+        R²: -1.913
+        RMSE:   237.1311
     Predicting: NORCLOZAPINE
-        R²: 0.4393
-        RMSE:   34.9467
+        R²: -0.3954
+        RMSE:   113.3859
 
 ![](images/rr_test_accuracy.png)
 
