@@ -56,6 +56,7 @@ else
     error("File models/scaler.jld cannot be opened!")
     exit(-1)
 end
+println()
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
@@ -71,10 +72,10 @@ function ctp(patient_data::Vector{<:Real}, scaler)
 
     # m = scaler.mean
     # s = scaler.scale
-    data = patient_data[2:end]
+    data = patient_data[2:5]
     data = StatsBase.transform(scaler, reshape(data, 1, length(data)))
     data[isnan.(data)] .= 0
-    patient_data[2:end] = data
+    patient_data[2:5] = data
     # patient_data[2:5] = (patient_data[2:5] .- m) ./ s
     x_gender = Bool(patient_data[1])
     x_cont = patient_data[2:5]
@@ -83,18 +84,15 @@ function ctp(patient_data::Vector{<:Real}, scaler)
     x2 = DataFrame(reshape(x_cont, 1, length(x_cont)), ["age", "dose", "bmi", "crp"])
     x3 = DataFrame(reshape(x_rest, 1, length(x_rest)), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
     x = hcat(x1, x2, x3)
-    x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+    x = coerce(x, :male=>Multiclass, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
 
-    Random.seed!(123)
     yhat1 = MLJ.predict(clo_model_rfr, x)[1]
     yhat1 = round(yhat1, digits=1)
-    Random.seed!(123)
     yhat3 = MLJ.predict(nclo_model_rfr, x)[1]
     yhat3 = round(yhat3, digits=1)
     clo_level = yhat1
     nclo_level = yhat3
     
-    Random.seed!(123)
     yhat2 = MLJ.predict(model_rfc, x)[1]
     p_norm = broadcast(pdf, yhat2, "norm")
     p_high = broadcast(pdf, yhat2, "high")
@@ -219,9 +217,9 @@ function handle(req)
         close(iob64_encode)
         p = String(take!(io))
         clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
-        return HTTP.Response(200, "$(clo_group) $(clo_group_p) $(clo_group_adj) $(clo_group_adj_p) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
+        return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*"], "$(clo_group) $(clo_group_p) $(clo_group_adj) $(clo_group_adj_p) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
     end
-    return HTTP.Response(200, read("./index.html"))
+    return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*"], read("./index.html"))
 end
 
 @info "Precompiling.."

@@ -1,3 +1,5 @@
+# Random.seed!(123)
+
 @info "Importing packages.."
 
 using Pkg
@@ -62,8 +64,10 @@ else
     error("File models/scaler.jld cannot be opened!")
     exit(-1)
 end
+println()
 
 # preprocess
+@info "Preprocessing.."
 y1 = test_data[:, 1]
 y2 = repeat(["norm"], length(y1))
 y2[y1 .> 550] .= "high"
@@ -71,9 +75,10 @@ y3 = test_data[:, 2]
 x = Matrix(test_data[:, 3:end])
 
 # standardize
-println("Processing: standardize")
+println("Standardizing")
 data = x[:, 2:end]
-data = StatsBase.transform(scaler, data)
+#scaler = StatsBase.fit(ZScoreTransform, data[:, 1:4], dims=1)
+data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
 data[isnan.(data)] .= 0
 # or
 # m = scaler.mean
@@ -83,25 +88,20 @@ data[isnan.(data)] .= 0
 # end
 x_gender = Bool.(x[:, 1])
 x_cont = data[:, 1:4]
-x_rest = data[:, 5:end]
+x_rest = round.(Int64, data[:, 5:end])
 x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = hcat(x1, x2, x3)
-x = coerce(x, :age=>Multiclass, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+x = coerce(x, :male=>Multiclass, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
 y2 = DataFrame(group=y2)
-y2 = coerce(y2.group, OrderedFactor{2})
-
+y2 = coerce(y2.group, Multiclass)
 println("Number of entries: $(size(y1, 1))")
 println()
-println("Calculating predictions")
-println("-----------------------")
-println()
+@info "Calculating predictions.."
 println("Regressor:")
-Random.seed!(123)
 yhat1 = MLJ.predict(clo_model_rfr, x)
 yhat1 = round.(yhat1, digits=1)
-Random.seed!(123)
 yhat3 = MLJ.predict(nclo_model_rfr, x)
 yhat3 = round.(yhat3, digits=1)
 rmse_clo = zeros(length(yhat1))
@@ -113,7 +113,7 @@ for idx in eachindex(yhat1)
     println("Subject ID: $idx \t NCLO level: $(y3[idx]) \t prediction: $(yhat3[idx]) \t RMSE: $(rmse_nclo[idx])")
     println()
 end
-println("Regressor prediction accuracy:")
+println("Regressor accuracy:")
 println("Predicting: CLOZAPINE")
 m = RSquared()
 println("\tR²:\t", round(m(yhat1, y1), digits=4))
@@ -196,7 +196,7 @@ end
 yhat2_adj = coerce(yhat2_adj, OrderedFactor{2})
 
 println()
-println("Classifier prediction accuracy:")
+println("Classifier accuracy:")
 println("\tlog_loss: ", round(log_loss(yhat2, y2) |> mean, digits=4))
 println("\tAUC: ", round(auc(yhat2, y2), digits=4))
 println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2), y2), digits=2))
@@ -214,7 +214,7 @@ prediction      ├──────┼──────┤
            high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
                 └──────┴──────┘
          """)
-println("Adjusted classifier prediction accuracy:")
+println("Adjusted classifier accuracy:")
 println("\tmisclassification rate: ", round(misclassification_rate(yhat2_adj, y2), digits=2))
 println("\taccuracy: ", round(1 - misclassification_rate(yhat2_adj, y2), digits=2))
 println("confusion matrix:")
@@ -236,8 +236,9 @@ p1 = Plots.plot!(yhat1, label="prediction", line=:dot, lw=2)
 p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", )
 p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
-savefig(p, "images/rr_test_accuracy.png")
+savefig(p, "images/rr_testing_accuracy.png")
 
+@info "Benchmarking.."
 print("Regressor execution time and memory use:\t")
 @time yhat = MLJ.predict(clo_model_rfr, x)
 print("Classifier execution time and memory use:\t")
