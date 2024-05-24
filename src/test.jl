@@ -126,7 +126,6 @@ m = RootMeanSquaredError()
 println("\tRMSE:\t", round(m(yhat3, y3), digits=4))
 println()
 
-Random.seed!(123)
 yhat2 = MLJ.predict(model_rfc, x)
 subj1 = 0
 subj2 = 0
@@ -138,6 +137,11 @@ subj3_adj = 0
 subj4_adj = 0
 println("Classifier:")
 yhat2_adj = repeat(["norm"], length(yhat2))
+yhat2_adj_p = zeros(2, length(yhat2))
+for idx in eachindex(yhat2)
+    yhat2_adj_p[1, idx] = yhat2.prob_given_ref[:1][idx]
+    yhat2_adj_p[2, idx] = yhat2.prob_given_ref[:2][idx]
+end
 for idx in eachindex(yhat2)
     print("Subject ID: $idx \t group: $(uppercase(String(y2[idx]))) \t")
     p_high = broadcast(pdf, yhat2[idx], "high")
@@ -175,6 +179,9 @@ for idx in eachindex(yhat2)
     p_high < 0.0 && (p_high = 0.0)
     p_norm > 1.0 && (p_norm = 1.0)
     p_norm < 0.0 && (p_norm = 0.0)
+    yhat2_adj_p[1, idx] = p_high
+    yhat2_adj_p[2, idx] = p_norm
+
     if p_norm > p_high
         println("adj. prediction: NORM, prob = $(round(p_norm, digits=2))")
         if String(y2[idx]) == "norm"
@@ -193,8 +200,12 @@ for idx in eachindex(yhat2)
     end
 end
 
-yhat2_adj = coerce(yhat2_adj, OrderedFactor{2})
-
+yhat2_adj = deepcopy(yhat2)
+for idx in eachindex(yhat2)
+    yhat2_adj.prob_given_ref[:1][idx] = yhat2_adj_p[1, idx]
+    yhat2_adj.prob_given_ref[:2][idx] = yhat2_adj_p[2, idx] 
+end
+# yhat2_adj = coerce(yhat2_adj, OrderedFactor{2})
 println()
 println("Classifier accuracy:")
 println("\tlog_loss: ", round(log_loss(yhat2, y2) |> mean, digits=4))
@@ -215,10 +226,10 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 println("Adjusted classifier accuracy:")
-println("\tmisclassification rate: ", round(misclassification_rate(yhat2_adj, y2), digits=2))
-println("\taccuracy: ", round(1 - misclassification_rate(yhat2_adj, y2), digits=2))
+println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2_adj), y2), digits=2))
+println("\taccuracy: ", round(1 - misclassification_rate(mode.(yhat2_adj), y2), digits=2))
 println("confusion matrix:")
-cm = confusion_matrix(yhat2_adj, y2)
+cm = confusion_matrix(mode.(yhat2_adj), y2)
 println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
 println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println("""
