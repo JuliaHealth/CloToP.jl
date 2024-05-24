@@ -74,9 +74,9 @@ x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = hcat(x1, x2, x3)
-x = coerce(x, :male=>Multiclass, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
 y2 = DataFrame(group=y2)
-y2 = coerce(y2.group, Multiclass)
+y2 = coerce(y2.group, OrderedFactor{2})
 # scitype(y)
 # levels(y)
 
@@ -144,11 +144,11 @@ model = rfc(max_depth = 26,
             n_subfeatures = -1, 
             n_trees = 750, 
             sampling_fraction = 1.0, 
-            feature_importance = :split)
-#mach = machine(model, x, y, scitype_check_level=0)
+            feature_importance = :impurity)
+#mach = machine(model, x, y, scitype_check_level=1)
 #MLJ.fit!(mach)
 
-mach = machine(model, x[train_idx, :], y2[train_idx], scitype_check_level=0)
+mach = machine(model, x[train_idx, :], y2[train_idx], scitype_check_level=1)
 MLJ.fit!(mach, verbosity=0)
 yhat = MLJ.predict(mach)
 
@@ -171,7 +171,7 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 
-mach_test = machine(model, x[test_idx, :], y2[test_idx], scitype_check_level=0)
+mach_test = machine(model, x[test_idx, :], y2[test_idx], scitype_check_level=1)
 MLJ.fit!(mach_test, verbosity=0)
 yhat = MLJ.predict(mach_test)
 println("Classifier testing accuracy:")
@@ -252,10 +252,10 @@ model_clo = rfr(max_depth = -1,
                 min_samples_split = 2, 
                 min_purity_increase = 0.0, 
                 n_subfeatures = -1, 
-                n_trees = 750, 
+                n_trees = 1000, 
                 sampling_fraction = 1.0, 
                 feature_importance = :impurity)
-mach_clo = machine(model_clo, x[train_idx, :], y1[train_idx], scitype_check_level=0)
+mach_clo = machine(model_clo, x[train_idx, :], y1[train_idx], scitype_check_level=1)
 MLJ.fit!(mach_clo, verbosity=0)
 yhat = MLJ.predict(mach_clo, x[train_idx, :])
 #yhat_reconstructed = round.(((yhat .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
@@ -270,7 +270,7 @@ println("\tR²: ", round(m(yhat, y1[train_idx]), digits=2))
 m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y1[train_idx]), digits=2))
 
-mach_clo_test = machine(model_clo, x[test_idx, :], y1[test_idx], scitype_check_level=0)
+mach_clo_test = machine(model_clo, x[test_idx, :], y1[test_idx], scitype_check_level=1)
 MLJ.fit!(mach_clo_test, verbosity=0)
 yhat = MLJ.predict(mach_clo_test, x[test_idx, :])
 #yhat_reconstructed = round.(((yhat .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
@@ -344,11 +344,11 @@ model_nclo = rfr(max_depth = -1,
                  n_subfeatures = -1, 
                  n_trees = 223, 
                  sampling_fraction = 1.0, 
-                 feature_importance = :split)
-mach_nclo = machine(model_nclo, x[train_idx, :], y3[train_idx], scitype_check_level=0)
+                 feature_importance = :impurity)
+mach_nclo = machine(model_nclo, x[train_idx, :], y3[train_idx], scitype_check_level=1)
 MLJ.fit!(mach_nclo, verbosity=0)
 yhat = MLJ.predict(mach_nclo, x[train_idx, :])
-# mach_nclo = machine(model_nclo, x, y, scitype_check_level=0)
+# mach_nclo = machine(model_nclo, x, y, scitype_check_level=1)
 # MLJ.fit!(mach_nclo, force=true, verbosity=0)
 # yhat = MLJ.predict(mach_nclo, x)
 # yhat_reconstructed = round.(((yhat .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
@@ -362,7 +362,7 @@ println("\tR²: ", round(m(yhat, y3[train_idx]), digits=2))
 m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y3[train_idx]), digits=2))
 
-mach_nclo_test = machine(model_nclo, x[test_idx, :], y3[test_idx], scitype_check_level=0)
+mach_nclo_test = machine(model_nclo, x[test_idx, :], y3[test_idx], scitype_check_level=1)
 MLJ.fit!(mach_nclo_test, verbosity=0)
 yhat = MLJ.predict(mach_nclo_test, x[test_idx, :])
 # regression parametersmach_nclo)
@@ -377,7 +377,7 @@ println()
 
 # final training on the whole dataset
 @info "Training final model.."
-mach = machine(model, x, y2, scitype_check_level=0)
+mach = machine(model, x, y2, scitype_check_level=1)
 MLJ.fit!(mach, verbosity=0)
 yhat = MLJ.predict(mach)
 println("Classifier accuracy:")
@@ -399,7 +399,7 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 println("Predicting: CLOZAPINE")
-mach_clo = machine(model_clo, x, y1, scitype_check_level=0)
+mach_clo = machine(model_clo, x, y1, scitype_check_level=1)
 MLJ.fit!(mach_clo, verbosity=0)
 yhat = MLJ.predict(mach_clo, x)
 sorting_idx = sortperm(y1)
@@ -411,7 +411,7 @@ println("\tR²: ", round(m(yhat, y1), digits=2))
 m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y1), digits=2))
 println("Predicting: NORCLOZAPINE")
-mach_nclo = machine(model_nclo, x, y3, scitype_check_level=0)
+mach_nclo = machine(model_nclo, x, y3, scitype_check_level=1)
 MLJ.fit!(mach_nclo, verbosity=0)
 yhat = MLJ.predict(mach_nclo, x)
 sorting_idx = sortperm(y3)
