@@ -1,25 +1,32 @@
-# Random.seed!(123)
-
-@info "Importing packages.."
+@info "Loading packages.."
 
 using Pkg
-# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
+# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJFlux", "NNlib", "Flux" "Plots", "StatsBase"]
 # Pkg.add(packages)
 
 using CSV
 using DataFrames
 using JLD2
 using MLJ
-using MLJDecisionTreeInterface
+# using MLJDecisionTreeInterface
+# using MLJXGBoostInterface
+using MLJFlux
+using NNlib
+using Flux
 using Random
 using Plots
 using StatsBase
+
+# Random.seed!(rand(1:1000))
 
 m = Pkg.Operations.Context().env.manifest
 println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
 println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
 println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
 println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
+println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
 println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
 println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
@@ -77,8 +84,7 @@ x = Matrix(test_data[:, 3:end])
 # standardize
 println("Standardizing")
 data = x[:, 2:end]
-#scaler = StatsBase.fit(ZScoreTransform, data[:, 1:4], dims=1)
-data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
+# data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
 data[isnan.(data)] .= 0
 # or
 # m = scaler.mean
@@ -92,7 +98,7 @@ x_rest = round.(Int64, data[:, 5:end])
 x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
-x = hcat(x1, x2, x3)
+x = Float32.(hcat(x1, x2, x3))
 x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
 y2 = DataFrame(group=y2)
 y2 = coerce(y2.group, OrderedFactor{2})
@@ -226,6 +232,8 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 println("Adjusted classifier accuracy:")
+println("\tlog_loss: ", round(log_loss(yhat2_adj, y2) |> mean, digits=4))
+println("\tAUC: ", round(auc(yhat2_adj, y2), digits=4))
 println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2_adj), y2), digits=2))
 println("\taccuracy: ", round(1 - misclassification_rate(mode.(yhat2_adj), y2), digits=2))
 println("confusion matrix:")
