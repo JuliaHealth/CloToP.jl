@@ -8,8 +8,7 @@ using CSV
 using DataFrames
 using JLD2
 using MLJ
-# using MLJDecisionTreeInterface
-# using MLJXGBoostInterface
+using MLJDecisionTreeInterface
 using MLJFlux
 using NNlib
 using Flux
@@ -17,18 +16,17 @@ using Random
 using Plots
 using StatsBase
 
-# Random.seed!(rand(1:1000))
-
 m = Pkg.Operations.Context().env.manifest
-println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
-println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
-println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
-println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
-println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println("                     CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
+println("              DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("                    JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("                     MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("MLJDecisionTreeInterface $(m[findfirst(v -> v.name == "MLJDecisionTreeInterface", m)].version)")
+println("                 MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("                    Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
+println("                   NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("                   Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println("               StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
 
 @info "Loading data.."
@@ -84,7 +82,7 @@ x = Matrix(test_data[:, 3:end])
 # standardize
 println("Standardizing")
 data = x[:, 2:end]
-# data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
+data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
 data[isnan.(data)] .= 0
 # or
 # m = scaler.mean
