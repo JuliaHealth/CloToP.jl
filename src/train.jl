@@ -190,15 +190,13 @@ model_nclo = rfr(max_depth = -1,
                  n_trees = 250, 
                  sampling_fraction = 1.0, 
                  feature_importance = :impurity)
-#model_nclo = nnr(builder =  MLJFlux.Short(n_hidden=100,
-#                                          dropout=0.1, 
-#                                          σ = NNlib.relu), 
-#                 optimiser = Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
-#                 loss = Flux.Losses.mse, 
-#                 epochs = 10000, 
-#                 batch_size = 10, 
-#                 lambda = 0.0, 
-#                 alpha = 0.2) 
+model_nclo = nnr(builder = MLJFlux.Short(n_hidden=64, dropout=0.1, σ=hardtanh),
+                 optimiser = Adam(0.01, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                 loss = Flux.Losses.mse, 
+                 epochs = 1000, 
+                 batch_size = 2, 
+                 lambda = 0.1, 
+                 alpha = 0.0) 
 mach_nclo = machine(model_nclo, x[train_idx, :], y3[train_idx], scitype_check_level=0)
 MLJ.fit!(mach_nclo, force=true, verbosity=1)
 yhat = MLJ.predict(mach_nclo, x[train_idx, :])

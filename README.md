@@ -18,35 +18,35 @@ Current classifier accuracy (train-test split 70:30):
 
 ```
 Classifier training accuracy:
-    log_loss: 0.02
+    log_loss: 0.0
     AUC: 1.0
-    misclassification rate: 0.01
-    accuracy: 0.99
+    misclassification rate: 0.0
+    accuracy: 1.0
 confusion matrix:
     sensitivity (TPR): 1.0
-    specificity (TNR): 0.99
+    specificity (TNR): 1.0
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │   70 │    0 │
+           norm │   74 │    0 │
 prediction      ├──────┼──────┤
-           high │    1 │   21 │
+           high │    0 │   18 │
                 └──────┴──────┘
          
 Classifier testing accuracy:
-    log_loss: 0.79
-    AUC: 0.92
-    misclassification rate: 0.18
-    accuracy: 0.82
+    log_loss: 2.42
+    AUC: 0.87
+    misclassification rate: 0.22
+    accuracy: 0.78
 confusion matrix:
-    sensitivity (TPR): 0.7
-    specificity (TNR): 0.87
+    sensitivity (TPR): 0.54
+    specificity (TNR): 0.89
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │   26 │    3 │
+           norm │   24 │    6 │
 prediction      ├──────┼──────┤
-           high │    4 │    7 │
+           high │    3 │    7 │
                 └──────┴──────┘
 ```
 
@@ -59,14 +59,14 @@ Classifier accuracy:
     misclassification rate: 0.01
     accuracy: 0.99
 confusion matrix:
-    sensitivity (TPR): 1.0
-    specificity (TNR): 0.99
+    sensitivity (TPR): 0.97
+    specificity (TNR): 1.0
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  100 │    0 │
+           norm │  101 │    1 │
 prediction      ├──────┼──────┤
-           high │    1 │   31 │
+           high │    0 │   30 │
                 └──────┴──────┘
 ```
 
@@ -77,19 +77,19 @@ Current regressor model accuracy (train-test split 70:30):
 ```
 Predicting: CLOZAPINE
 Regressor training accuracy
-    R²: 0.96
-    RMSE: 66.63
+    R²: 0.98
+    RMSE: 44.92
 Regressor testing accuracy
-    R²: 0.72
-    RMSE: 176.77
+    R²: 0.52
+    RMSE: 268.11
 
 Predicting: NORCLOZAPINE
 Regressor training accuracy
-    R²: 0.95
-    RMSE: 39.31
+    R²: 0.99
+    RMSE: 20.02
 Regressor testing accuracy
-    R²: 0.8
-    RMSE: 67.91
+    R²: 0.46
+    RMSE: 123.4
 ```
 
 Final model accuracy:
@@ -97,12 +97,12 @@ Final model accuracy:
 ```
 Predicting: CLOZAPINE
 Regressor accuracy
-    R²: 0.97
-    RMSE: 57.33
+    R²: 0.98
+    RMSE: 50.27
 Predicting: NORCLOZAPINE
 Regressor accuracy
-    R²: 0.96
-    RMSE: 35.31
+    R²: 0.99
+    RMSE: 19.05
 ```
 
 ![](images/rr_training_accuracy.png)
@@ -113,30 +113,30 @@ Current model accuracy:
 
 ```
 Regressor:
-Subject ID: 1   CLO level: 806.4    prediction: 517.0   RMSE: 289.4
-Subject ID: 1   NCLO level: 317.7   prediction: 294.2   RMSE: 23.5
+Subject ID: 1   CLO level: 806.4    prediction: 672.8   RMSE: 133.6
+Subject ID: 1   NCLO level: 317.7   prediction: 288.0   RMSE: 29.7
 
-Subject ID: 2   CLO level: 487.1    prediction: 348.3   RMSE: 138.8
-Subject ID: 2   NCLO level: 322.3   prediction: 228.3   RMSE: 94.0
+Subject ID: 2   CLO level: 487.1    prediction: 254.8   RMSE: 232.3
+Subject ID: 2   NCLO level: 322.3   prediction: 257.1   RMSE: 65.2
 
-Subject ID: 3   CLO level: 115.6    prediction: 202.6   RMSE: 87.0
-Subject ID: 3   NCLO level: 148.2   prediction: 162.2   RMSE: 14.0
+Subject ID: 3   CLO level: 115.6    prediction: 279.2   RMSE: 163.6
+Subject ID: 3   NCLO level: 148.2   prediction: 158.0   RMSE: 9.8
 
 Regressor accuracy:
 Predicting: CLOZAPINE
-    R²: 0.54
-    RMSE:   192.0
+    R²: 0.59
+    RMSE:   181.27
 Predicting: NORCLOZAPINE
-    R²: 0.51
-    RMSE:   56.52
+    R²: 0.73
+    RMSE:   41.75
 
 Classifier:
-Subject ID: 1   group: HIGH     prediction: NORM, prob = 0.78   adj. prediction: NORM, prob = 1.0
-Subject ID: 2   group: NORM     prediction: NORM, prob = 0.98   adj. prediction: NORM, prob = 1.0
+Subject ID: 1   group: HIGH     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 0.8
+Subject ID: 2   group: NORM     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 1.0
 Subject ID: 3   group: NORM     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 1.0
 
 Classifier accuracy:
-    log_loss: 0.52
+    log_loss: 3.4
     AUC: 1.0
     misclassification rate: 0.33
     accuracy: 0.67
@@ -152,8 +152,8 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          
 Adjusted classifier accuracy:
-    log_loss: 12.01
-    AUC: 0.5
+    log_loss: 0.54
+    AUC: 1.0
     misclassification rate: 0.33
     accuracy: 0.67
 confusion matrix:
