@@ -281,16 +281,14 @@ model_clo = rfr(max_depth = -1,
                 n_trees = 750, 
                 sampling_fraction = 1.0, 
                 feature_importance = :impurity)
-#nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
-#model_clo = nnr(builder =  MLJFlux.Short(n_hidden=200,
-#                                         dropout=0.1, 
-#                                         σ = NNlib.relu), 
-#                optimiser = Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
-#                loss = Flux.Losses.mse, 
-#                epochs = 1000, 
-#                batch_size = 10, 
-#                lambda = 0.0, 
-#                alpha = 0.2) 
+nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
+model_clo = nnr(builder = MLJFlux.MLP(hidden=(100,)),
+                optimiser = Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                loss = Flux.Losses.mse, 
+                epochs = 1000, 
+                batch_size = 10, 
+                lambda = 0.0, 
+                alpha = 0.2) 
 mach_clo = machine(model_clo, x[train_idx, :], y1[train_idx], scitype_check_level=0)
 MLJ.fit!(mach_clo, force=true, verbosity=1)
 yhat = MLJ.predict(mach_clo, x[train_idx, :])
