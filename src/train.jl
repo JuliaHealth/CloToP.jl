@@ -77,13 +77,14 @@ x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = Float32.(hcat(x1, x2, x3))
-x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+# x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+x = coerce(x, :male=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 y2 = DataFrame(group=y2)
 y2 = coerce(y2.group, OrderedFactor{2})
 # scitype(y)
 # levels(y)
 
-println("Splitting (70:30)")
+println("Splitting: 70:30")
 train_idx, test_idx = partition(eachindex(y2), 0.7, shuffle=true)
 # train_idx, test_idx = partition(eachindex(y), 0.8, rng=123) # 70:30 split
 println()
@@ -92,47 +93,42 @@ println()
 
 #=
 info(nnc)
-n_trees_range = range(Int, :n_trees, lower=1, upper=1000)
-max_depth_range = range(Int, :max_depth, lower=1, upper=100)
-min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
-min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
-min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
-sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.0, upper=1.0)
-p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, min_purity_increase_range, sampling_fraction_range]
-m = [log_loss, auc, accuracy, f1score, misclassification_rate, cross_entropy]
-# Evaluating over 100_000 metamodels
-self_tuning_rfc1 = TunedModel(model=rfc(),
-                              resampling=CV(nfolds=5),
-                              tuning=Grid(resolution=5),
-                              range=p,
-                              measure=m)
-m_self_tuning_rfc1 = machine(self_tuning_rfc1, x[train_idx, :], y2[train_idx])
-MLJ.fit!(m_self_tuning_rfc1)
-yhat = MLJ.predict(m_self_tuning_rfc1, x[test_idx, :])
+epochs_range = range(Int, :epochs, lower=1, upper=1000)
+batchsize_range = range(Int, :batch_size, lower=1, upper=100)
+lambda_range = range(Float64, :lambda, lower=0.0, upper=100)
+alpha_range = range(Float64, :alpha, lower=0.0, upper=1.0)
+p = [epochs_range, batchsize_range, lambda_range, alpha_range]
+m = [log_loss]
+m = [accuracy]
+self_tuning_nnc = TunedModel(model=nnc(builder = MLJFlux.Short(n_hidden = 100, 
+                                                               dropout = 0.1, 
+                                                               σ = NNlib.σ)),
+                             resampling=CV(nfolds=5),
+                             tuning=Grid(resolution=5),
+                             range=p,
+                             measure=m)
+m_self_tuning_nnc = machine(self_tuning_nnc, x[train_idx, :], y2[train_idx], scitype_check_level=0)
+MLJ.fit!(m_self_tuning_nnc)
+yhat = MLJ.predict(m_self_tuning_nnc, x[test_idx, :])
 cm = confusion_matrix(mode.(yhat), y2[test_idx])
 fitted_params(m_self_tuning_rfc1).best_model
-
-MLJ.fit!(m_self_tuning_rfc1)
-report(m_self_tuning_rfc1).best_history_entry
-
-evaluate(model,
-         x, y,
-         resampling=CV(nfolds=10),
-         measures=[log_loss, accuracy, f1score, misclassification_rate, cross_entropy])
-report(m_self_tuning_rfc).best_history_entry
 =#
 
 nnc = @MLJ.load NeuralNetworkClassifier pkg=MLJFlux verbosity=0
-model = nnc(builder = MLJFlux.Short(n_hidden = 100, 
-                                    dropout = 0.1, 
+model = nnc(builder = MLJFlux.Short(n_hidden = 64, 
+                                    dropout = 0.01, 
                                     σ = NNlib.σ),
             finaliser = NNlib.softmax, 
-            optimiser = Flux.Optimise.Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
-            loss = Flux.Losses.binarycrossentropy, 
+            optimiser = ADAM(0.001, (0.9, 0.999), IdDict{Any,Any}()),
+            loss = Flux.Losses.crossentropy, 
             epochs = 1000, 
             batch_size = 10, 
             lambda = 0.0, 
-            alpha = 0.0)
+            alpha = 0.01)
+mach = machine(model, x[train_idx, :], y2[train_idx], scitype_check_level=0)
+MLJ.fit!(mach, force=true, verbosity=1)
+yhat = MLJ.predict(mach, x[train_idx, :])
+
 #rfc = @MLJ.load RandomForestClassifier pkg=DecisionTree verbosity=0
 #model = rfc(max_depth = -1, 
 #            min_samples_leaf = 1, 
@@ -142,9 +138,6 @@ model = nnc(builder = MLJFlux.Short(n_hidden = 100,
 #            n_trees = 750, 
 #            sampling_fraction = 1.0, 
 #            feature_importance = :impurity)
-mach = machine(model, x[train_idx, :], y2[train_idx], scitype_check_level=0)
-MLJ.fit!(mach, force=true, verbosity=1)
-yhat = MLJ.predict(mach, x[train_idx, :])
 
 #=
 max_depth_range = range(Int, :max_depth, lower=1, upper=100)
@@ -169,6 +162,12 @@ MLJ.fit!(m_self_tuning_rfc1)
 yhat = MLJ.predict(m_self_tuning_rfc1, x[test_idx, :])
 cm = confusion_matrix(mode.(yhat), y2[test_idx])
 fitted_params(m_self_tuning_rfc1).best_model
+
+evaluate(model,
+         x, y,
+         resampling=CV(nfolds=10),
+         measures=[log_loss, accuracy, f1score, misclassification_rate, cross_entropy])
+report(m_self_tuning_rfc).best_history_entry
 
 mach = machine(model, x[train_idx, :], y2[train_idx])
 MLJ.fit!(mach, force=true, verbosity=2)
@@ -281,14 +280,14 @@ model_clo = rfr(max_depth = -1,
                 n_trees = 750, 
                 sampling_fraction = 1.0, 
                 feature_importance = :impurity)
-nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
-model_clo = nnr(builder = MLJFlux.MLP(hidden=(100,)),
-                optimiser = Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
-                loss = Flux.Losses.mse, 
-                epochs = 1000, 
-                batch_size = 10, 
-                lambda = 0.0, 
-                alpha = 0.2) 
+# nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
+# model_clo = nnr(builder = MLJFlux.MLP(hidden=(100,)),
+#                 optimiser = Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+#                 loss = Flux.Losses.mse, 
+#                 epochs = 1000, 
+#                 batch_size = 10, 
+#                 lambda = 0.0, 
+#                 alpha = 0.2) 
 mach_clo = machine(model_clo, x[train_idx, :], y1[train_idx], scitype_check_level=0)
 MLJ.fit!(mach_clo, force=true, verbosity=1)
 yhat = MLJ.predict(mach_clo, x[train_idx, :])

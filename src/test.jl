@@ -84,22 +84,20 @@ println("Standardizing")
 data = x[:, 2:end]
 data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
 data[isnan.(data)] .= 0
-# or
-# m = scaler.mean
-# s = scaler.scale
-# for idx in 1:size(data, 1)
-#     data[idx, :] = (data[idx, :] .- m) ./ s
-# end
 x_gender = Bool.(x[:, 1])
 x_cont = data[:, 1:4]
 x_rest = round.(Int64, data[:, 5:end])
+
+# create DataFrame
 x1 = DataFrame(:male=>x_gender)
 x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = Float32.(hcat(x1, x2, x3))
-x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+# x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+x = coerce(x, :male=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 y2 = DataFrame(group=y2)
 y2 = coerce(y2.group, OrderedFactor{2})
+
 println("Number of entries: $(size(y1, 1))")
 println()
 @info "Calculating predictions.."
@@ -148,8 +146,8 @@ for idx in eachindex(yhat2)
 end
 for idx in eachindex(yhat2)
     print("Subject ID: $idx \t group: $(uppercase(String(y2[idx]))) \t")
-    p_high = broadcast(pdf, yhat2[idx], "high")
-    p_norm = broadcast(pdf, yhat2[idx], "norm")
+    p_high = Float64(broadcast(pdf, yhat2[idx], "high"))
+    p_norm = Float64(broadcast(pdf, yhat2[idx], "norm"))
     if p_norm > p_high
         print("prediction: NORM, prob = $(round(p_norm, digits=2)) \t")
         if String(y2[idx]) == "norm"
@@ -166,16 +164,16 @@ for idx in eachindex(yhat2)
         end
     end
     if yhat1[idx] > 550
-        p_high += 0.2
-        p_norm -= 0.2
-    elseif yhat1[idx] <= 550
-        p_norm += 0.2
-        p_high -= 0.2
+        p_high += 0.3
+        p_norm -= 0.3
+    else
+        p_norm += 0.3
+        p_high -= 0.3
     end
     if yhat3[idx] > 400
         p_high += 0.1
         p_norm -= 0.1
-    elseif yhat3[idx] <= 400
+    else
         p_norm += 0.1
         p_high -= 0.1
     end
