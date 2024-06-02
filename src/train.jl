@@ -86,99 +86,25 @@ y2 = coerce(y2.group, OrderedFactor{2})
 
 println("Splitting: 70:30")
 train_idx, test_idx = partition(eachindex(y2), 0.7, shuffle=true)
-# train_idx, test_idx = partition(eachindex(y), 0.8, rng=123) # 70:30 split
 println()
 
 @info "Creating classifier model"
 
-#=
-info(nnc)
-epochs_range = range(Int, :epochs, lower=1, upper=1000)
-batchsize_range = range(Int, :batch_size, lower=1, upper=100)
-lambda_range = range(Float64, :lambda, lower=0.0, upper=100)
-alpha_range = range(Float64, :alpha, lower=0.0, upper=1.0)
-p = [epochs_range, batchsize_range, lambda_range, alpha_range]
-m = [log_loss]
-m = [accuracy]
-self_tuning_nnc = TunedModel(model=nnc(builder = MLJFlux.Short(n_hidden = 100, 
-                                                               dropout = 0.1, 
-                                                               σ = NNlib.σ)),
-                             resampling=CV(nfolds=5),
-                             tuning=Grid(resolution=5),
-                             range=p,
-                             measure=m)
-m_self_tuning_nnc = machine(self_tuning_nnc, x[train_idx, :], y2[train_idx], scitype_check_level=0)
-MLJ.fit!(m_self_tuning_nnc)
-yhat = MLJ.predict(m_self_tuning_nnc, x[test_idx, :])
-cm = confusion_matrix(mode.(yhat), y2[test_idx])
-fitted_params(m_self_tuning_rfc1).best_model
-=#
-
 nnc = @MLJ.load NeuralNetworkClassifier pkg=MLJFlux verbosity=0
-model = nnc(builder = MLJFlux.Short(n_hidden = 64, 
+model = nnc(builder = MLJFlux.Short(n_hidden = 32, 
                                     dropout = 0.01, 
-                                    σ = NNlib.σ),
+                                    σ = NNlib.tanh_fast),
             finaliser = NNlib.softmax, 
-            optimiser = ADAM(0.001, (0.9, 0.999), IdDict{Any,Any}()),
+            optimiser = ADAM(0.01, (0.9, 0.999), IdDict{Any,Any}()),
             loss = Flux.Losses.crossentropy, 
             epochs = 1000, 
-            batch_size = 10, 
+            batch_size = 2, 
             lambda = 0.0, 
-            alpha = 0.01)
+            alpha = 0.001)
 mach = machine(model, x[train_idx, :], y2[train_idx], scitype_check_level=0)
 MLJ.fit!(mach, force=true, verbosity=1)
+
 yhat = MLJ.predict(mach, x[train_idx, :])
-
-#rfc = @MLJ.load RandomForestClassifier pkg=DecisionTree verbosity=0
-#model = rfc(max_depth = -1, 
-#            min_samples_leaf = 1, 
-#            min_samples_split = 2, 
-#            min_purity_increase = 0, 
-#            n_subfeatures = -1, 
-#            n_trees = 750, 
-#            sampling_fraction = 1.0, 
-#            feature_importance = :impurity)
-
-#=
-max_depth_range = range(Int, :max_depth, lower=1, upper=100)
-min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
-min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
-min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
-n_subfeatures_range = range(Int, :n_subfeatures, lower=1, upper=11)
-p = [min_samples_leaf_range, min_samples_split_range, min_purity_increase_range, n_subfeatures_range]
-m = [log_loss, auc, accuracy, f1score, misclassification_rate, cross_entropy]
-
-p = [n_trees_range, max_depth_range]
-m = [log_loss]
-
-# Evaluating over 100_000 metamodels
-self_tuning_rfc1 = TunedModel(model=dtc(),
-                              resampling=CV(nfolds=5),
-                              tuning=Grid(resolution=5),
-                              range=p,
-                              measure=m)
-m_self_tuning_rfc1 = machine(self_tuning_rfc1, x[train_idx, :], y2[train_idx])
-MLJ.fit!(m_self_tuning_rfc1)
-yhat = MLJ.predict(m_self_tuning_rfc1, x[test_idx, :])
-cm = confusion_matrix(mode.(yhat), y2[test_idx])
-fitted_params(m_self_tuning_rfc1).best_model
-
-evaluate(model,
-         x, y,
-         resampling=CV(nfolds=10),
-         measures=[log_loss, accuracy, f1score, misclassification_rate, cross_entropy])
-report(m_self_tuning_rfc).best_history_entry
-
-mach = machine(model, x[train_idx, :], y2[train_idx])
-MLJ.fit!(mach, force=true, verbosity=2)
-MLJ.fit!(mach, force=true, verbosity=0)
-yhat = MLJ.predict(mach)
-# n = names(x)
-# for idx in eachindex(n)
-#     println("Feature $(lpad(string(idx), 2, ' ')): $(n[idx])")
-# end
-=#
-
 println("Classifier training accuracy:")
 println("\tlog_loss: ", round(log_loss(yhat, y2[train_idx]) |> mean, digits=2))
 println("\tAUC: ", round(auc(yhat, y2[train_idx]), digits=2))
@@ -221,56 +147,6 @@ prediction      ├──────┼──────┤
 @info "Creating regressor model"
 println("Predicting: CLOZAPINE")
 
-#=
-info(RandomForestRegressor)
-
-n_trees_range = range(Int, :n_trees, lower=1, upper=1000)
-max_depth_range = range(Int, :max_depth, lower=1, upper=100)
-min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
-min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
-n_subfeatures_range = range(Int, :n_subfeatures, lower=1, upper=11)
-min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0, scale=:log)
-sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0, scale=:log)
-feature_importance_range = range(rfr(), FeatureSelector(), :feature_importance, values = [[:split], [:impurity]])
-iterator(feature_importance_range)
-p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, min_purity_increase_range, sampling_fraction_range, feature_importance_range]
-p = [n_trees_range]
-p = [n_trees_range, max_depth_range, sampling_fraction_range]
-m = [root_mean_squared_error]
-self_tuning_rfr1 = TunedModel(model=rfr(),
-                              resampling=CV(nfolds=10),
-                              tuning=Grid(resolution=10),
-                              range=p,
-                              measure=m)
-m_self_tuning_rfr1 = machine(self_tuning_rfr1, x, y1)
-MLJ.fit!(m_self_tuning_rfr1)
-fitted_params(m_self_tuning_rfr1).best_model
-
-self_tuning_rfr2 = TunedModel(model=rfr(feature_importance=:impurity, sampling_fraction=1.0),
-                              resampling=CV(nfolds=5),
-                              tuning=Grid(resolution=5),
-                              range=p,
-                              measure=m)
-m_self_tuning_rfr2 = machine(self_tuning_rfr2, x, y)
-MLJ.fit!(m_self_tuning_rfr2)
-fitted_params(m_self_tuning_rfr2).best_model
-
-MLJ.fit!(m_self_tuning_rfr1, rows=train_idx)
-MLJ.fit!(m_self_tuning_rfr1, rows=test_idx)
-MLJ.fit!(m_self_tuning_rfr1)
-
-report(m_self_tuning_rfr1).best_history_entry
-report(m_self_tuning_rfr2).best_history_entry
-
-model = fitted_params(m_self_tuning_rfr1).best_model
-model = fitted_params(m_self_tuning_rfr2).best_model
-
-evaluate(model_clo,
-         x, y,
-         resampling=CV(nfolds=10),
-         measure=[rsq, root_mean_squared_error])
-=#
-
 rfr = @MLJ.load RandomForestRegressor pkg=DecisionTree verbosity=0
 model_clo = rfr(max_depth = -1, 
                 min_samples_leaf = 1, 
@@ -280,23 +156,17 @@ model_clo = rfr(max_depth = -1,
                 n_trees = 750, 
                 sampling_fraction = 1.0, 
                 feature_importance = :impurity)
-# nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
-# model_clo = nnr(builder = MLJFlux.MLP(hidden=(100,)),
-#                 optimiser = Adam(0.001, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
-#                 loss = Flux.Losses.mse, 
-#                 epochs = 1000, 
-#                 batch_size = 10, 
-#                 lambda = 0.0, 
-#                 alpha = 0.2) 
+nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
+model_clo = nnr(builder = MLJFlux.Short(n_hidden=64, dropout=0.1, σ=hardtanh),
+                optimiser = Adam(0.01, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                loss = Flux.Losses.mse, 
+                epochs = 1000, 
+                batch_size = 2, 
+                lambda = 0.1, 
+                alpha = 0.0) 
 mach_clo = machine(model_clo, x[train_idx, :], y1[train_idx], scitype_check_level=0)
 MLJ.fit!(mach_clo, force=true, verbosity=1)
 yhat = MLJ.predict(mach_clo, x[train_idx, :])
-#yhat_reconstructed = round.(((yhat .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
-#y_reconstructed = round.(((y .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
-# regression parameters
-# params = fitted_params(mach_clo)
-# params.coefs # coefficient of the regression with names
-# params.intercept # intercept
 println("Regressor training accuracy")
 m = RSquared()
 println("\tR²: ", round(m(yhat, y1[train_idx]), digits=2))
@@ -304,12 +174,6 @@ m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y1[train_idx]), digits=2))
 
 yhat = MLJ.predict(mach_clo, x[test_idx, :])
-#yhat_reconstructed = round.(((yhat .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
-#y_reconstructed = round.(((y .* scaler_y.scale[1]) .+ scaler_y.mean[1]), digits=1)
-# regression parameters
-# params = fitted_params(mach_clo)
-# params.coefs # coefficient of the regression with names
-# params.intercept # intercept
 println("Regressor testing accuracy")
 m = RSquared()
 println("\tR²: ", round(m(yhat, y1[test_idx]), digits=2))
@@ -317,56 +181,6 @@ m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y1[test_idx]), digits=2))
 
 println("Predicting: NORCLOZAPINE")
-
-#=
-info(RandomForestRegressor)
-evaluate(model,
-         x, y,
-         resampling=CV(nfolds=10),
-         measure=[rsq, root_mean_squared_error])
-n_trees_range = range(Int, :n_trees, lower=1, upper=1000)
-max_depth_range = range(Int, :max_depth, lower=1, upper=100)
-min_samples_leaf_range = range(Int, :min_samples_leaf, lower=1, upper=100)
-min_samples_split_range = range(Int, :min_samples_split, lower=1, upper=100)
-n_subfeatures_range = range(Int, :n_subfeatures, lower=1, upper=11)
-min_purity_increase_range = range(Float64, :min_purity_increase, lower=0.1, upper=1.0)
-sampling_fraction_range = range(Float64, :sampling_fraction, lower=0.1, upper=1.0)
-p = [n_trees_range, max_depth_range, min_samples_leaf_range, min_samples_split_range, n_subfeatures_range, sampling_fraction_range]
-p = [n_trees_range]
-m = [root_mean_squared_error]
-self_tuning_rfr1 = TunedModel(model=rfr(feature_importance=:split),
-                              resampling=CV(nfolds=10),
-                              tuning=Grid(resolution=100),
-                              range=p,
-                              measure=m)
-self_tuning_rfr2 = TunedModel(model=rfr(max_depth = -1, 
-                                        min_samples_leaf = 1, 
-                                        min_samples_split = 2, 
-                                        min_purity_increase = 0.0, 
-                                        n_subfeatures = -1, 
-                                        sampling_fraction = 0.999, 
-                                        feature_importance=:impurity),
-                              resampling=CV(nfolds=10),
-                              tuning=Grid(resolution=100),
-                              range=p,
-                              measure=m)
-m_self_tuning_rfr1 = machine(self_tuning_rfr1, x, y3)
-MLJ.fit!(m_self_tuning_rfr1)
-fitted_params(m_self_tuning_rfr1).best_model
-
-m_self_tuning_rfr2 = machine(self_tuning_rfr2, x, y)
-MLJ.fit!(m_self_tuning_rfr2)
-fitted_params(m_self_tuning_rfr2).best_model
-
-MLJ.fit!(m_self_tuning_rfr, rows=train_idx)
-MLJ.fit!(m_self_tuning_rfr, rows=test_idx)
-
-report(m_self_tuning_rfr1).best_history_entry
-report(m_self_tuning_rfr2).best_history_entry
-
-model = fitted_params(m_self_tuning_rfr1).best_model
-model = fitted_params(m_self_tuning_rfr2).best_model
-=#
 
 model_nclo = rfr(max_depth = -1, 
                  min_samples_leaf = 1, 
@@ -388,14 +202,6 @@ model_nclo = rfr(max_depth = -1,
 mach_nclo = machine(model_nclo, x[train_idx, :], y3[train_idx], scitype_check_level=0)
 MLJ.fit!(mach_nclo, force=true, verbosity=1)
 yhat = MLJ.predict(mach_nclo, x[train_idx, :])
-# mach_nclo = machine(model_nclo, x, y, scitype_check_level=0)
-# MLJ.fit!(mach_nclo, force=true, verbosity=0)
-# yhat = MLJ.predict(mach_nclo, x)
-# yhat_reconstructed = round.(((yhat .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
-# y_reconstructed = round.(((y .* scaler.scale[1]) .+ scaler.mean[1]), digits=1)
-# regression parametersmach_nclo)
-# params.coefs # coefficient of the regression with names
-# params.intercept # intercept
 println("Regressor training accuracy")
 m = RSquared()
 println("\tR²: ", round(m(yhat, y3[train_idx]), digits=2))
@@ -403,9 +209,6 @@ m = RootMeanSquaredError()
 println("\tRMSE: ", round(m(yhat, y3[train_idx]), digits=2))
 
 yhat = MLJ.predict(mach_nclo, x[test_idx, :])
-# regression parametersmach_nclo)
-# params.coefs # coefficient of the regression with names
-# params.intercept # intercept
 println("Regressor testing accuracy")
 m = RSquared()
 println("\tR²: ", round(m(yhat, y3[test_idx]), digits=2))
