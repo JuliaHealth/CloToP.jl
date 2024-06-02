@@ -6,23 +6,31 @@ using Pkg
 
 using HTTP
 using JSON3
+using Base64
 using DataFrames
+using JLD2
 using MLJ
 using MLJDecisionTreeInterface
+using MLJFlux
+using NNlib
+using Flux
 using Random
-using StatsBase
-using JLD2
 using Plots
-using Base64
+using StatsBase
 
 m = Pkg.Operations.Context().env.manifest
-println("      HTTP $(m[findfirst(v -> v.name == "HTTP", m)].version)")
-println("     JSON3 $(m[findfirst(v -> v.name == "JSON3", m)].version)")
-println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
-println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
-println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
-println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println("                    HTTP $(m[findfirst(v -> v.name == "HTTP", m)].version)")
+println("                   JSON3 $(m[findfirst(v -> v.name == "JSON3", m)].version)")
+println("                     CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
+println("              DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("                    JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("                     MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("MLJDecisionTreeInterface $(m[findfirst(v -> v.name == "MLJDecisionTreeInterface", m)].version)")
+println("                 MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("                    Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
+println("                   NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("                   Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println("               StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
 
 @info "Loading data.."
@@ -83,8 +91,9 @@ function ctp(patient_data::Vector{<:Real}, scaler)
     x1 = DataFrame(:male=>x_gender)
     x2 = DataFrame(reshape(x_cont, 1, length(x_cont)), ["age", "dose", "bmi", "crp"])
     x3 = DataFrame(reshape(x_rest, 1, length(x_rest)), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
-    x = hcat(x1, x2, x3)
-    x = coerce(x, :male=>Multiclass, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+    x = Float32.(hcat(x1, x2, x3))
+    # x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
+    x = coerce(x, :male=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 
     yhat1 = MLJ.predict(clo_model_rfr, x)[1]
     yhat1 = round(yhat1, digits=1)
@@ -94,8 +103,8 @@ function ctp(patient_data::Vector{<:Real}, scaler)
     nclo_level = yhat3
     
     yhat2 = MLJ.predict(model_rfc, x)[1]
-    p_norm = broadcast(pdf, yhat2, "norm")
-    p_high = broadcast(pdf, yhat2, "high")
+    p_norm = Float64(broadcast(pdf, yhat2, "norm"))
+    p_high = Float64(broadcast(pdf, yhat2, "high"))
     if p_norm > p_high
         clo_group = 0
         clo_group_p = round(p_norm, digits=2)
@@ -104,18 +113,18 @@ function ctp(patient_data::Vector{<:Real}, scaler)
         clo_group_p = round(p_high, digits=2)
     end
     if yhat1 > 550
-        p_norm -= 0.2
-        p_high += 0.2
-    elseif yhat1 <= 550
-        p_norm += 0.2
-        p_high -= 0.2
+        p_norm -= 0.3
+        p_high += 0.3
+    else
+        p_norm += 0.3
+        p_high -= 0.3
     end
     if yhat3 > 400
-        p_norm -= 0.1
-        p_high += 0.1
-    elseif yhat3 <= 400
-        p_norm += 0.1
-        p_high -= 0.1
+        p_norm -= 0.3
+        p_high += 0.3
+    else
+        p_norm += 0.3
+        p_high -= 0.3
     end
     p_high > 1.0 && (p_high = 1.0)
     p_high < 0.0 && (p_high = 0.0)

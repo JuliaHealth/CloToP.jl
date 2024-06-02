@@ -171,11 +171,11 @@ for idx in eachindex(yhat2)
         p_high -= 0.3
     end
     if yhat3[idx] > 400
-        p_high += 0.1
-        p_norm -= 0.1
+        p_high += 0.3
+        p_norm -= 0.3
     else
-        p_norm += 0.1
-        p_high -= 0.1
+        p_norm += 0.3
+        p_high -= 0.3
     end
     p_high > 1.0 && (p_high = 1.0)
     p_high < 0.0 && (p_high = 0.0)
