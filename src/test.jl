@@ -100,6 +100,7 @@ y2 = coerce(y2.group, OrderedFactor{2})
 
 println("Number of entries: $(size(y1, 1))")
 println()
+
 @info "Calculating predictions.."
 println("Regressor:")
 yhat1 = MLJ.predict(clo_model_rfr, x)
@@ -129,16 +130,7 @@ println("\tRMSE:\t", round(m(yhat3, y3), digits=2))
 println()
 
 yhat2 = MLJ.predict(model_rfc, x)
-subj1 = 0
-subj2 = 0
-subj3 = 0
-subj4 = 0
-subj1_adj = 0
-subj2_adj = 0
-subj3_adj = 0
-subj4_adj = 0
 println("Classifier:")
-yhat2_adj = repeat(["norm"], length(yhat2))
 yhat2_adj_p = zeros(2, length(yhat2))
 for idx in eachindex(yhat2)
     yhat2_adj_p[1, idx] = yhat2.prob_given_ref[:1][idx]
@@ -150,18 +142,8 @@ for idx in eachindex(yhat2)
     p_norm = Float64(broadcast(pdf, yhat2[idx], "norm"))
     if p_norm > p_high
         print("prediction: NORM, prob = $(round(p_norm, digits=2)) \t")
-        if String(y2[idx]) == "norm"
-            global subj1 += 1
-        elseif String(y2[idx]) == "high"
-            global subj2 += 1
-        end
     else
         print("prediction: HIGH, prob = $(round(p_high, digits=2)) \t")
-        if String(y2[idx]) == "high"
-            global subj4 += 1
-        elseif String(y2[idx]) == "norm"
-            global subj3 += 1
-        end
     end
     if yhat1[idx] > 550
         p_high += 0.3
@@ -186,29 +168,18 @@ for idx in eachindex(yhat2)
 
     if p_norm > p_high
         println("adj. prediction: NORM, prob = $(round(p_norm, digits=2))")
-        if String(y2[idx]) == "norm"
-            global subj1_adj += 1
-        elseif String(y2[idx]) == "high"
-            global subj2_adj += 1
-        end
     else
         println("adj. prediction: HIGH, prob = $(round(p_high, digits=2))")
-        yhat2_adj[idx] = "high"
-        if String(y2[idx]) == "high"
-            global subj4_adj += 1
-        elseif String(y2[idx]) == "norm"
-            global subj3_adj += 1
-        end
     end
 end
+println()
 
 yhat2_adj = deepcopy(yhat2)
 for idx in eachindex(yhat2)
     yhat2_adj.prob_given_ref[:1][idx] = yhat2_adj_p[1, idx]
     yhat2_adj.prob_given_ref[:2][idx] = yhat2_adj_p[2, idx] 
 end
-# yhat2_adj = coerce(yhat2_adj, OrderedFactor{2})
-println()
+
 println("Classifier accuracy:")
 println("\tlog_loss: ", round(log_loss(yhat2, y2) |> mean, digits=2))
 println("\tAUC: ", round(auc(yhat2, y2), digits=2))
@@ -246,9 +217,9 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 
-p1 = Plots.plot(y1, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]", )
+p1 = Plots.plot(y1, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]", xticks=[1:1:length(y1)])
 p1 = Plots.plot!(yhat1, label="prediction", line=:dot, lw=2)
-p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", )
+p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", xticks=[1:1:length(y3)])
 p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
