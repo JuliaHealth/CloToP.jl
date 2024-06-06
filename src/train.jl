@@ -78,7 +78,7 @@ x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = Float32.(hcat(x1, x2, x3))
 # x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-x = coerce(x, :male=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 y2 = DataFrame(group=y2)
 y2 = coerce(y2.group, OrderedFactor{2})
 # scitype(y)
@@ -95,14 +95,72 @@ model = nnc(builder = MLJFlux.Short(n_hidden = 32,
                                     dropout = 0.01, 
                                     σ = NNlib.tanh_fast),
             finaliser = NNlib.softmax, 
-            optimiser = ADAM(0.01, (0.9, 0.999), IdDict{Any,Any}()),
+            optimiser = Adam(0.01, (0.9, 0.999), IdDict{Any,Any}()),
             loss = Flux.Losses.crossentropy, 
-            epochs = 1000, 
-            batch_size = 2, 
+            epochs = 10, 
+            batch_size = 1, 
             lambda = 0.0, 
             alpha = 0.001)
 mach = machine(model, x[train_idx, :], y2[train_idx], scitype_check_level=0)
 MLJ.fit!(mach, force=true, verbosity=1)
+
+println("Initial cross entropy: $(round(cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean, digits=4))")
+
+ep = 10:10:10_000
+training_loss = zeros(length(ep))
+@info "Optimizing: epochs"
+@Threads.threads for idx in 1:length(ep)
+    # model.optimiser.eta = model.optimiser.eta + 0.01
+    model.epochs = ep[idx]
+    fit!(mach, verbosity=0)
+    training_loss[idx] = cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean
+end
+_, idx = findmin(abs.(training_loss .- minimum(training_loss)))
+model.epochs = ep[idx]
+println("Epochs: $(model.epochs)")
+println("Cross entropy: $(round(cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean, digits=4))")
+
+batch_size = 1:10
+training_loss = zeros(length(batch_size))
+@info "Optimizing: batch size"
+@Threads.threads for idx in 1:length(batch_size)
+    model.batch_size = batch_size[idx]
+    fit!(mach, verbosity=0)
+    training_loss[idx] = cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean
+end
+_, idx = findmin(abs.(training_loss .- minimum(training_loss)))
+model.batch_size = batch_size[idx]
+println("Batch size: $(model.batch_size)")
+println("Cross entropy: $(round(cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean, digits=4))")
+
+eta = 0.001:0.001:0.1
+training_loss = zeros(length(eta))
+@info "Optimizing: eta"
+@Threads.threads for idx in 1:length(eta)
+    model.optimiser.eta = eta[idx]
+    fit!(mach, verbosity=0)
+    training_loss[idx] = cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean
+end
+_, idx = findmin(abs.(training_loss .- minimum(training_loss)))
+model.optimiser.eta = eta[idx]
+println("Eta: $(model.optimiser.eta)")
+println("Cross entropy: $(round(cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean, digits=4))")
+
+alpha = 0.001:0.001:1
+training_loss = zeros(length(alpha))
+@info "Optimizing: alpha"
+@Threads.threads for idx in 1:length(alpha)
+    # model.optimiser.eta = model.optimiser.eta + 0.01
+    model.alpha = alpha[idx]
+    fit!(mach, verbosity=0)
+    training_loss[idx] = cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean
+end
+_, idx = findmin(abs.(training_loss .- minimum(training_loss)))
+model.alpha = alpha[idx]
+println("Alpha: $(model.alpha)")
+println("Cross entropy: $(round(cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean, digits=4))")
+
+println("Final cross entropy: $(round(cross_entropy(MLJ.predict(mach, x[train_idx, :]), y2[train_idx]) |> mean, digits=4))")
 
 yhat = MLJ.predict(mach, x[train_idx, :])
 println("Classifier training accuracy:")

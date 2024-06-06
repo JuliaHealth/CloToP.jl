@@ -43,21 +43,21 @@ end
 # load models
 if isfile("models/clozapine_classifier_model.jlso")
     println("Loading: clozapine_classifier_model.jlso")
-    model_rfc = machine("models/clozapine_classifier_model.jlso")
+    model_classifier = machine("models/clozapine_classifier_model.jlso")
 else
     error("File models/clozapine_classifier_model.jlso cannot be opened!")
     exit(-1)
 end
 if isfile("models/clozapine_regressor_model.jlso")
     println("Loading: clozapine_regressor_model.jlso")
-    clo_model_rfr = machine("models/clozapine_regressor_model.jlso")
+    clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
 else
     error("File models/clozapine_regressor_model.jlso cannot be opened!")
     exit(-1)
 end
 if isfile("models/norclozapine_regressor_model.jlso")
     println("Loading: norclozapine_regressor_model.jlso")
-    nclo_model_rfr = machine("models/norclozapine_regressor_model.jlso")
+    nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
 else
     error("File models/norclozapine_regressor_model.jlso cannot be opened!")
     exit(-1)
@@ -94,7 +94,7 @@ x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
 x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
 x = Float32.(hcat(x1, x2, x3))
 # x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-x = coerce(x, :male=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 y2 = DataFrame(group=y2)
 y2 = coerce(y2.group, OrderedFactor{2})
 
@@ -103,9 +103,9 @@ println()
 
 @info "Calculating predictions.."
 println("Regressor:")
-yhat1 = MLJ.predict(clo_model_rfr, x)
+yhat1 = MLJ.predict(clo_model_regressor, x)
 yhat1 = round.(yhat1, digits=1)
-yhat3 = MLJ.predict(nclo_model_rfr, x)
+yhat3 = MLJ.predict(nclo_model_regressor, x)
 yhat3 = round.(yhat3, digits=1)
 rmse_clo = zeros(length(yhat1))
 rmse_nclo = zeros(length(yhat3))
@@ -129,7 +129,7 @@ m = RootMeanSquaredError()
 println("\tRMSE:\t", round(m(yhat3, y3), digits=2))
 println()
 
-yhat2 = MLJ.predict(model_rfc, x)
+yhat2 = MLJ.predict(model_classifier, x)
 println("Classifier:")
 yhat2_adj_p = zeros(2, length(yhat2))
 for idx in eachindex(yhat2)
@@ -217,16 +217,16 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 
-p1 = Plots.plot(y1, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]", xticks=[1:1:length(y1)])
+p1 = Plots.plot(y1, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]")
 p1 = Plots.plot!(yhat1, label="prediction", line=:dot, lw=2)
-p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]", xticks=[1:1:length(y3)])
+p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]")
 p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
 
 @info "Benchmarking.."
 print("Regressor execution time and memory use:\t")
-@time yhat = MLJ.predict(clo_model_rfr, x)
+@time yhat = MLJ.predict(clo_model_regressor, x)
 print("Classifier execution time and memory use:\t")
-@time yhat2 = MLJ.predict(model_rfc, x)
+@time yhat2 = MLJ.predict(model_classifier, x)
 println()
