@@ -1,7 +1,7 @@
 @info "Loading packages"
 
 using Pkg
-# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJFlux", "NNlib", "Flux" "Plots", "StatsBase"]
+# packages = ["CSV", "DataFrames", "MLJ", :MLJFlux", "NNlib", "Flux", "JLD2", "StatsBase", "Plots"]
 # Pkg.add(packages)
 
 using CSV

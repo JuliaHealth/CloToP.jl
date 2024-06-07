@@ -1,7 +1,7 @@
-@info "Importing packages.."
+@info "Importing packages"
 
 using Pkg
-# packages = ["HTTP", "JSON3", "DataFrames", "MLJ", "JLD2", "StatsBase", "Plots", "MLJDecisionTreeInterface"]
+# packages = ["HTTP", "JSON3", "DataFrames", "MLJ", :MLJFlux", "NNlib", "Flux", "JLD2", "StatsBase", "Plots"]
 # Pkg.add(packages)
 
 using HTTP
@@ -10,7 +10,6 @@ using Base64
 using DataFrames
 using JLD2
 using MLJ
-using MLJDecisionTreeInterface
 using MLJFlux
 using NNlib
 using Flux
@@ -19,21 +18,20 @@ using Plots
 using StatsBase
 
 m = Pkg.Operations.Context().env.manifest
-println("                    HTTP $(m[findfirst(v -> v.name == "HTTP", m)].version)")
-println("                   JSON3 $(m[findfirst(v -> v.name == "JSON3", m)].version)")
-println("                     CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
-println("              DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
-println("                    JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
-println("                     MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
-println("MLJDecisionTreeInterface $(m[findfirst(v -> v.name == "MLJDecisionTreeInterface", m)].version)")
-println("                 MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("                    Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("                   NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("                   Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println("               StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println("      HTTP $(m[findfirst(v -> v.name == "HTTP", m)].version)")
+println("     JSON3 $(m[findfirst(v -> v.name == "JSON3", m)].version)")
+println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
+println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
+println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
 
-@info "Loading data.."
+@info "Loading data"
 
 # load models
 if isfile("models/clozapine_classifier_model.jlso")
@@ -93,15 +91,16 @@ function ctp(patient_data::Vector{<:Real}, scaler)
     x3 = DataFrame(reshape(x_rest, 1, length(x_rest)), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
     x = Float32.(hcat(x1, x2, x3))
     # x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-    x = coerce(x, :male=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+    x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 
-    yhat1 = MLJ.predict(clo_model_rfr, x)[1]
-    yhat1 = round(yhat1, digits=1)
-    yhat3 = MLJ.predict(nclo_model_rfr, x)[1]
-    yhat3 = round(yhat3, digits=1)
-    clo_level = yhat1
-    nclo_level = yhat3
-    
+    clo_level = MLJ.predict(clo_model_rfr, x)[1]
+    clo_level = round(clo_level, digits=1)
+    clo_level < 0 && (clo_level = 0)
+
+    nclo_level = MLJ.predict(nclo_model_rfr, x)[1]
+    nclo_level = round(nclo_level, digits=1)
+    nclo_level < 0 && (nclo_level = 0)
+
     yhat2 = MLJ.predict(model_rfc, x)[1]
     p_norm = Float64(broadcast(pdf, yhat2, "norm"))
     p_high = Float64(broadcast(pdf, yhat2, "high"))
@@ -112,14 +111,14 @@ function ctp(patient_data::Vector{<:Real}, scaler)
         clo_group = 1
         clo_group_p = round(p_high, digits=2)
     end
-    if yhat1 > 550
-        p_norm -= 0.3
-        p_high += 0.3
+    if clo_level > 550
+        p_norm -= 0.1
+        p_high += 0.1
     else
-        p_norm += 0.3
-        p_high -= 0.3
+        p_norm += 0.1
+        p_high -= 0.1
     end
-    if yhat3 > 400
+    if nclo_level > 400
         p_norm -= 0.3
         p_high += 0.3
     else
@@ -145,9 +144,9 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler)
     # 220-550 ng/mL
     # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
 
-    doses = 0:12.5:1000
-    clo_concentration = zeros(length(doses))
-    nclo_concentration = zeros(length(doses))
+    doses = 0:12.5:800
+    clo_level = zeros(length(doses))
+    nclo_level = zeros(length(doses))
     clo_group = zeros(Int64, length(doses))
     clo_group_p = zeros(length(doses))
     clo_group_adj= zeros(Int64, length(doses))
@@ -156,18 +155,18 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler)
     for idx in eachindex(doses)
         data = patient_data
         data = vcat(data[1:2], doses[idx], data[3:end])
-        clo_group[idx], clo_group_p[idx], clo_group_adj[idx], clo_group_adj_p[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler)
+        clo_group[idx], clo_group_p[idx], clo_group_adj[idx], clo_group_adj_p[idx], clo_level[idx], nclo_level[idx] = ctp(data, scaler)
     end
 
-    if minimum(clo_concentration) < 220
-        min_dose_idx = findfirst(x -> x > 220, clo_concentration) - 1
+    if minimum(clo_level) < 220
+        min_dose_idx = findfirst(x -> x > 220, clo_level) - 1
         min_dose_idx < 1 && (min_dose_idx = 1)
     else
         min_dose_idx = 1
     end
 
-    if maximum(clo_concentration) > 550
-        max_dose_idx = findfirst(x -> x > 550, clo_concentration) - 1
+    if maximum(clo_level) > 550
+        max_dose_idx = findfirst(x -> x > 550, clo_level) - 1
         max_dose_idx < 1 && (max_dose_idx = 1)
     else
         max_dose_idx = length(doses)
@@ -175,27 +174,27 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler)
 
     dose_range = (doses[min_dose_idx], doses[max_dose_idx])
 
-    return dose_range, collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p
+    return dose_range, collect(doses), clo_level, nclo_level, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p
 end
 
-function plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
+function plot_recommended_dose(doses, clo_level, nclo_level, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
 
     # 220-550
     # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
 
-    if minimum(clo_concentration) < 220
-        min_dose_idx = findfirst(x -> x > 220, clo_concentration)
+    if minimum(clo_level) < 220
+        min_dose_idx = findfirst(x -> x >= 220, clo_level)
     else
         min_dose_idx = 1
     end
 
-    if maximum(clo_concentration) > 550
-        max_dose_idx = findfirst(x -> x > 550, clo_concentration)
+    if maximum(clo_level) > 550
+        max_dose_idx = findfirst(x -> x >= 550, clo_level)
     else
         max_dose_idx = length(doses)
     end
 
-    p = plot(doses, clo_concentration, ylims=(0, 1000), xlims=(0, 1000), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
+    p = plot(doses, clo_level, ylims=(0, 1000), xlims=(0, 800), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
     p = hline!([220], lc=:green, ls=:dot)
     p = hline!([550], lc=:red, ls=:dot)
     p = vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
@@ -205,7 +204,7 @@ end
 
 function handle(req)
     if req.method == "POST"
-        @info "Calculating predictions.."
+        @info "Calculating predictions"
         form = JSON3.read(String(req.body))
         sex = form.sex
         age = form.age
@@ -218,8 +217,8 @@ function handle(req)
         a2_ind = Float64(form.a2_ind)
         a2_inh = Float64(form.a2_inh)
         a2_s = Float64(form.a2_s)
-        dose_range, doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
-        p = plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
+        dose_range, doses, clo_level, nclo_level, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler)
+        p = plot_recommended_dose(doses, clo_level, nclo_level, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
         io = IOBuffer()
         iob64_encode = Base64EncodePipe(io)
         show(iob64_encode, MIME("image/png"), p)
@@ -231,10 +230,10 @@ function handle(req)
     return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*"], read("./index.html"))
 end
 
-@info "Precompiling.."
-dose_range, doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([0, 18, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler)
-p = plot_recommended_dose(doses, clo_concentration, nclo_concentration, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
+@info "Precompiling"
+dose_range, doses, clo_level, nclo_level, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p = recommended_dose([0, 18, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler)
+p = plot_recommended_dose(doses, clo_level, nclo_level, clo_group, clo_group_p, clo_group_adj, clo_group_adj_p)
 clo_group, clo_group_p, clo_group_adj, clo_group_adj_p, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler)
 
-@info "Starting server.."
+@info "Starting server"
 HTTP.serve(handle, 8080)
