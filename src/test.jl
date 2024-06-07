@@ -1,4 +1,4 @@
-@info "Loading packages.."
+@info "Loading packages"
 
 using Pkg
 # packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJFlux", "NNlib", "Flux" "Plots", "StatsBase"]
@@ -8,7 +8,6 @@ using CSV
 using DataFrames
 using JLD2
 using MLJ
-using MLJDecisionTreeInterface
 using MLJFlux
 using NNlib
 using Flux
@@ -17,19 +16,18 @@ using Plots
 using StatsBase
 
 m = Pkg.Operations.Context().env.manifest
-println("                     CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
-println("              DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
-println("                    JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
-println("                     MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
-println("MLJDecisionTreeInterface $(m[findfirst(v -> v.name == "MLJDecisionTreeInterface", m)].version)")
-println("                 MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("                    Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("                   NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("                   Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println("               StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
+println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
+println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
+println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
+println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
+println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
+println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
 
-@info "Loading data.."
+@info "Loading data"
 
 # load training data
 if isfile("data/clozapine_test.csv")
@@ -72,7 +70,7 @@ end
 println()
 
 # preprocess
-@info "Preprocessing.."
+@info "Preprocessing"
 y1 = test_data[:, 1]
 y2 = repeat(["norm"], length(y1))
 y2[y1 .> 550] .= "high"
@@ -101,7 +99,7 @@ y2 = coerce(y2.group, OrderedFactor{2})
 println("Number of entries: $(size(y1, 1))")
 println()
 
-@info "Calculating predictions.."
+@info "Calculating predictions"
 println("Regressor:")
 yhat1 = MLJ.predict(clo_model_regressor, x)
 yhat1 = round.(yhat1, digits=1)
@@ -119,14 +117,14 @@ end
 println("Regressor accuracy:")
 println("Predicting: CLOZAPINE")
 m = RSquared()
-println("\tR²:\t", round(m(yhat1, y1), digits=2))
+println("  R²:\t", round(m(yhat1, y1), digits=2))
 m = RootMeanSquaredError()
-println("\tRMSE:\t", round(m(yhat1, y1), digits=2))
+println("  RMSE:\t", round(m(yhat1, y1), digits=2))
 println("Predicting: NORCLOZAPINE")
 m = RSquared()
-println("\tR²:\t", round(m(yhat3, y3), digits=2))
+println("  R²:\t", round(m(yhat3, y3), digits=2))
 m = RootMeanSquaredError()
-println("\tRMSE:\t", round(m(yhat3, y3), digits=2))
+println("  RMSE:\t", round(m(yhat3, y3), digits=2))
 println()
 
 yhat2 = MLJ.predict(model_classifier, x)
@@ -146,18 +144,18 @@ for idx in eachindex(yhat2)
         print("prediction: HIGH, prob = $(round(p_high, digits=2)) \t")
     end
     if yhat1[idx] > 550
-        p_high += 0.3
-        p_norm -= 0.3
+        p_high += 0.1
+        p_norm -= 0.1
     else
-        p_norm += 0.3
-        p_high -= 0.3
+        p_norm += 0.1
+        p_high -= 0.1
     end
     if yhat3[idx] > 400
-        p_high += 0.3
-        p_norm -= 0.3
+        p_high += 0.4
+        p_norm -= 0.4
     else
-        p_norm += 0.3
-        p_high -= 0.3
+        p_norm += 0.4
+        p_high -= 0.4
     end
     p_high > 1.0 && (p_high = 1.0)
     p_high < 0.0 && (p_high = 0.0)
@@ -181,14 +179,15 @@ for idx in eachindex(yhat2)
 end
 
 println("Classifier accuracy:")
-println("\tlog_loss: ", round(log_loss(yhat2, y2) |> mean, digits=2))
-println("\tAUC: ", round(auc(yhat2, y2), digits=2))
-println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2), y2), digits=2))
-println("\taccuracy: ", round(1 - misclassification_rate(mode.(yhat2), y2), digits=2))
-println("confusion matrix:")
+println("  cross-entropy: ", round(cross_entropy(yhat2, y2), digits=2))
+println("  log-loss: ", round(log_loss(yhat2, y2) |> mean, digits=2))
+println("  AUC: ", round(auc(yhat2, y2), digits=2))
+println("  misclassification rate: ", round(misclassification_rate(mode.(yhat2), y2), digits=2))
+println("  accuracy: ", round(1 - misclassification_rate(mode.(yhat2), y2), digits=2))
+println("Confusion matrix:")
 cm = confusion_matrix(mode.(yhat2), y2)
-println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
+println("  sensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
+println("  specificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println("""
                      group
                   norm   high   
@@ -199,14 +198,15 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 println("Adjusted classifier accuracy:")
-println("\tlog_loss: ", round(log_loss(yhat2_adj, y2) |> mean, digits=2))
-println("\tAUC: ", round(auc(yhat2_adj, y2), digits=2))
-println("\tmisclassification rate: ", round(misclassification_rate(mode.(yhat2_adj), y2), digits=2))
-println("\taccuracy: ", round(1 - misclassification_rate(mode.(yhat2_adj), y2), digits=2))
-println("confusion matrix:")
+println("  cross-entropy: ", round(cross_entropy(yhat2_adj, y2), digits=2))
+println("  log-loss: ", round(log_loss(yhat2_adj, y2) |> mean, digits=2))
+println("  AUC: ", round(auc(yhat2_adj, y2), digits=2))
+println("  misclassification rate: ", round(misclassification_rate(mode.(yhat2_adj), y2), digits=2))
+println("  accuracy: ", round(1 - misclassification_rate(mode.(yhat2_adj), y2), digits=2))
+println("Confusion matrix:")
 cm = confusion_matrix(mode.(yhat2_adj), y2)
-println("\tsensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("\tspecificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
+println("  sensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
+println("  specificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
 println("""
                      group
                   norm   high   
@@ -224,7 +224,7 @@ p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
 
-@info "Benchmarking.."
+@info "Benchmarking"
 print("Regressor execution time and memory use:\t")
 @time yhat = MLJ.predict(clo_model_regressor, x)
 print("Classifier execution time and memory use:\t")

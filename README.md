@@ -12,159 +12,224 @@ Individual recommended safe dose range can also be predicted:
 
 The models are actively developed and we expect their accuracy to improve.
 
-### Classifier
-
-Current classifier accuracy (train-test split 70:30):
+### Training
 
 ```
-Classifier training accuracy:
-    log_loss: 0.0
-    AUC: 1.0
-    misclassification rate: 0.0
-    accuracy: 1.0
-confusion matrix:
-    sensitivity (TPR): 1.0
-    specificity (TNR): 1.0
+[ Info: Creating classifier model
+Initial cross-entropy: 0.222
+[ Info: Optimizing: n_hidden
+Progress: 100%|████████████████████| Time: 0:01:56
+[ Info: Optimizing: dropout
+Progress: 100%|████████████████████| Time: 0:01:22
+[ Info: Optimizing: epochs
+Progress: 100%|████████████████████| Time: 0:06:02
+[ Info: Optimizing: batch_size
+Progress: 100%|████████████████████| Time: 0:00:02
+[ Info: Optimizing: η
+Progress: 100%|████████████████████| Time: 0:00:19
+[ Info: Optimizing: λ
+Progress: 100%|████████████████████| Time: 0:01:45
+[ Info: Optimizing: α
+Progress: 100%|████████████████████| Time: 0:06:37
+Final cross-entropy: 0.5052
+Optimized parameters:
+n_hidden: 32
+dropout: 0.01
+η: 0.01
+epochs: 500
+batch_size: 2
+λ: 0.0
+α: 0.001
+
+[ Info: Classifier accuracy
+Training:
+  cross-entropy: 0.0
+  log-loss: 0.0
+  AUC: 1.0
+  misclassification rate: 0.0
+  accuracy: 1.0
+Confusion matrix:
+  sensitivity (TPR): 1.0
+  specificity (TNR): 1.0
                      group
                   norm   high   
                 ┌──────┬──────┐
            norm │   74 │    0 │
 prediction      ├──────┼──────┤
-           high │    0 │   18 │
+           high │    0 │   21 │
                 └──────┴──────┘
          
-Classifier testing accuracy:
-    log_loss: 2.42
-    AUC: 0.87
-    misclassification rate: 0.22
-    accuracy: 0.78
-confusion matrix:
-    sensitivity (TPR): 0.54
-    specificity (TNR): 0.89
+Validating:
+  cross-entropy: 0.58
+  log-loss: 0.58
+  AUC: 0.98
+  misclassification rate: 0.07
+  accuracy: 0.93
+Confusion matrix:
+  sensitivity (TPR): 0.9
+  specificity (TNR): 0.94
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │   24 │    6 │
+           norm │   29 │    1 │
 prediction      ├──────┼──────┤
-           high │    3 │    7 │
+           high │    2 │    9 │
                 └──────┴──────┘
-```
+         
+[ Info: Creating regressor model: clozapine
+Initial RMSE: 129.7905
+[ Info: Optimizing: n_hidden
+Progress: 100%|████████████████████| Time: 0:04:11
+[ Info: Optimizing: dropout
+Progress: 100%|████████████████████| Time: 0:03:14
+[ Info: Optimizing: epochs
+Progress: 100%|████████████████████| Time: 0:12:58
+[ Info: Optimizing: batch_size
+Progress: 100%|████████████████████| Time: 0:00:18
+[ Info: Optimizing: η
+[ Info: Optimizing: λ
+Progress: 100%|████████████████████| Time: 0:03:14
+[ Info: Optimizing: α
+Progress: 100%|████████████████████| Time: 0:30:43
+Final RMSE: 118.4395
+Optimized parameters:
+  n_hidden: 64
+  dropout: 0.52
+  η: 0.01
+  epochs: 1000
+  batch_size: 2
+  λ: 0.1
+  α: 0.0
 
-Final model accuracy:
+[ Info: Regressor accuracy: clozapine
+Training:
+    R²: 0.96
+    RMSE: 66.61
+Validating:
+    R²: 0.85
+    RMSE: 132.57
+[ Info: Creating regressor model: norclozapine
+Initial RMSE: 84.6936
+[ Info: Optimizing: n_hidden
+Progress: 100%|████████████████████| Time: 0:04:13
+[ Info: Optimizing: dropout
+Progress: 100%|████████████████████| Time: 0:03:26
+[ Info: Optimizing: epochs
+Progress: 100%|████████████████████| Time: 0:14:05
+[ Info: Optimizing: batch_size
+Progress: 100%|████████████████████| Time: 0:01:28
+[ Info: Optimizing: η
+[ Info: Optimizing: lambda
+Progress: 100%|████████████████████| Time: 0:13:49
+[ Info: Optimizing: α
+Progress: 100%|████████████████████| Time: 2:07:02
+Final RMSE: 73.4603
+Optimized parameters:
+  n_hidden: 128
+  dropout: 0.54
+  η: 0.01
+  epochs: 8400
+  batch_size: 4
+  λ: 0.1
+  α: 0.226
 
-```
+[ Info: Regressor accuracy: norclozapine
+Training:
+  R²: 0.97
+  RMSE: 30.0
+Validating:
+  R²: 0.83
+  RMSE: 69.92
+
+[ Info: Training final model
 Classifier accuracy:
-    log_loss: 0.02
-    AUC: 1.0
-    misclassification rate: 0.01
-    accuracy: 0.99
-confusion matrix:
-    sensitivity (TPR): 0.97
-    specificity (TNR): 1.0
+  log-loss: 0.01
+  AUC: 1.0
+  misclassification rate: 0.01
+  accuracy: 0.99
+Confusion matrix:
+  sensitivity (TPR): 1.0
+  specificity (TNR): 0.99
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  101 │    1 │
+           norm │  104 │    0 │
 prediction      ├──────┼──────┤
-           high │    0 │   30 │
+           high │    1 │   31 │
                 └──────┴──────┘
-```
-
-### Regressor
-
-Current regressor model accuracy (train-test split 70:30):
-
-```
-Predicting: CLOZAPINE
-Regressor training accuracy
-    R²: 0.98
-    RMSE: 44.92
-Regressor testing accuracy
-    R²: 0.52
-    RMSE: 268.11
-
-Predicting: NORCLOZAPINE
-Regressor training accuracy
-    R²: 0.99
-    RMSE: 20.02
-Regressor testing accuracy
-    R²: 0.46
-    RMSE: 123.4
-```
-
-Final model accuracy:
-
-```
-Predicting: CLOZAPINE
+         
+Predicting: clozapine
 Regressor accuracy
-    R²: 0.98
-    RMSE: 50.27
-Predicting: NORCLOZAPINE
+  R²: 0.97
+  RMSE: 63.54
+Predicting: norclozapine
 Regressor accuracy
-    R²: 0.99
-    RMSE: 19.05
+  R²: 0.97
+  RMSE: 28.78
 ```
 
 ![](images/rr_training_accuracy.png)
 
 ### Testing
 
-Current model accuracy:
-
 ```
 Regressor:
-Subject ID: 1   CLO level: 806.4    prediction: 672.8   RMSE: 133.6
-Subject ID: 1   NCLO level: 317.7   prediction: 288.0   RMSE: 29.7
+Subject ID: 1   CLO level: 240.5    prediction: 74.7    RMSE: 165.8
+Subject ID: 1   NCLO level: 90.7    prediction: 110.3   RMSE: 19.6
 
-Subject ID: 2   CLO level: 487.1    prediction: 254.8   RMSE: 232.3
-Subject ID: 2   NCLO level: 322.3   prediction: 257.1   RMSE: 65.2
+Subject ID: 2   CLO level: 292.4    prediction: 793.8   RMSE: 501.4
+Subject ID: 2   NCLO level: 283.8   prediction: 343.0   RMSE: 59.2
 
-Subject ID: 3   CLO level: 115.6    prediction: 279.2   RMSE: 163.6
-Subject ID: 3   NCLO level: 148.2   prediction: 158.0   RMSE: 9.8
+Subject ID: 3   CLO level: 390.5    prediction: 593.8   RMSE: 203.3
+Subject ID: 3   NCLO level: 162.5   prediction: 250.1   RMSE: 87.6
+
+Subject ID: 4   CLO level: 586.1    prediction: 771.9   RMSE: 185.8
+Subject ID: 4   NCLO level: 189.4   prediction: 321.7   RMSE: 132.3
 
 Regressor accuracy:
 Predicting: CLOZAPINE
-    R²: 0.59
-    RMSE:   181.27
+  R²: -4.09
+  RMSE:   297.8
 Predicting: NORCLOZAPINE
-    R²: 0.73
-    RMSE:   41.75
+  R²: -0.52
+  RMSE:   85.24
 
 Classifier:
-Subject ID: 1   group: HIGH     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 0.8
-Subject ID: 2   group: NORM     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 1.0
-Subject ID: 3   group: NORM     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 1.0
+Subject ID: 1   group: NORM     prediction: NORM, prob = 1.0    adj. prediction: NORM, prob = 1.0
+Subject ID: 2   group: NORM     prediction: HIGH, prob = 0.69   adj. prediction: NORM, prob = 0.61
+Subject ID: 3   group: NORM     prediction: HIGH, prob = 0.63   adj. prediction: NORM, prob = 0.67
+Subject ID: 4   group: HIGH     prediction: HIGH, prob = 0.92   adj. prediction: HIGH, prob = 0.62
 
 Classifier accuracy:
-    log_loss: 3.4
-    AUC: 1.0
-    misclassification rate: 0.33
-    accuracy: 0.67
-confusion matrix:
-    sensitivity (TP): 0.0
-    specificity (TP): 1.0
+  log_loss: 0.56
+  AUC: 1.0
+  misclassification rate: 0.5
+  accuracy: 0.5
+Confusion matrix:
+  sensitivity (TP): 1.0
+  specificity (TP): 0.33
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │    2 │    1 │
+           norm │    1 │    0 │
 prediction      ├──────┼──────┤
-           high │    0 │    0 │
+           high │    2 │    1 │
                 └──────┴──────┘
          
 Adjusted classifier accuracy:
-    log_loss: 0.54
-    AUC: 1.0
-    misclassification rate: 0.33
-    accuracy: 0.67
-confusion matrix:
-    sensitivity (TP): 0.0
-    specificity (TP): 1.0
+  log_loss: 0.35
+  AUC: 1.0
+  misclassification rate: 0.0
+  accuracy: 1.0
+Confusion matrix:
+  sensitivity (TP): 1.0
+  specificity (TP): 1.0
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │    2 │    1 │
+           norm │    3 │    0 │
 prediction      ├──────┼──────┤
-           high │    0 │    0 │
+           high │    0 │    1 │
                 └──────┴──────┘
 ```
 
