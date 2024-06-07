@@ -33,13 +33,13 @@ Progress: 100%|████████████████████| Tim
 Progress: 100%|████████████████████| Time: 0:06:37
 Final cross-entropy: 0.5052
 Optimized parameters:
-n_hidden: 32
-dropout: 0.01
-η: 0.01
-epochs: 500
-batch_size: 2
-λ: 0.0
-α: 0.001
+  n_hidden: 32
+  dropout: 0.01
+  η: 0.01
+  epochs: 500
+  batch_size: 2
+  λ: 0.0
+  α: 0.001
 
 [ Info: Classifier accuracy
 Training:
