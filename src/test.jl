@@ -284,9 +284,9 @@ prediction      ├──────┼──────┤
 
 =#
 
-p1 = Plots.plot(clo_level .- clo_level_pred, ylims=(-400, 400), xlabel="patients", title="clozapine", legend=false)
+p1 = Plots.scatter(clo_level .- clo_level_pred, ylims=(-400, 400), xlabel="patients", title="clozapine", legend=false)
 # p1 = Plots.plot!(clo_level_pred, line=:dot, lw=2)
-p2 = Plots.plot(nclo_level .- nclo_level_pred, ylims=(-400, 400), xlabel="patients", ylabel="error", title="norclozapine", legend=false)
+p2 = Plots.scatter(nclo_level .- nclo_level_pred, ylims=(-400, 400), xlabel="patients", ylabel="error", title="norclozapine", legend=false)
 # p2 = Plots.plot!(nclo_level_pred, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
