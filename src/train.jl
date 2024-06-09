@@ -1,6 +1,7 @@
 @info "Loading packages"
 
-optimize_regressors = false
+optimize_clo_regressor = false
+optimize_nclo_regressor = false
 
 using Pkg
 # packages = ["CSV", "DataFrames", "MLJ", :MLJFlux", "NNlib", "Flux", "JLD2", "StatsBase", "Plots"]
@@ -48,9 +49,8 @@ println()
 
 # preprocess
 @info "Preprocessing"
-println("Applying sqrt transformation")
-clo_level = sqrt.(train_raw_data[:, 1])
-nclo_level = sqrt.(train_raw_data[:, 2])
+clo_level = train_raw_data[:, 1]
+nclo_level = train_raw_data[:, 2]
 x = Matrix(train_raw_data[:, 3:end])
 
 # CLOZAPINE
@@ -110,7 +110,7 @@ println()
 
 init_n_hidden = 84
 init_dropout = 0.07
-init_η = 0.01
+init_η = 0.013
 init_epochs = 5600
 init_batch_size = 2
 init_λ = 0.1
@@ -127,12 +127,12 @@ model_clo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                 lambda = init_λ, 
                 alpha = init_α) 
 
-if optimize_regressors
+if optimize_clo_regressor
 
     mach_clo = machine(model_clo, data_clo[train_idx, :], clo_level[train_idx], scitype_check_level=0)
     MLJ.fit!(mach_clo, force=true, verbosity=0)
 
-    error_first = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_first = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     println("Initial RMSE: $(round(error_first, digits=4))")
 
     @info "Optimizing: n_hidden"
@@ -142,13 +142,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(n_hidden)
         model_clo.builder.n_hidden = n_hidden[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.builder.n_hidden = n_hidden[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -162,13 +162,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(drop)
         model_clo.builder.dropout = drop[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.builder.dropout = drop[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -182,13 +182,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(ep)
         model_clo.epochs = ep[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.epochs = ep[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -202,13 +202,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(batch_size)
         model_clo.batch_size = batch_size[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.batch_size = batch_size[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -222,13 +222,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(η)
         model_clo.optimiser.eta = η[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.optimiser.eta = η[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -242,13 +242,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(λ)
         model_clo.lambda = λ[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.lambda = λ[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -263,13 +263,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(α)
         model_clo.alpha = α[idx]
         MLJ.fit!(mach_clo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_clo.alpha = α[idx]
     MLJ.fit!(mach_clo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -277,7 +277,7 @@ if optimize_regressors
     end
 
     MLJ.fit!(mach_clo, verbosity=0)
-    error_last = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]).^2, clo_level[test_idx].^2)
+    error_last = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     println("Final RMSE: $(round(error_last, digits=4))")
     println("Model parameters:")
     println("  n_hidden: $(model_clo.builder.n_hidden)")
@@ -307,13 +307,13 @@ MLJ.fit!(mach_clo, force=true, verbosity=0)
 
 println("Regressor accuracy: training")
 clo_level_pred = MLJ.predict(mach_clo, data_clo[train_idx, :])
-println("  R²: ", round(RSquared()(clo_level_pred.^2, clo_level[train_idx].^2), digits=2))
-println("  RMSE: ", round(RootMeanSquaredError()(clo_level_pred.^2, clo_level[train_idx].^2), digits=2))
+println("  R²: ", round(RSquared()(clo_level_pred, clo_level[train_idx]), digits=2))
+println("  RMSE: ", round(RootMeanSquaredError()(clo_level_pred, clo_level[train_idx]), digits=2))
 
 println("Regressor accuracy: validating")
 clo_level_pred = MLJ.predict(mach_clo, data_clo[test_idx, :])
-println("  R²: ", round(RSquared()(clo_level_pred.^2, clo_level[test_idx].^2), digits=2))
-println("  RMSE: ", round(RootMeanSquaredError()(clo_level_pred.^2, clo_level[test_idx].^2), digits=2))
+println("  R²: ", round(RSquared()(clo_level_pred, clo_level[test_idx]), digits=2))
+println("  RMSE: ", round(RootMeanSquaredError()(clo_level_pred, clo_level[test_idx]), digits=2))
 
 @info "Training final model"
 
@@ -321,11 +321,10 @@ mach_clo = machine(model_clo, data_clo, clo_level, scitype_check_level=0)
 MLJ.fit!(mach_clo, force=true, verbosity=0)
 clo_level_pred = MLJ.predict(mach_clo, data_clo)
 sorting_idx = sortperm(clo_level)
-p1 = Plots.plot(clo_level[sorting_idx].^2 .- clo_level_pred[sorting_idx].^2, ylims=(-200, 200), xlabel="patients", ylabel="error", title="clozapine", legend=false)
-# p1 = Plots.plot!(clo_level_pred[sorting_idx].^2, label="prediction", line=:dot, lw=2)
+p1 = Plots.plot(clo_level[sorting_idx] .- clo_level_pred[sorting_idx], ylims=(-200, 200), xlabel="patients", ylabel="error", title="clozapine [ng/ml]", legend=false)
 println("Regressor accuracy:")
-println("  R²: ", round(RSquared()(clo_level_pred.^2, clo_level.^2), digits=2))
-println("  RMSE: ", round(RootMeanSquaredError()(clo_level_pred.^2, clo_level.^2), digits=2))
+println("  R²: ", round(RSquared()(clo_level_pred, clo_level), digits=2))
+println("  RMSE: ", round(RootMeanSquaredError()(clo_level_pred, clo_level), digits=2))
 println()
 
 @info "Creating regressor model: norclozapine"
@@ -348,12 +347,12 @@ model_nclo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                  lambda = init_λ, 
                  alpha = init_α) 
 
-if optimize_regressors
+if optimize_nclo_regressor
 
     mach_nclo = machine(model_nclo, data_nclo[train_idx, :], nclo_level[train_idx], scitype_check_level=0)
     MLJ.fit!(mach_nclo, force=true, verbosity=0)
 
-    error_first = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_first = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     println("Initial RMSE: $(round(error_first, digits=4))")
 
     @info "Optimizing: n_hidden"
@@ -363,13 +362,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(n_hidden)
         model_nclo.builder.n_hidden = n_hidden[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.builder.n_hidden = n_hidden[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -383,13 +382,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(drop)
         model_nclo.builder.dropout = drop[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.builder.dropout = drop[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -403,13 +402,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(ep)
         model_nclo.epochs = ep[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.epochs = ep[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -423,13 +422,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(batch_size)
         model_nclo.batch_size = batch_size[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.batch_size = batch_size[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -443,13 +442,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(η)
         model_nclo.optimiser.eta = η[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.optimiser.eta = η[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -463,13 +462,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(lambda)
         model_nclo.lambda = lambda[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.lambda = lambda[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -484,13 +483,13 @@ if optimize_regressors
     @Threads.threads for idx in eachindex(α)
         model_nclo.alpha = α[idx]
         MLJ.fit!(mach_nclo, verbosity=0)
-        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+        training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
     model_nclo.alpha = α[idx]
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
@@ -498,7 +497,7 @@ if optimize_regressors
     end
 
     MLJ.fit!(mach_nclo, verbosity=0)
-    error_last = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]).^2, nclo_level[test_idx].^2)
+    error_last = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     println("Final RMSE: $(round(error_last, digits=4))")
     println("Model parameters:")
     println("  n_hidden: $(model_nclo.builder.n_hidden)")
@@ -528,13 +527,13 @@ MLJ.fit!(mach_nclo, force=true, verbosity=0)
 
 println("Regressor accuracy: training")
 nclo_level_pred = MLJ.predict(mach_nclo, data_nclo[train_idx, :])
-println("  R²: ", round(RSquared()(nclo_level_pred.^2, nclo_level[train_idx].^2), digits=2))
-println("  RMSE: ", round(RootMeanSquaredError()(nclo_level_pred.^2, nclo_level[train_idx].^2), digits=2))
+println("  R²: ", round(RSquared()(nclo_level_pred, nclo_level[train_idx]), digits=2))
+println("  RMSE: ", round(RootMeanSquaredError()(nclo_level_pred, nclo_level[train_idx]), digits=2))
 
 println("Regressor accuracy: validating")
 nclo_level_pred = MLJ.predict(mach_nclo, data_nclo[test_idx, :])
-println("  R²: ", round(RSquared()(nclo_level_pred.^2, nclo_level[test_idx].^2), digits=2))
-println("  RMSE: ", round(RootMeanSquaredError()(nclo_level_pred.^2, nclo_level[test_idx].^2), digits=2))
+println("  R²: ", round(RSquared()(nclo_level_pred, nclo_level[test_idx]), digits=2))
+println("  RMSE: ", round(RootMeanSquaredError()(nclo_level_pred, nclo_level[test_idx]), digits=2))
 
 @info "Training final model"
 
@@ -542,18 +541,18 @@ mach_nclo = machine(model_nclo, data_nclo, nclo_level, scitype_check_level=0)
 MLJ.fit!(mach_nclo, force=true, verbosity=0)
 nclo_level_pred = MLJ.predict(mach_nclo, data_nclo)
 sorting_idx = sortperm(nclo_level)
-p2 = Plots.plot(nclo_level[sorting_idx].^2 .- nclo_level_pred[sorting_idx].^2, ylims=(-200, 200), xlabel="patients", ylabel="error", title="norclozapine", legend=false)
-# p2 = Plots.plot!(, label="prediction", line=:dot, lw=2)
+p2 = Plots.plot(nclo_level[sorting_idx] .- nclo_level_pred[sorting_idx], ylims=(-200, 200), xlabel="patients", ylabel="error", title="norclozapine [ng/ml]", legend=false)
 println("Regressor accuracy:")
-println("  R²: ", round(RSquared()(nclo_level_pred.^2, nclo_level.^2), digits=2))
-println("  RMSE: ", round(RootMeanSquaredError()(nclo_level_pred.^2, nclo_level.^2), digits=2))
+println("  R²: ", round(RSquared()(nclo_level_pred, nclo_level), digits=2))
+println("  RMSE: ", round(RootMeanSquaredError()(nclo_level_pred, nclo_level), digits=2))
 println()
 
 @info "Classifying into groups"
 
 println("Classification based on predicted clozapine level:")
+nclo_level_pred = nclo_level_pred
 clo_group = repeat(["norm"], length(clo_level))
-clo_group[(clo_level).^2 .> 550] .= "high"
+clo_group[(clo_level) .> 550] .= "high"
 nclo_level_pred[(nclo_level_pred) .< 0] .= 0
 x = Matrix(train_raw_data[:, 3:end])
 
@@ -578,8 +577,6 @@ data_group = coerce(data_group, :male=>OrderedFactor{2}, :age=>Continuous, :nclo
 
 # predict clozapine level and assign patients to groups
 clo_level_pred = MLJ.predict(mach_clo, data_group)
-clo_level = clo_level.^2
-clo_level_pred = clo_level_pred.^2
 clo_level_pred[clo_level_pred .< 0] .= 0
 clo_group_pred = repeat(["norm"], length(clo_level_pred))
 clo_group_pred[clo_level_pred .> 550] .= "high"
@@ -604,12 +601,8 @@ prediction      ├──────┼──────┤
          """)
 
 println("Classification adjusted for predicted norclozapine level:")
-nclo_level = nclo_level.^2
-nclo_level_pred = nclo_level_pred.^2
 clo_group_pred_adj = repeat(["norm"], length(clo_level_pred))
-clo_group_pred_adj[clo_level_pred .> 550] .= "high"
-clo_group_pred_adj[nclo_level_pred .>= 400] .= "high"
-clo_group_pred_adj[nclo_level_pred .< 400] .= "norm"
+clo_group_pred_adj[clo_level_pred .> 550 .|| nclo_level_pred .>= 270] .= "high"
 
 cm = zeros(Int64, 2, 2)
 cm[1, 1] = count(clo_group_pred_adj[clo_group .== "norm"] .== "norm")

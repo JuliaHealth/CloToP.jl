@@ -113,8 +113,8 @@ data_clo = coerce(data_clo, :male=>OrderedFactor{2}, :nclo=>Continuous, :age=>Co
 
 clo_level_pred = MLJ.predict(clo_model_regressor, data_clo)
 
-clo_level_pred = round.(clo_level_pred.^2, digits=1)
-nclo_level_pred = round.(nclo_level_pred.^2, digits=1)
+clo_level_pred = round.(clo_level_pred, digits=1)
+nclo_level_pred = round.(nclo_level_pred, digits=1)
 
 println()
 
@@ -167,9 +167,7 @@ prediction      ├──────┼──────┤
 
 println("Classification adjusted for predicted norclozapine level:")
 clo_group_pred_adj = repeat(["norm"], length(clo_level_pred))
-clo_group_pred_adj[clo_level_pred .> 550] .= "high"
-clo_group_pred_adj[nclo_level_pred .>= 400] .= "high"
-clo_group_pred_adj[nclo_level_pred .< 400] .= "norm"
+clo_group_pred_adj[clo_level_pred .> 550 .|| nclo_level_pred .>= 270] .= "high"
 
 cm = zeros(Int64, 2, 2)
 cm[1, 1] = count(clo_group_pred_adj[clo_group .== "norm"] .== "norm")
@@ -190,103 +188,9 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 
-
-#=
-yhat2 = MLJ.predict(model_classifier, x)
-println("Classifier:")
-yhat2_adj_p = zeros(2, length(yhat2))
-for idx in eachindex(yhat2)
-    yhat2_adj_p[1, idx] = yhat2.prob_given_ref[:1][idx]
-    yhat2_adj_p[2, idx] = yhat2.prob_given_ref[:2][idx]
-end
-for idx in eachindex(yhat2)
-    print("Subject ID: $idx \t group: $(uppercase(String(y2[idx]))) \t")
-    p_high = Float64(broadcast(pdf, yhat2[idx], "high"))
-    p_norm = Float64(broadcast(pdf, yhat2[idx], "norm"))
-    if p_norm > p_high
-        print("prediction: NORM, prob = $(round(p_norm, digits=2)) \t")
-    else
-        print("prediction: HIGH, prob = $(round(p_high, digits=2)) \t")
-    end
-    if yhat1[idx] > 550
-        p_high += 0.1
-        p_norm -= 0.1
-    else
-        p_norm += 0.1
-        p_high -= 0.1
-    end
-    if yhat3[idx] > 400
-        p_high += 0.4
-        p_norm -= 0.4
-    else
-        p_norm += 0.4
-        p_high -= 0.4
-    end
-    p_high > 1.0 && (p_high = 1.0)
-    p_high < 0.0 && (p_high = 0.0)
-    p_norm > 1.0 && (p_norm = 1.0)
-    p_norm < 0.0 && (p_norm = 0.0)
-    yhat2_adj_p[1, idx] = p_high
-    yhat2_adj_p[2, idx] = p_norm
-
-    if p_norm > p_high
-        println("adj. prediction: NORM, prob = $(round(p_norm, digits=2))")
-    else
-        println("adj. prediction: HIGH, prob = $(round(p_high, digits=2))")
-    end
-end
-println()
-
-yhat2_adj = deepcopy(yhat2)
-for idx in eachindex(yhat2)
-    yhat2_adj.prob_given_ref[:1][idx] = yhat2_adj_p[1, idx]
-    yhat2_adj.prob_given_ref[:2][idx] = yhat2_adj_p[2, idx] 
-end
-
-println("Classifier accuracy:")
-println("  cross-entropy: ", round(cross_entropy(yhat2, y2), digits=2))
-println("  log-loss: ", round(log_loss(yhat2, y2) |> mean, digits=2))
-println("  AUC: ", round(auc(yhat2, y2), digits=2))
-println("  misclassification rate: ", round(misclassification_rate(mode.(yhat2), y2), digits=2))
-println("  accuracy: ", round(1 - misclassification_rate(mode.(yhat2), y2), digits=2))
-println("Confusion matrix:")
-cm = confusion_matrix(mode.(yhat2), y2)
-println("  sensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("  specificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
-println("""
-                     group
-                  norm   high   
-                ┌──────┬──────┐
-           norm │ $(lpad(cm.mat[4], 4, " ")) │ $(lpad(cm.mat[2], 4, " ")) │
-prediction      ├──────┼──────┤
-           high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
-                └──────┴──────┘
-         """)
-println("Adjusted classifier accuracy:")
-println("  cross-entropy: ", round(cross_entropy(yhat2_adj, y2), digits=2))
-println("  log-loss: ", round(log_loss(yhat2_adj, y2) |> mean, digits=2))
-println("  AUC: ", round(auc(yhat2_adj, y2), digits=2))
-println("  misclassification rate: ", round(misclassification_rate(mode.(yhat2_adj), y2), digits=2))
-println("  accuracy: ", round(1 - misclassification_rate(mode.(yhat2_adj), y2), digits=2))
-println("Confusion matrix:")
-cm = confusion_matrix(mode.(yhat2_adj), y2)
-println("  sensitivity (TP): ", round(cm.mat[1, 1] / sum(cm.mat[:, 1]), digits=2))
-println("  specificity (TP): ", round(cm.mat[2, 2] / sum(cm.mat[:, 2]), digits=2))
-println("""
-                     group
-                  norm   high   
-                ┌──────┬──────┐
-           norm │ $(lpad(cm.mat[4], 4, " ")) │ $(lpad(cm.mat[2], 4, " ")) │
-prediction      ├──────┼──────┤
-           high │ $(lpad(cm.mat[3], 4, " ")) │ $(lpad(cm.mat[1], 4, " ")) │
-                └──────┴──────┘
-         """)
-
-=#
-
-p1 = Plots.scatter(clo_level .- clo_level_pred, ylims=(-400, 400), xlabel="patients", title="clozapine", legend=false)
+p1 = Plots.scatter(clo_level .- clo_level_pred, ylims=(-500, 500), xlabel="patients", ylabel="error", title="clozapine [ng/ml]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
 # p1 = Plots.plot!(clo_level_pred, line=:dot, lw=2)
-p2 = Plots.scatter(nclo_level .- nclo_level_pred, ylims=(-400, 400), xlabel="patients", ylabel="error", title="norclozapine", legend=false)
+p2 = Plots.scatter(nclo_level .- nclo_level_pred, ylims=(-200, 200), xlabel="patients", ylabel="error", title="norclozapine [ng/ml]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
 # p2 = Plots.plot!(nclo_level_pred, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
