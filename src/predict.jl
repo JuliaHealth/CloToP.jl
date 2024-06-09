@@ -39,13 +39,6 @@ else
 end
 
 # load models
-if isfile("models/clozapine_regressor_model.jlso")
-    println("Loading: clozapine_regressor_model.jlso")
-    clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
-else
-    error("File models/clozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
-end
 if isfile("models/norclozapine_regressor_model.jlso")
     println("Loading: norclozapine_regressor_model.jlso")
     nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
@@ -70,7 +63,7 @@ end
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
-function predict_single_patient(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
+function ctp(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
 
     data_nclo = deepcopy(patient_data)
     # standaridize
@@ -159,6 +152,8 @@ function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo
     println("Minimum recommended dose: $(doses[min_dose_idx]) mg/day")
     println("Maximum recommended dose: $(doses[max_dose_idx]) mg/day")
 
+    dose_range = (doses[min_dose_idx], doses[max_dose_idx])
+
     plot(doses, clo_concentration, ylims=(0, 1000), xlims=(0, 800), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
     hline!([220], lc=:green, ls=:dot)
     hline!([550], lc=:red, ls=:dot)
@@ -179,7 +174,7 @@ end
 # substrates_1a2: Int
 
 pt = [0, 20, 512.5, 27, 10.5, 0, 0, 0, 0, 0, 0]
-predict_single_patient(pt, scaler_clo, scaler_nclo)
+ctp(pt, scaler_clo, scaler_nclo)
 
 # male: 0/1
 # age: Float

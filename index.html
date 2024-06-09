@@ -138,12 +138,6 @@
           <td id="clo_group_adj" style="font-weight:bold"></td>
         </tr>
         <tr>
-          <td style="text-align:right">Probability:</td>
-          <td id="clo_group_p" style="font-weight:bold"></td>
-          <td style="text-align:right">Probability:</td>
-          <td id="clo_group_adj_p" style="font-weight:bold"></td>
-        </tr>
-        <tr>
           <td colspan=4>
             <center>
               <b>Recommended clozapine doses:</b>
@@ -169,9 +163,7 @@
 
   <script>
     document.getElementById("clo_group").innerHTML = "";
-    document.getElementById("clo_group_p").innerHTML = "";
     document.getElementById("clo_group_adj").innerHTML = "";
-    document.getElementById("clo_group_adj_p").innerHTML = "";
     document.getElementById("clo_level").innerHTML = "";
     document.getElementById("nclo_level").innerHTML = "";
     document.getElementById("submit").addEventListener("click",async() => {
@@ -193,14 +185,12 @@
       });
       const clo_prediction_response = await response.text();
       clo_group = clo_prediction_response.split(" ")[0];
-      clo_group_p = clo_prediction_response.split(" ")[1];
-      clo_group_adj = clo_prediction_response.split(" ")[2];
-      clo_group_adj_p = clo_prediction_response.split(" ")[3];
-      clo_level = clo_prediction_response.split(" ")[4];
-      nclo_level = clo_prediction_response.split(" ")[5];
-      dose1 = clo_prediction_response.split(" ")[6];
-      dose2 = clo_prediction_response.split(" ")[7];
-      plot = clo_prediction_response.split(" ")[8];
+      clo_group_adj = clo_prediction_response.split(" ")[1];
+      clo_level = clo_prediction_response.split(" ")[2];
+      nclo_level = clo_prediction_response.split(" ")[3];
+      dose1 = clo_prediction_response.split(" ")[4];
+      dose2 = clo_prediction_response.split(" ")[5];
+      plot = clo_prediction_response.split(" ")[6];
       console.log(clo_group);
       console.log(clo_group_adj);
       if (clo_group == 0) {
@@ -209,14 +199,12 @@
       else {
         document.getElementById("clo_group").style.color="red"
         document.getElementById("clo_group").innerHTML = "TOXIC"; }
-      document.getElementById("clo_group_p").innerHTML = clo_group_p;
       if (clo_group_adj == 0) {
         document.getElementById("clo_group_adj").style.color="green"
         document.getElementById("clo_group_adj").innerHTML = "NORMAL"; }
       else {
         document.getElementById("clo_group_adj").style.color="red"
         document.getElementById("clo_group_adj").innerHTML = "TOXIC"; }
-      document.getElementById("clo_group_adj_p").innerHTML = clo_group_adj_p;
       document.getElementById("clo_level").innerHTML = clo_level;
       document.getElementById("nclo_level").innerHTML = nclo_level;
       document.getElementById("dose1").innerHTML = dose1;
