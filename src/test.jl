@@ -39,13 +39,6 @@ else
 end
 
 # load models
-if isfile("models/clozapine_classifier_model.jlso")
-    println("Loading: clozapine_classifier_model.jlso")
-    model_classifier = machine("models/clozapine_classifier_model.jlso")
-else
-    error("File models/clozapine_classifier_model.jlso cannot be opened!")
-    exit(-1)
-end
 if isfile("models/clozapine_regressor_model.jlso")
     println("Loading: clozapine_regressor_model.jlso")
     clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
@@ -60,73 +53,145 @@ else
     error("File models/norclozapine_regressor_model.jlso cannot be opened!")
     exit(-1)
 end
-if isfile("models/scaler.jld")
-    println("Loading: scaler.jld")
-    scaler = JLD2.load_object("models/scaler.jld")
+if isfile("models/scaler_clo.jld")
+    println("Loading: scaler_clo.jld")
+    scaler_clo = JLD2.load_object("models/scaler_clo.jld")
 else
-    error("File models/scaler.jld cannot be opened!")
+    error("File models/scaler_clo.jld cannot be opened!")
     exit(-1)
 end
+if isfile("models/scaler_nclo.jld")
+    println("Loading: scaler_nclo.jld")
+    scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
+else
+    error("File models/scaler_nclo.jld cannot be opened!")
+    exit(-1)
+end
+
+println()
+println("Number of entries: $(nrows(test_data))")
+println("Number of features: $(ncol(test_data) - 2)")
 println()
 
-# preprocess
-@info "Preprocessing"
-y1 = test_data[:, 1]
-y2 = repeat(["norm"], length(y1))
-y2[y1 .> 550] .= "high"
-y3 = test_data[:, 2]
-x = Matrix(test_data[:, 3:end])
+@info "Predicting norclozapine level"
 
-# standardize
-println("Standardizing")
-data = x[:, 2:end]
-data[:, 1:4] = StatsBase.transform(scaler, data[:, 1:4])
-data[isnan.(data)] .= 0
-x_gender = Bool.(x[:, 1])
-x_cont = data[:, 1:4]
-x_rest = round.(Int64, data[:, 5:end])
+data_nclo = Matrix(test_data[:, 3:end])
+clo_level = test_data[:, 1]
+nclo_level = test_data[:, 2]
+
+# standaridize
+data_nclo[:, 2:5] = StatsBase.transform(scaler_nclo, data_nclo[:, 2:5])
+data_nclo[isnan.(data_nclo)] .= 0
 
 # create DataFrame
-x1 = DataFrame(:male=>x_gender)
-x2 = DataFrame(x_cont, ["age", "dose", "bmi", "crp"])
-x3 = DataFrame(x_rest, ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
-x = Float32.(hcat(x1, x2, x3))
-# x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Count, :inhibitors_3a4=>Count, :substrates_3a4=>Count, :inducers_1a2=>Count, :inhibitors_1a2=>Count, :substrates_1a2=>Count)
-x = coerce(x, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
-y2 = DataFrame(group=y2)
-y2 = coerce(y2.group, OrderedFactor{2})
+x1 = DataFrame(:male=>data_nclo[:, 1])
+x2 = DataFrame(data_nclo[:, 2:5], ["age", "dose", "bmi", "crp"])
+x3 = DataFrame(data_nclo[:, 6:end], ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
+data_nclo = Float32.(hcat(x1, x2, x3))
+data_nclo = coerce(data_nclo, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
 
-println("Number of entries: $(size(y1, 1))")
+# predict
+nclo_level_pred = MLJ.predict(nclo_model_regressor, data_nclo)
+
 println()
 
-@info "Calculating predictions"
-println("Regressor:")
-yhat1 = MLJ.predict(clo_model_regressor, x)
-yhat1 = round.(yhat1, digits=1)
-yhat3 = MLJ.predict(nclo_model_regressor, x)
-yhat3 = round.(yhat3, digits=1)
-rmse_clo = zeros(length(yhat1))
-rmse_nclo = zeros(length(yhat3))
-for idx in eachindex(yhat1)
-    rmse_clo[idx] = round.(sqrt((yhat1[idx] - y1[idx])^2), digits=2)
-    rmse_nclo[idx] = round.(sqrt((yhat3[idx] - y3[idx])^2), digits=2)
-    println("Subject ID: $idx \t CLO level: $(y1[idx]) \t prediction: $(yhat1[idx]) \t RMSE: $(rmse_clo[idx])")
-    println("Subject ID: $idx \t NCLO level: $(y3[idx]) \t prediction: $(yhat3[idx]) \t RMSE: $(rmse_nclo[idx])")
+@info "Predicting clozapine level"
+
+data_clo = Matrix(test_data[:, 3:end])
+data_clo = hcat(data_clo[:, 1], nclo_level_pred, data_clo[:, 2:end])
+
+# standardize
+data_clo[:, 2:6] = StatsBase.transform(scaler_clo, data_clo[:, 2:6])
+data_clo[isnan.(data_clo)] .= 0
+
+# create DataFrame
+x1 = DataFrame(:male=>data_clo[:, 1])
+x2 = DataFrame(data_clo[:, 2:6], ["nclo", "age", "dose", "bmi", "crp"])
+x3 = DataFrame(data_clo[:, 7:end], ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
+data_clo = Float32.(hcat(x1, x2, x3))
+data_clo = coerce(data_clo, :male=>OrderedFactor{2}, :nclo=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+
+clo_level_pred = MLJ.predict(clo_model_regressor, data_clo)
+
+clo_level_pred = round.(clo_level_pred.^2, digits=1)
+nclo_level_pred = round.(nclo_level_pred.^2, digits=1)
+
+println()
+
+@info "Regressor accuracy"
+println("Predicted levels:")
+error_clo = zeros(length(clo_level_pred))
+error_nclo = zeros(length(nclo_level_pred))
+for idx in eachindex(clo_level_pred)
+    error_clo[idx] = round.(clo_level_pred[idx] - clo_level[idx], digits=2)
+    error_nclo[idx] = round.(nclo_level_pred[idx] - nclo_level[idx], digits=2)
+    println("Subject ID: $idx \t  CLO level: $(clo_level[idx]) \t prediction: $(clo_level_pred[idx]) \t error: $(error_clo[idx])")
+    println("Subject ID: $idx \t NCLO level: $(nclo_level[idx]) \t prediction: $(nclo_level_pred[idx]) \t error: $(error_nclo[idx])")
     println()
 end
-println("Regressor accuracy:")
+
 println("Predicting: CLOZAPINE")
-m = RSquared()
-println("  R²:\t", round(m(yhat1, y1), digits=2))
-m = RootMeanSquaredError()
-println("  RMSE:\t", round(m(yhat1, y1), digits=2))
+println("  R²:\t", round(RSquared()(clo_level_pred, clo_level), digits=2))
+println("  RMSE:\t", round(RootMeanSquaredError()(clo_level_pred, clo_level), digits=2))
 println("Predicting: NORCLOZAPINE")
-m = RSquared()
-println("  R²:\t", round(m(yhat3, y3), digits=2))
-m = RootMeanSquaredError()
-println("  RMSE:\t", round(m(yhat3, y3), digits=2))
+println("  R²:\t", round(RSquared()(nclo_level_pred, nclo_level), digits=2))
+println("  RMSE:\t", round( RootMeanSquaredError()(nclo_level_pred, nclo_level), digits=2))
 println()
 
+@info "Classifying into groups"
+
+println("Classification based on predicted clozapine level:")
+clo_group = repeat(["norm"], length(clo_level))
+clo_group[clo_level .> 550] .= "high"
+clo_group_pred = repeat(["norm"], length(clo_level_pred))
+clo_group_pred[clo_level_pred .> 550] .= "high"
+
+cm = zeros(Int64, 2, 2)
+cm[1, 1] = count(clo_group_pred[clo_group .== "norm"] .== "norm")
+cm[1, 2] = count(clo_group_pred[clo_group .== "high"] .== "norm")
+cm[2, 2] = count(clo_group_pred[clo_group .== "high"] .== "high")
+cm[2, 1] = count(clo_group_pred[clo_group .== "norm"] .== "high")
+
+println("Confusion matrix:")
+println("  misclassification rate: ", round(sum([cm[1, 2], cm[2, 1]]) / sum(cm), digits=2))
+println("  accuracy: ", round(1 - sum([cm[1, 2], cm[2, 1]]) / sum(cm), digits=2))
+println("""
+                     group
+                  norm   high   
+                ┌──────┬──────┐
+           norm │ $(lpad(cm[1, 1], 4, " ")) │ $(lpad(cm[1, 2], 4, " ")) │
+prediction      ├──────┼──────┤
+           high │ $(lpad(cm[2, 1], 4, " ")) │ $(lpad(cm[2, 2], 4, " ")) │
+                └──────┴──────┘
+         """)
+
+println("Classification adjusted for predicted norclozapine level:")
+clo_group_pred_adj = repeat(["norm"], length(clo_level_pred))
+clo_group_pred_adj[clo_level_pred .> 550] .= "high"
+clo_group_pred_adj[nclo_level_pred .>= 400] .= "high"
+clo_group_pred_adj[nclo_level_pred .< 400] .= "norm"
+
+cm = zeros(Int64, 2, 2)
+cm[1, 1] = count(clo_group_pred_adj[clo_group .== "norm"] .== "norm")
+cm[1, 2] = count(clo_group_pred_adj[clo_group .== "high"] .== "norm")
+cm[2, 2] = count(clo_group_pred_adj[clo_group .== "high"] .== "high")
+cm[2, 1] = count(clo_group_pred_adj[clo_group .== "norm"] .== "high")
+
+println("Confusion matrix:")
+println("  misclassification rate: ", round(sum([cm[1, 2], cm[2, 1]]) / sum(cm), digits=2))
+println("  accuracy: ", round(1 - sum([cm[1, 2], cm[2, 1]]) / sum(cm), digits=2))
+println("""
+                     group
+                  norm   high   
+                ┌──────┬──────┐
+           norm │ $(lpad(cm[1, 1], 4, " ")) │ $(lpad(cm[1, 2], 4, " ")) │
+prediction      ├──────┼──────┤
+           high │ $(lpad(cm[2, 1], 4, " ")) │ $(lpad(cm[2, 2], 4, " ")) │
+                └──────┴──────┘
+         """)
+
+
+#=
 yhat2 = MLJ.predict(model_classifier, x)
 println("Classifier:")
 yhat2_adj_p = zeros(2, length(yhat2))
@@ -217,16 +282,11 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 
-p1 = Plots.plot(y1, label="data", ylims=(0, 2000), xlabel="patients", ylabel="clozapine [ng/mL]")
-p1 = Plots.plot!(yhat1, label="prediction", line=:dot, lw=2)
-p2 = Plots.plot(y3, label="data", ylims=(0, 1000), xlabel="patients", ylabel="norclozapine [ng/mL]")
-p2 = Plots.plot!(yhat3, label="prediction", line=:dot, lw=2)
+=#
+
+p1 = Plots.plot(clo_level .- clo_level_pred, ylims=(-400, 400), xlabel="patients", title="clozapine", legend=false)
+# p1 = Plots.plot!(clo_level_pred, line=:dot, lw=2)
+p2 = Plots.plot(nclo_level .- nclo_level_pred, ylims=(-400, 400), xlabel="patients", ylabel="error", title="norclozapine", legend=false)
+# p2 = Plots.plot!(nclo_level_pred, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
-
-@info "Benchmarking"
-print("Regressor execution time and memory use:\t")
-@time yhat = MLJ.predict(clo_model_regressor, x)
-print("Classifier execution time and memory use:\t")
-@time yhat2 = MLJ.predict(model_classifier, x)
-println()

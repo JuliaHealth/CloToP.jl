@@ -15,157 +15,41 @@ The models are actively developed and we expect their accuracy to improve.
 ### Training
 
 ```
-[ Info: Creating classifier model
-Initial cross-entropy: 0.222
-[ Info: Optimizing: n_hidden
-Progress: 100%|████████████████████| Time: 0:01:56
-[ Info: Optimizing: dropout
-Progress: 100%|████████████████████| Time: 0:01:22
-[ Info: Optimizing: epochs
-Progress: 100%|████████████████████| Time: 0:06:02
-[ Info: Optimizing: batch_size
-Progress: 100%|████████████████████| Time: 0:00:02
-[ Info: Optimizing: η
-Progress: 100%|████████████████████| Time: 0:00:19
-[ Info: Optimizing: λ
-Progress: 100%|████████████████████| Time: 0:01:45
-[ Info: Optimizing: α
-Progress: 100%|████████████████████| Time: 0:06:37
-Final cross-entropy: 0.5052
-Optimized parameters:
-  n_hidden: 32
-  dropout: 0.01
-  η: 0.01
-  epochs: 500
-  batch_size: 2
-  λ: 0.0
-  α: 0.001
-
-[ Info: Classifier accuracy
-Training:
-  cross-entropy: 0.0
-  log-loss: 0.0
-  AUC: 1.0
-  misclassification rate: 0.0
-  accuracy: 1.0
-Confusion matrix:
-  sensitivity (TPR): 1.0
-  specificity (TNR): 1.0
-                     group
-                  norm   high   
-                ┌──────┬──────┐
-           norm │   74 │    0 │
-prediction      ├──────┼──────┤
-           high │    0 │   21 │
-                └──────┴──────┘
-         
-Validating:
-  cross-entropy: 0.58
-  log-loss: 0.58
-  AUC: 0.98
-  misclassification rate: 0.07
-  accuracy: 0.93
-Confusion matrix:
-  sensitivity (TPR): 0.9
-  specificity (TNR): 0.94
-                     group
-                  norm   high   
-                ┌──────┬──────┐
-           norm │   29 │    1 │
-prediction      ├──────┼──────┤
-           high │    2 │    9 │
-                └──────┴──────┘
-         
 [ Info: Creating regressor model: clozapine
-Initial RMSE: 129.7905
-[ Info: Optimizing: n_hidden
-Progress: 100%|████████████████████| Time: 0:04:11
-[ Info: Optimizing: dropout
-Progress: 100%|████████████████████| Time: 0:03:14
-[ Info: Optimizing: epochs
-Progress: 100%|████████████████████| Time: 0:12:58
-[ Info: Optimizing: batch_size
-Progress: 100%|████████████████████| Time: 0:00:18
-[ Info: Optimizing: η
-[ Info: Optimizing: λ
-Progress: 100%|████████████████████| Time: 0:03:14
-[ Info: Optimizing: α
-Progress: 100%|████████████████████| Time: 0:30:43
-Final RMSE: 118.4395
-Optimized parameters:
-  n_hidden: 64
-  dropout: 0.52
-  η: 0.01
-  epochs: 1000
-  batch_size: 2
-  λ: 0.1
-  α: 0.0
-
-[ Info: Regressor accuracy: clozapine
-Training:
-    R²: 0.96
-    RMSE: 66.61
-Validating:
-    R²: 0.85
-    RMSE: 132.57
-[ Info: Creating regressor model: norclozapine
-Initial RMSE: 84.6936
-[ Info: Optimizing: n_hidden
-Progress: 100%|████████████████████| Time: 0:04:13
-[ Info: Optimizing: dropout
-Progress: 100%|████████████████████| Time: 0:03:26
-[ Info: Optimizing: epochs
-Progress: 100%|████████████████████| Time: 0:14:05
-[ Info: Optimizing: batch_size
-Progress: 100%|████████████████████| Time: 0:01:28
-[ Info: Optimizing: η
-[ Info: Optimizing: lambda
-Progress: 100%|████████████████████| Time: 0:13:49
-[ Info: Optimizing: α
-Progress: 100%|████████████████████| Time: 2:07:02
-Final RMSE: 73.4603
-Optimized parameters:
-  n_hidden: 128
-  dropout: 0.54
-  η: 0.01
-  epochs: 8400
-  batch_size: 4
-  λ: 0.1
-  α: 0.226
-
-[ Info: Regressor accuracy: norclozapine
-Training:
-  R²: 0.97
-  RMSE: 30.0
-Validating:
-  R²: 0.83
-  RMSE: 69.92
-
+Regressor accuracy: training
+  R²: 0.99
+  RMSE: 35.32
+Regressor accuracy: validating
+  R²: 0.9
+  RMSE: 96.74
 [ Info: Training final model
-Classifier accuracy:
-  log-loss: 0.01
-  AUC: 1.0
-  misclassification rate: 0.01
-  accuracy: 0.99
+Regressor accuracy:
+  R²: 0.99
+  RMSE: 39.19
+
+[ Info: Creating regressor model: norclozapine
+Regressor accuracy: training
+  R²: 0.98
+  RMSE: 26.39
+Regressor accuracy: validating
+  R²: 0.73
+  RMSE: 72.88
+[ Info: Training final model
+Regressor accuracy:
+  R²: 0.98
+  RMSE: 21.78
+
+[ Info: Classifying into groups
 Confusion matrix:
-  sensitivity (TPR): 1.0
-  specificity (TNR): 0.99
+  misclassification rate: 0.03
+  accuracy: 0.97
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  104 │    0 │
+           norm │  102 │    1 │
 prediction      ├──────┼──────┤
-           high │    1 │   31 │
+           high │    3 │   30 │
                 └──────┴──────┘
-         
-Predicting: clozapine
-Regressor accuracy
-  R²: 0.97
-  RMSE: 63.54
-Predicting: norclozapine
-Regressor accuracy
-  R²: 0.97
-  RMSE: 28.78
 ```
 
 ![](images/rr_training_accuracy.png)
