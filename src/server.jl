@@ -208,7 +208,7 @@ end
 
 @info "Precompiling"
 dose_range, doses, clo_level, nclo_level, clo_group, clo_group_adj = recommended_dose([0, 18, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler_clo, scaler_nclo)
-p = plot_recommended_dose(doses, clo_level, nclo_level, clo_group, clo_group_adj)
+p = plot_recommended_dose(doses, clo_level)
 clo_group, clo_group_adj, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler_clo, scaler_nclo)
 
 @info "Starting server"
