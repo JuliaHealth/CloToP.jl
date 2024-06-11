@@ -13,6 +13,7 @@ using JLD2
 using MLJ
 using MLJFlux
 using NNlib
+using Optimisers
 using Flux
 using Random
 using Plots
@@ -23,10 +24,11 @@ m = Pkg.Operations.Context().env.manifest
 println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
 println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
 println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
+println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
 println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
 println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
 println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
 println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
 println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
@@ -120,12 +122,12 @@ nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
 model_clo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                                         dropout=init_dropout,
                                         σ=hardtanh),
-                optimiser = Adam(init_η, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8), 
                 loss = Flux.Losses.mse, 
                 epochs = init_epochs, 
                 batch_size = init_batch_size, 
                 lambda = init_λ, 
-                alpha = init_α) 
+                alpha = init_α)
 
 if optimize_clo_regressor
 
@@ -293,7 +295,7 @@ if optimize_clo_regressor
         model_clo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                                                 dropout=init_dropout,
                                                 σ=hardtanh),
-                        optimiser = Adam(init_η, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                        optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8), 
                         loss = Flux.Losses.mse, 
                         epochs = init_epochs, 
                         batch_size = init_batch_size, 
@@ -340,7 +342,7 @@ init_α = 0.0
 model_nclo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                                          dropout=init_dropout,
                                          σ=hardtanh),
-                 optimiser = Adam(init_η, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                 optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8), 
                  loss = Flux.Losses.mse, 
                  epochs = init_epochs, 
                  batch_size = init_batch_size, 
@@ -513,7 +515,7 @@ if optimize_nclo_regressor
         model_nclo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                                                  dropout=init_dropout,
                                                  σ=hardtanh),
-                         optimiser = Adam(init_η, (0.9, 0.999), 1.0e-8, IdDict{Any, Any}()), 
+                         optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8), 
                          loss = Flux.Losses.mse, 
                          epochs = init_epochs, 
                          batch_size = init_batch_size, 
