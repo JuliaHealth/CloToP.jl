@@ -1,5 +1,7 @@
 @info "Loading packages"
 
+standardize_data = true
+
 using Pkg
 # packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJFlux", "NNlib", "Flux" "Plots", "StatsBase"]
 # Pkg.add(packages)
@@ -79,8 +81,8 @@ data_nclo = Matrix(test_data[:, 3:end])
 clo_level = test_data[:, 1]
 nclo_level = test_data[:, 2]
 
-# standaridize
-data_nclo[:, 2:5] = StatsBase.transform(scaler_nclo, data_nclo[:, 2:5])
+# standardize
+standardize_data && (data_nclo[:, 2:5] = StatsBase.transform(scaler_nclo, data_nclo[:, 2:5]))
 data_nclo[isnan.(data_nclo)] .= 0
 
 # create DataFrame
@@ -101,7 +103,7 @@ data_clo = Matrix(test_data[:, 3:end])
 data_clo = hcat(data_clo[:, 1], nclo_level_pred, data_clo[:, 2:end])
 
 # standardize
-data_clo[:, 2:6] = StatsBase.transform(scaler_clo, data_clo[:, 2:6])
+standardize_data && (data_clo[:, 2:6] = StatsBase.transform(scaler_clo, data_clo[:, 2:6]))
 data_clo[isnan.(data_clo)] .= 0
 
 # create DataFrame

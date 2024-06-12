@@ -2,9 +2,10 @@
 
 optimize_clo_regressor = false
 optimize_nclo_regressor = false
+standardize_data = true
 
 using Pkg
-# packages = ["CSV", "DataFrames", "MLJ", :MLJFlux", "NNlib", "Flux", "JLD2", "StatsBase", "Plots"]
+# packages = ["CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", "Plots", "ProgressMeter", "StatsBase"]
 # Pkg.add(packages)
 
 using CSV
@@ -17,8 +18,8 @@ using Optimisers
 using Flux
 using Random
 using Plots
-using StatsBase
 using ProgressMeter
+using StatsBase
 
 m = Pkg.Operations.Context().env.manifest
 println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
@@ -72,7 +73,7 @@ data_clo = hcat(data_clo[:, 1], nclo_level, data_clo[:, 2:end])
 # standardize
 println("Standardizing")
 scaler_clo = StatsBase.fit(ZScoreTransform, data_clo[:, 2:6], dims=1)
-data_clo[:, 2:6] = StatsBase.transform(scaler_clo, data_clo[:, 2:6])
+standardize_data && (data_clo[:, 2:6] = StatsBase.transform(scaler_clo, data_clo[:, 2:6]))
 data_clo[isnan.(data_clo)] .= 0
 
 # create DataFrame
@@ -94,7 +95,7 @@ data_nclo = vcat(x, x_z1)
 
 # standardize
 scaler_nclo = StatsBase.fit(ZScoreTransform, data_nclo[:, 2:5], dims=1)
-data_nclo[:, 2:5] = StatsBase.transform(scaler_nclo, data_nclo[:, 2:5])
+standardize_data && (data_nclo[:, 2:5] = StatsBase.transform(scaler_nclo, data_nclo[:, 2:5]))
 data_nclo[isnan.(data_nclo)] .= 0
 
 # create DataFrame
@@ -110,13 +111,26 @@ println()
 
 @info "Creating regressor model: clozapine"
 
-init_n_hidden = 84
-init_dropout = 0.07
-init_η = 0.013
-init_epochs = 5600
-init_batch_size = 2
-init_λ = 0.1
-init_α = 0.0
+if standardize_data
+    # model parameters for standardized data
+    init_n_hidden= 84
+    init_dropout = 0.07
+    init_η = 0.013
+    init_η = 0.01
+    init_epochs = 5600
+    init_batch_size = 2
+    init_λ = 0.1
+    init_α = 0.0
+else
+    # model parameters for non-standardized data
+    init_n_hidden = 84
+    init_dropout = 0.07
+    init_η = 0.01
+    init_epochs = 7300
+    init_batch_size = 7
+    init_λ = 6.4
+    init_α = 0.97
+end
 
 nnr = @MLJ.load NeuralNetworkRegressor pkg=MLJFlux verbosity=0
 model_clo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
@@ -222,19 +236,19 @@ if optimize_clo_regressor
     training_error = zeros(length(η))
     progbar = Progress(length(η), dt=1, barlen=20, color=:white)
     @Threads.threads for idx in eachindex(η)
-        model_clo.optimiser.eta = η[idx]
+        model_clo.optimiser = Optimisers.Adam(η[idx], (0.9, 0.999), 1.0e-8)
         MLJ.fit!(mach_clo, verbosity=0)
         training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
-    model_clo.optimiser.eta = η[idx]
+    model_clo.optimiser = Optimisers.Adam(η[idx], (0.9, 0.999), 1.0e-8)
     MLJ.fit!(mach_clo, verbosity=0)
     error_new = RootMeanSquaredError()(MLJ.predict(mach_clo, data_clo[test_idx, :]), clo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
-        model_clo.optimiser.eta = init_η
+        model_clo.optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8)
     end
 
     @info "Optimizing: λ"
@@ -331,13 +345,25 @@ println()
 
 @info "Creating regressor model: norclozapine"
 
-init_n_hidden = 64
-init_dropout = 0.1
-init_η = 0.01
-init_epochs = 1000
-init_batch_size = 2
-init_λ = 0.1
-init_α = 0.0
+if standardize_data
+    # model parameters for standardized data
+    init_n_hidden = 64
+    init_dropout = 0.1
+    init_η = 0.01
+    init_epochs = 1000
+    init_batch_size = 2
+    init_λ = 0.1
+    init_α = 0.0
+else
+    # model parameters for non-standardized data
+    init_n_hidden = 64
+    init_dropout = 0.1
+    init_η = 0.01
+    init_epochs = 1000
+    init_batch_size = 2
+    init_λ = 0.1
+    init_α = 0.0
+end
 
 model_nclo = nnr(builder = MLJFlux.Short(n_hidden=init_n_hidden,
                                          dropout=init_dropout,
@@ -442,19 +468,19 @@ if optimize_nclo_regressor
     training_error = zeros(length(η))
     progbar = Progress(length(η), dt=1, barlen=20, color=:white)
     @Threads.threads for idx in eachindex(η)
-        model_nclo.optimiser.eta = η[idx]
+        model_nclo.optimiser = Optimisers.Adam(η[idx], (0.9, 0.999), 1.0e-8)
         MLJ.fit!(mach_nclo, verbosity=0)
         training_error[idx] = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
         next!(progbar)
     end
     _, idx = findmin(training_error)
-    model_nclo.optimiser.eta = η[idx]
+    model_nclo.optimiser = Optimisers.Adam(η[idx], (0.9, 0.999), 1.0e-8)
     MLJ.fit!(mach_nclo, verbosity=0)
     error_new = RootMeanSquaredError()(MLJ.predict(mach_nclo, data_nclo[test_idx, :]), nclo_level[test_idx])
     if error_new < error_first
         error_first = error_new
     else
-        model_nclo.optimiser.eta = init_η
+        model_nclo.optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8)
     end
 
     @info "Optimizing: lambda"
@@ -567,7 +593,7 @@ x = vcat(x, x_z1)
 data_group = hcat(x[:, 1], nclo_level_pred, x[:, 2:end])
 
 # standardize
-data_group[:, 2:6] = StatsBase.transform(scaler_clo, data_group[:, 2:6])
+standardize_data && (data_group[:, 2:6] = StatsBase.transform(scaler_clo, data_group[:, 2:6]))
 data_group[isnan.(data_group)] .= 0
 
 # create DataFrame
