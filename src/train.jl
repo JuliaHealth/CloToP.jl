@@ -630,7 +630,7 @@ prediction      ├──────┼──────┤
 
 println("Classification adjusted for predicted norclozapine level:")
 clo_group_pred_adj = repeat(["norm"], length(clo_level_pred))
-clo_group_pred_adj[clo_level_pred .> 550 .|| nclo_level_pred .>= 270] .= "high"
+clo_group_pred_adj[clo_level_pred .> 550 .|| nclo_level_pred .> 270] .= "high"
 
 cm = zeros(Int64, 2, 2)
 cm[1, 1] = count(clo_group_pred_adj[clo_group .== "norm"] .== "norm")
