@@ -101,12 +101,12 @@ Saving: scaler_nclo.jld
        CSV 0.10.14
 DataFrames 1.6.1
       JLD2 0.4.48
-       MLJ 0.20.5
-   MLJFlux 0.4.0
+       MLJ 0.20.0
+   MLJFlux 0.5.1
       Flux 0.14.15
-     NNlib 0.4.0
+     NNlib 0.5.1
      Plots 1.40.4
- StatsBase 0.34.3
+ StatsBase 0.33.21
 
 [ Info: Loading data
 Loading: clozapine_test.csv
@@ -115,7 +115,7 @@ Loading: norclozapine_regressor_model.jlso
 Loading: scaler_clo.jld
 Loading: scaler_nclo.jld
 
-Number of entries: 2
+Number of entries: 3
 Number of features: 11
 
 [ Info: Predicting norclozapine level
@@ -124,18 +124,21 @@ Number of features: 11
 
 [ Info: Regressor accuracy
 Predicted levels:
-Subject ID: 1    CLO level: 806.4   prediction: 760.8   error: -45.6
-Subject ID: 1   NCLO level: 317.7   prediction: 383.4   error: 65.7
+Subject ID: 1    CLO level: 806.4   prediction: 641.4   error: -165.0
+Subject ID: 1   NCLO level: 317.7   prediction: 306.0   error: -11.7
 
-Subject ID: 2    CLO level: 300.5   prediction: 396.0   error: 95.5
-Subject ID: 2   NCLO level: 138.3   prediction: 237.4   error: 99.1
+Subject ID: 2    CLO level: 300.5   prediction: 415.2   error: 114.7
+Subject ID: 2   NCLO level: 138.3   prediction: 227.3   error: 89.0
+
+Subject ID: 3    CLO level: 264.5   prediction: 233.3   error: -31.2
+Subject ID: 3   NCLO level: 161.1   prediction: 148.5   error: -12.6
 
 Predicting: CLOZAPINE
-  R²:   0.91
-  RMSE: 74.83
+  R²: 0.77
+  RMSE: 117.41
 Predicting: NORCLOZAPINE
-  R²:   0.12
-  RMSE: 84.08
+  R²: 0.57
+  RMSE: 52.33
 
 [ Info: Classifying into groups
 Classification based on predicted clozapine level:
@@ -145,7 +148,7 @@ Confusion matrix:
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │    1 │    0 │
+           norm │    2 │    0 │
 prediction      ├──────┼──────┤
            high │    0 │    1 │
                 └──────┴──────┘
@@ -157,7 +160,7 @@ Confusion matrix:
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │    1 │    0 │
+           norm │    2 │    0 │
 prediction      ├──────┼──────┤
            high │    0 │    1 │
                 └──────┴──────┘
