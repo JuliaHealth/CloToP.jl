@@ -1,7 +1,7 @@
 @info "Importing packages.."
 
 using Pkg
-# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJDecisionTreeInterface", "Plots", "StatsBase"]
+# packages = ["CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", "Plots", "ProgressMeter", "StatsBase"]
 # Pkg.add(packages)
 
 using CSV
@@ -22,7 +22,8 @@ println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
 println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
 println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
 println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("     NNlib $(m[findfirst(v -> v.name == "NNlib", m)].version)")
+println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
 println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
 println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()

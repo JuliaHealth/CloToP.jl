@@ -1,7 +1,7 @@
 @info "Importing packages"
 
 using Pkg
-# packages = ["HTTP", "JSON3", "DataFrames", "MLJ", :MLJFlux", "NNlib", "Flux", "JLD2", "StatsBase", "Plots"]
+# packages = ["HTTP", "JSON3", "CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", "Plots", "ProgressMeter", "StatsBase"]
 # Pkg.add(packages)
 
 using HTTP
@@ -26,7 +26,8 @@ println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
 println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
 println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
 println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("     NNlib $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
+println("     NNlib $(m[findfirst(v -> v.name == "NNlib", m)].version)")
+println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
 println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
 println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
