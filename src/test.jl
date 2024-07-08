@@ -191,9 +191,9 @@ prediction      ├──────┼──────┤
                 └──────┴──────┘
          """)
 
-p1 = Plots.scatter(clo_level .- clo_level_pred, ylims=(-500, 500), xlabel="patients", ylabel="error", title="clozapine [ng/ml]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
+p1 = Plots.scatter(clo_level .- clo_level_pred, ylims=(-500, 500), xlabel="patients", ylabel="error", title="clozapine [ng/mL]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
 # p1 = Plots.plot!(clo_level_pred, line=:dot, lw=2)
-p2 = Plots.scatter(nclo_level .- nclo_level_pred, ylims=(-200, 200), xlabel="patients", ylabel="error", title="norclozapine [ng/ml]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
+p2 = Plots.scatter(nclo_level .- nclo_level_pred, ylims=(-200, 200), xlabel="patients", ylabel="error", title="norclozapine [ng/mL]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
 # p2 = Plots.plot!(nclo_level_pred, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
 savefig(p, "images/rr_testing_accuracy.png")
