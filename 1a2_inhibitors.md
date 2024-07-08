@@ -7,6 +7,7 @@
 **Weak**: ≥1.25-fold and <2-fold increase in the plasma AUC values (20–50% decrease in clearance)
 
 ## Strong inhibitors
+
 - fluvoxamine
 - liquorice
 - fluoroquinolones

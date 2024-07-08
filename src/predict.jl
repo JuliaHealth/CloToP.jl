@@ -47,6 +47,13 @@ else
     error("File models/norclozapine_regressor_model.jlso cannot be opened!")
     exit(-1)
 end
+if isfile("models/clozapine_regressor_model.jlso")
+    println("Loading: clozapine_regressor_model.jlso")
+    clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
+else
+    error("File models/clozapine_regressor_model.jlso cannot be opened!")
+    exit(-1)
+end
 if isfile("models/scaler_clo.jld")
     println("Loading: scaler_clo.jld")
     scaler_clo = JLD2.load_object("models/scaler_clo.jld")
@@ -127,7 +134,7 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
     for idx in eachindex(doses)
         data = deepcopy(patient_data)
         data = vcat(data[1:2], doses[idx], data[3:end])
-        clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = predict_single_patient(data, scaler_clo, scaler_nclo)
+        clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler_clo, scaler_nclo)
     end
 
     return collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_adjusted
@@ -188,6 +195,6 @@ ctp(pt, scaler_clo, scaler_nclo)
 # inhibitors_1a2: Int
 # substrates_1a2: Int
 
-pt = [0, 65, 28, 0.5, 0, 0, 0, 1, 0, 0]
+pt = [0, 37, 23.9, 1.3, 1, 0, 1, 1, 0, 0]
 doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted, = recommended_dose(pt, scaler_clo, scaler_nclo)
-dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted)
+p = dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted)
