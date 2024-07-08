@@ -578,9 +578,6 @@ println()
 @info "Classifying into groups"
 
 println("Classification based on predicted clozapine level:")
-nclo_level_pred = nclo_level_pred
-clo_group = repeat(["norm"], length(clo_level))
-clo_group[(clo_level) .> 550] .= "high"
 nclo_level_pred[(nclo_level_pred) .< 0] .= 0
 x = Matrix(train_raw_data[:, 3:end])
 

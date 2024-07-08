@@ -135,11 +135,11 @@ end
 
 function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted)
 
-    # therapeutic concentration range: 220-550 ng/mL
+    # therapeutic concentration range: 250-550 ng/mL
     # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
 
-    if minimum(clo_concentration) < 220
-        min_dose_idx = findfirst(x -> x > 220, clo_concentration)
+    if minimum(clo_concentration) < 250
+        min_dose_idx = findfirst(x -> x > 250, clo_concentration)
     else
         min_dose_idx = 1
     end
@@ -156,7 +156,7 @@ function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo
     dose_range = (doses[min_dose_idx], doses[max_dose_idx])
 
     plot(doses, clo_concentration, ylims=(0, 1000), xlims=(0, 800), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
-    hline!([220], lc=:green, ls=:dot)
+    hline!([250], lc=:green, ls=:dot)
     hline!([550], lc=:red, ls=:dot)
     vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
     vline!([doses[max_dose_idx]], lc=:red, ls=:dot)

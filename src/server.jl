@@ -121,7 +121,7 @@ end
 
 function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
 
-    # 220-550 ng/mL
+    # 250-550 ng/mL
     # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
 
     doses = 0:12.5:800
@@ -136,8 +136,8 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
         clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler_clo, scaler_nclo)
     end
 
-    if minimum(clo_concentration) < 220
-        min_dose_idx = findfirst(x -> x > 220, clo_concentration)
+    if minimum(clo_concentration) < 250
+        min_dose_idx = findfirst(x -> x > 250, clo_concentration)
     else
         min_dose_idx = 1
     end
@@ -155,11 +155,11 @@ end
 
 function plot_recommended_dose(doses, clo_level)
 
-    # 220-550
+    # 250-550
     # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
 
-    if minimum(clo_level) < 220
-        min_dose_idx = findfirst(x -> x >= 220, clo_level)
+    if minimum(clo_level) < 250
+        min_dose_idx = findfirst(x -> x >= 250, clo_level)
     else
         min_dose_idx = 1
     end
@@ -171,7 +171,7 @@ function plot_recommended_dose(doses, clo_level)
     end
 
     p = plot(doses, clo_level, ylims=(0, 1000), xlims=(0, 800), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
-    p = hline!([220], lc=:green, ls=:dot)
+    p = hline!([250], lc=:green, ls=:dot)
     p = hline!([550], lc=:red, ls=:dot)
     p = vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
     p = vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
