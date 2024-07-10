@@ -10,7 +10,7 @@ Individual recommended safe dose range can also be predicted:
 
 ## Performance
 
-The models are actively developed and we expect their accuracy to improve.
+The model are actively developed and we expect its accuracy to improve.
 
 ### Training
 
@@ -93,6 +93,8 @@ Saving: scaler_nclo.jld
 ```
 
 ![](images/rr_training_accuracy.png)
+
+In the figure above, patients are sorted by increasing CLO or NCLO measured level.
 
 ### Testing
 
@@ -180,7 +182,9 @@ Next, go to the local website at [http://localhost:8080](http://localhost:8080),
 
 ![](images/webpage.png)
 
-(!) Adjusted clozapine level is the classifier prediction modified by predicted concentration.
+Alternatively, the online webapp is available at [https://clotop.eu/](https://clotop.eu/).
+
+(!) Adjusted clozapine level is the classifier prediction modified by predicted norclozapine concentration.
 
 Toxic clozapine level has been defined as > 550 ng/mL, recommended therapeutic concentration has been defined as > 250 ng/mL [source: [10.1192/bjp.2023.27](https://doi.org/10.1192/bjp.2023.27)].
 
