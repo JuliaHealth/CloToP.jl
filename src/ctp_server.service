@@ -1,5 +1,5 @@
 [Unit]
-Description=Start CTP server.
+Description=Start CloToP server.
 
 [Service]
 Type=simple
