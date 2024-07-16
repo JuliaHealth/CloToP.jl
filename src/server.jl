@@ -202,8 +202,10 @@ function handle(req)
         close(iob64_encode)
         p = String(take!(io))
         clo_group, clo_group_adj, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler_clo, scaler_nclo)
+        return HTTP.Response(200, "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
         return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*"], "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
     end
+    return HTTP.Response(200, read("./index.html"))
     return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*"], read("./index.html"))
 end
 
@@ -214,4 +216,4 @@ clo_group, clo_group_adj, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0
 println()
 
 @info "Starting server"
-HTTP.serve(handle, "0.0.0.0", 8080)
+HTTP.serve(handle, 8080)
