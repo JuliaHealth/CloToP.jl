@@ -15,7 +15,6 @@ using NNlib
 using Flux
 using Random
 using Plots
-using Sockets
 using StatsBase
 
 m = Pkg.Operations.Context().env.manifest
@@ -30,7 +29,6 @@ println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
 println("     NNlib $(m[findfirst(v -> v.name == "NNlib", m)].version)")
 println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
 println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println("   Sockets $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()
 
@@ -213,7 +211,7 @@ end
 dose_range, doses, clo_level, nclo_level, clo_group, clo_group_adj = recommended_dose([0, 18, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler_clo, scaler_nclo)
 p = plot_recommended_dose(doses, clo_level)
 clo_group, clo_group_adj, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler_clo, scaler_nclo)
+println()
 
 @info "Starting server"
-ip_address = getipaddr()
-HTTP.serve(handle, host=ip_address, port=8080)
+HTTP.serve(handle, 8080)
