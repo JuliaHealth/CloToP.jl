@@ -181,7 +181,6 @@ end
 
 function handle(req)
     if req.method == "POST"
-        @info "Calculating predictions"
         form = JSON3.read(String(req.body))
         sex = form.sex
         age = form.age
@@ -201,6 +200,8 @@ function handle(req)
         show(iob64_encode, MIME("image/png"), p)
         close(iob64_encode)
         p = String(take!(io))
+        @info "Query: sex: $sex, age: $age, clo_dose: $clo_dose, bmi: $bmi, crp: $crp, a4_ind: $a4_ind, a4_inh: $a4_inh, a4_s: $a4_s, a2_ind: $a2_ind, a2_inh: $a2_inh, a2_s: $a2_s"
+        @info "Calculating predictions"
         clo_group, clo_group_adj, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler_clo, scaler_nclo)
         return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*"], "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
     end
@@ -214,4 +215,4 @@ clo_group, clo_group_adj, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0
 println()
 
 @info "Starting server"
-HTTP.serve(handle, "0.0.0.0", 8080)
+HTTP.serve(handle, "0.0.0.0", 8080, verbose=true)
