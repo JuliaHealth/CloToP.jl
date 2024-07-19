@@ -170,7 +170,7 @@
     document.getElementById("clo_group_adj").innerHTML = "";
     document.getElementById("clo_level").innerHTML = "";
     document.getElementById("nclo_level").innerHTML = "";
-    document.getElementById("submit").addEventListener("click",async() => {
+    document.getElementById("submit").addEventListener("click", async() => {
       response = await fetch("http://localhost:8080", {
         method: "POST",
         body: JSON.stringify({
