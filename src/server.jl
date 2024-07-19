@@ -203,9 +203,9 @@ function handle(req)
         @info "Query: sex: $sex, age: $age, clo_dose: $clo_dose, bmi: $bmi, crp: $crp, a4_ind: $a4_ind, a4_inh: $a4_inh, a4_s: $a4_s, a2_ind: $a2_ind, a2_inh: $a2_inh, a2_s: $a2_s"
         @info "Calculating predictions"
         clo_group, clo_group_adj, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler_clo, scaler_nclo)
-        return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"http://0.0.0.0:8080", "Access-Control-Request-Method"=>"GET,POST,PUT,DELETE,OPTIONS", "Access-Control-Allow-Headers"=>"Content-Type"], "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
+        return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*", "Access-Control-Request-Method"=>"GET,POST", "mode"=>"no-cors"], "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
     end
-    return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"http://0.0.0.0:8080", "Access-Control-Request-Method"=>"GET,POST,PUT,DELETE,OPTIONS", "Access-Control-Allow-Headers"=>"Content-Type"], read("./index.html"))
+    return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*", "Access-Control-Request-Method"=>"GET,POST", "mode"=>"no-cors"], read("./index.html"))
 end
 
 @info "Precompiling"
