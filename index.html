@@ -170,20 +170,20 @@
     document.getElementById("clo_level").innerHTML = "";
     document.getElementById("nclo_level").innerHTML = "";
     document.getElementById("submit").addEventListener("click",async() => {
-      response = await fetch("http://127.0.0.1:8080",{
-        method:"POST",
+      response = await fetch("http://0.0.0.0:8080", {
+        method: "POST",
         body: JSON.stringify({
-          "sex":parseInt(document.getElementById("sex").value),
-          "age":parseFloat(document.getElementById("age").value),
-          "clo_dose":parseFloat(document.getElementById("clo_dose").value),
-          "bmi":parseInt(document.getElementById("bmi").value),
-          "crp":parseInt(document.getElementById("crp").value),
-          "a2_s":parseFloat(document.getElementById("1a2_s").value),
-          "a2_inh":parseFloat(document.getElementById("1a2_inh").value),
-          "a2_ind":parseFloat(document.getElementById("1a2_ind").value),
-          "a4_s":parseFloat(document.getElementById("3a4_s").value),
-          "a4_inh":parseFloat(document.getElementById("3a4_inh").value),
-          "a4_ind":parseFloat(document.getElementById("3a4_ind").value),
+          "sex": parseInt(document.getElementById("sex").value),
+          "age": parseFloat(document.getElementById("age").value),
+          "clo_dose": parseFloat(document.getElementById("clo_dose").value),
+          "bmi": parseInt(document.getElementById("bmi").value),
+          "crp": parseInt(document.getElementById("crp").value),
+          "a2_s": parseFloat(document.getElementById("1a2_s").value),
+          "a2_inh": parseFloat(document.getElementById("1a2_inh").value),
+          "a2_ind": parseFloat(document.getElementById("1a2_ind").value),
+          "a4_s": parseFloat(document.getElementById("3a4_s").value),
+          "a4_inh": parseFloat(document.getElementById("3a4_inh").value),
+          "a4_ind": parseFloat(document.getElementById("3a4_ind").value),
         })
       });
       const clo_prediction_response = await response.text();
