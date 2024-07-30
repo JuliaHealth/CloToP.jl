@@ -1,13 +1,11 @@
 @info "Loading packages"
 
+# config
 optimize_clo_regressor = false
 optimize_nclo_regressor = false
 standardize_data = true
 
 using Pkg
-# packages = ["CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", "Plots", "ProgressMeter", "StatsBase"]
-# Pkg.add(packages)
-
 using CSV
 using DataFrames
 using JLD2

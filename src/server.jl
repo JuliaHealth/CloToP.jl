@@ -1,9 +1,6 @@
-@info "Importing packages"
+@info "Loading packages"
 
 using Pkg
-# packages = ["HTTP", "JSON3", "CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", "Plots", "ProgressMeter", "Sockets", "StatsBase"]
-# Pkg.add(packages)
-
 using HTTP
 using JSON3
 using Base64

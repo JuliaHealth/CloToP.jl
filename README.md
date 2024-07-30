@@ -96,6 +96,10 @@ Saving: scaler_nclo.jld
 
 In the figure above, patients are sorted by increasing CLO or NCLO measured level.
 
+Adjusted clozapine level is the classifier prediction modified by predicted norclozapine concentration.
+
+Toxic clozapine level has been defined as > 550 ng/mL, recommended therapeutic concentration has been defined as > 250 ng/mL [source: [10.1192/bjp.2023.27](https://doi.org/10.1192/bjp.2023.27)].
+
 ### Testing
 
 ```
@@ -172,21 +176,25 @@ prediction      ├──────┼──────┤
 
 ## Quickstart
 
-Clone this repository, go to its folder and run:
+Install the latest Julia version from [https://julialang.org/downloads/](https://julialang.org/downloads/)
+
+Clone this repository, go to its folder and run to install required packages (this has to be done only once):
 
 ```sh
-julia src/server.jl
+julia src/install.jl
 ```
 
-Next, go to the local website at [http://localhost:8080](http://localhost:8080), enter patient's data and click the "PREDICT" button.
+Start the server:
+
+```sh
+julia src/install.jl
+```
+
+The server is listening on port 8080. With your web browser, go to [http://localhost:8080](http://localhost:8080), enter patient's data and click the "PREDICT" button.
 
 ![](images/webpage.png)
 
-Alternatively, the online webapp is available at [https://clotop.eu/](https://clotop.eu/).
-
-(!) Adjusted clozapine level is the classifier prediction modified by predicted norclozapine concentration.
-
-Toxic clozapine level has been defined as > 550 ng/mL, recommended therapeutic concentration has been defined as > 250 ng/mL [source: [10.1192/bjp.2023.27](https://doi.org/10.1192/bjp.2023.27)].
+Alternatively, the server is also available online at [https://clotop.eu/](https://clotop.eu/).
 
 ## How to Cite
 

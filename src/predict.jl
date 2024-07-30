@@ -1,9 +1,6 @@
-@info "Importing packages.."
+@info "Loading packages"
 
 using Pkg
-# packages = ["CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", "Plots", "ProgressMeter", "StatsBase"]
-# Pkg.add(packages)
-
 using CSV
 using DataFrames
 using JLD2
