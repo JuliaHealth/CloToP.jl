@@ -1,73 +1,28 @@
-@info "Loading packages"
-
-using Pkg
-using CSV
-using DataFrames
-using JLD2
-using MLJ
-using MLJFlux
-using NNlib
-using Flux
-using Random
-using Plots
-using StatsBase
-
-m = Pkg.Operations.Context().env.manifest
-println("       CSV $(m[findfirst(v -> v.name == "CSV", m)].version)")
-println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
-println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
-println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
-println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("     NNlib $(m[findfirst(v -> v.name == "NNlib", m)].version)")
-println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
-println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
-println()
-
-@info "Loading data"
-
-# load training data
-if isfile("data/clozapine_test.csv")
-    println("Loading: clozapine_test.csv")
-    test_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
-else
-    error("File data/clozapine_test.csv cannot be opened!")
-    exit(-1)
-end
-
-# load models
-if isfile("models/norclozapine_regressor_model.jlso")
-    println("Loading: norclozapine_regressor_model.jlso")
-    nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
-else
-    error("File models/norclozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
-end
-if isfile("models/clozapine_regressor_model.jlso")
-    println("Loading: clozapine_regressor_model.jlso")
-    clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
-else
-    error("File models/clozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
-end
-if isfile("models/scaler_clo.jld")
-    println("Loading: scaler_clo.jld")
-    scaler_clo = JLD2.load_object("models/scaler_clo.jld")
-else
-    error("File models/scaler_clo.jld cannot be opened!")
-    exit(-1)
-end
-if isfile("models/scaler_nclo.jld")
-    println("Loading: scaler_nclo.jld")
-    scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
-else
-    error("File models/scaler_nclo.jld cannot be opened!")
-    exit(-1)
-end
+export ctp
+export recommended_dose
+export dose_range
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
 
+"""
+    ctp(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
+
+male: 0/1
+age: Float
+dose: Float
+bmi: Float
+crp: Float
+inducers_3a4: Int
+inhibitors_3a4: Int
+substrates_3a4: Int
+inducers_1a2: Int
+inhibitors_1a2: Int
+substrates_1a2: Int
+
+pt = [0, 20, 512.5, 27, 10.5, 0, 0, 0, 0, 0, 0]
+ctp(pt, CloToP.scaler_clo, CloToP.scaler_nclo)
+
+"""
 function ctp(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
 
     data_nclo = deepcopy(patient_data)
@@ -120,6 +75,27 @@ function ctp(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
     return clo_group, clo_group_adj, clo_level, nclo_level
 end
 
+"""
+    recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
+
+male: 0/1
+age: Float
+bmi: Float
+crp: Float
+inducers_3a4: Int
+inhibitors_3a4: Int
+substrates_3a4: Int
+inducers_1a2: Int
+inhibitors_1a2: Int
+substrates_1a2: Int
+
+pt = [0, 37, 23.9, 1.3, 1, 0, 1, 1, 0, 0]
+recommended_dose(pt, CloToP.scaler_clo, CloToP.scaler_nclo)
+
+# Returns
+
+doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted
+"""
 function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
 
     doses = 0:12.5:800
@@ -137,6 +113,16 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
     return collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_adjusted
 end
 
+"""
+    dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted)
+
+doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted
+
+# Returns
+
+p
+
+"""
 function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted)
 
     # therapeutic concentration range: 250-550 ng/mL
@@ -165,33 +151,3 @@ function dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo
     vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
     vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
 end
-
-# male: 0/1
-# age: Float
-# dose: Float
-# bmi: Float
-# crp: Float
-# inducers_3a4: Int
-# inhibitors_3a4: Int
-# substrates_3a4: Int
-# inducers_1a2: Int
-# inhibitors_1a2: Int
-# substrates_1a2: Int
-
-pt = [0, 20, 512.5, 27, 10.5, 0, 0, 0, 0, 0, 0]
-ctp(pt, scaler_clo, scaler_nclo)
-
-# male: 0/1
-# age: Float
-# bmi: Float
-# crp: Float
-# inducers_3a4: Int
-# inhibitors_3a4: Int
-# substrates_3a4: Int
-# inducers_1a2: Int
-# inhibitors_1a2: Int
-# substrates_1a2: Int
-
-pt = [0, 37, 23.9, 1.3, 1, 0, 1, 1, 0, 0]
-doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted, = recommended_dose(pt, scaler_clo, scaler_nclo)
-p = dose_range(doses, clo_concentration, nclo_concentration, clo_group, clo_group_adjusted)

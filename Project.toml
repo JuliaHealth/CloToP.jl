@@ -1,0 +1,26 @@
+name = "CloToP"
+uuid = "36264fbd-b81b-4a35-867d-4d62317665ca"
+authors = ["Adam Wysokinski <adam.wysokinski@umed.lodz.pl>"]
+version = "0.0.1"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
+NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
