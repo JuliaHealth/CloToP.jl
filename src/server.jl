@@ -128,10 +128,13 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
     clo_group_adjusted= zeros(Int64, length(doses))
 
     for idx in eachindex(doses)
-        data = deepcopy(patient_data)
+        data = deepcopy(paitent_data)
         data = vcat(data[1:2], doses[idx], data[3:end])
         clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler_clo, scaler_nclo)
     end
+
+    clo_concentration[1] = 0
+    nclo_concentration[1] = 0
 
     if minimum(clo_concentration) < 250
         min_dose_idx = findfirst(x -> x > 250, clo_concentration)

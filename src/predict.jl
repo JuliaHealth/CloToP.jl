@@ -110,6 +110,9 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
         clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler_clo, scaler_nclo)
     end
 
+    clo_concentration[1] = 0
+    nclo_concentration[1] = 0
+
     return collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_adjusted
 end
 
