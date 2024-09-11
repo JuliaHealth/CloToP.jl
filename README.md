@@ -194,7 +194,7 @@ The server is listening on port 8080. With your web browser, go to [http://local
 
 ![](images/webpage.png)
 
-Alternatively, the server is also available online at [https://clotop.eu/](https://clotop.eu/).
+Alternatively, the server is also available online at [https://csk.umed.pl/clotop](https://csk.umed.pl/clotop).
 
 ## How to Cite
 
