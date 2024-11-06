@@ -176,7 +176,7 @@ prediction      ├──────┼──────┤
 
 ## Quickstart
 
-Install the latest Julia version from [https://julialang.org/downloads/](https://julialang.org/downloads/)
+Install the latest Julia version from [https://julialang.org/downloads/](https://julialang.org/downloads/) (version ≥1.11 is required).
 
 Clone this repository, go to its folder and run to install required packages (this has to be done only once):
 

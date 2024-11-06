@@ -35,28 +35,24 @@ if isfile("models/clozapine_regressor_model.jlso")
     clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
 else
     error("File models/clozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
 end
 if isfile("models/norclozapine_regressor_model.jlso")
     println("Loading: norclozapine_regressor_model.jlso")
     nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
 else
     error("File models/norclozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
 end
 if isfile("models/scaler_clo.jld")
     println("Loading: scaler_clo.jld")
     scaler_clo = JLD2.load_object("models/scaler_clo.jld")
 else
     error("File models/scaler_clo.jld cannot be opened!")
-    exit(-1)
 end
 if isfile("models/scaler_nclo.jld")
     println("Loading: scaler_nclo.jld")
     scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
 else
     error("File models/scaler_nclo.jld cannot be opened!")
-    exit(-1)
 end
 println()
 
