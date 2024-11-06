@@ -198,7 +198,20 @@ Alternatively, the server is also available online at [https://csk.umed.pl/cloto
 
 ## How to Cite
 
-If you use this tool, please acknowledge us by citing our [paper](https://zenodo.org/records/11048224).
+If you use this tool, please acknowledge us by citing our [paper](https://doi.org/10.1016/j.psychres.2024.116256).
+
+```bibtex
+@article{wysokinski_2024,
+    title = {Clozapine Toxicity Predictor: deep neural network model predicting clozapine toxicity and its therapeutic dose range},
+    journal = {Psychiatry Research},
+    pages = {116256},
+    year = {2024},
+    issn = {0165-1781},
+    doi = {https://doi.org/10.1016/j.psychres.2024.116256},
+    url = {https://www.sciencedirect.com/science/article/pii/S0165178124005419},
+    author = {Adam Wysokiński and Joanna Dreczka},
+}
+```
 
 ## Contributors
 
