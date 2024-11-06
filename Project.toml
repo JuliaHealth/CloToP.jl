@@ -1,7 +1,7 @@
 name = "CloToP"
 uuid = "36264fbd-b81b-4a35-867d-4d62317665ca"
 authors = ["Adam Wysokinski <adam.wysokinski@umed.lodz.pl>"]
-version = "0.0.1"
+version = "1.0.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -17,7 +17,16 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-julia = "1.10"
+CSV = "0.10.15"
+DataFrames = "1.7"
+Flux = "0.14.10"
+JLD2 = "0.5"
+MLJ = "0.20"
+MLJFlux = "0.6"
+NNlib = "0.9.10"
+Plots = "1.40"
+StatsBase = "0.34"
+julia = "1.11"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
