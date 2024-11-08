@@ -32,44 +32,24 @@ println()
 
 @info "Loading data"
 
-# load training data
-if isfile("data/clozapine_test.csv")
-    println("Loading: clozapine_test.csv")
-    test_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
-else
-    error("File data/clozapine_test.csv cannot be opened!")
-    exit(-1)
-end
+# load testing data
+@assert isfile("data/clozapine_test.csv") "File data/clozapine_test.csv cannot be opened!"
+println("Loading: clozapine_test.csv")
+test_data = CSV.read("data/clozapine_test.csv", header=true, DataFrame)
 
 # load models
-if isfile("models/clozapine_regressor_model.jlso")
-    println("Loading: clozapine_regressor_model.jlso")
-    clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
-else
-    error("File models/clozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
-end
-if isfile("models/norclozapine_regressor_model.jlso")
-    println("Loading: norclozapine_regressor_model.jlso")
-    nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
-else
-    error("File models/norclozapine_regressor_model.jlso cannot be opened!")
-    exit(-1)
-end
-if isfile("models/scaler_clo.jld")
-    println("Loading: scaler_clo.jld")
-    scaler_clo = JLD2.load_object("models/scaler_clo.jld")
-else
-    error("File models/scaler_clo.jld cannot be opened!")
-    exit(-1)
-end
-if isfile("models/scaler_nclo.jld")
-    println("Loading: scaler_nclo.jld")
-    scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
-else
-    error("File models/scaler_nclo.jld cannot be opened!")
-    exit(-1)
-end
+@assert isfile("models/clozapine_regressor_model.jlso") "File models/clozapine_regressor_model.jlso cannot be opened!"
+println("Loading: clozapine_regressor_model.jlso")
+clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
+@assert isfile("models/norclozapine_regressor_model.jlso") "File models/norclozapine_regressor_model.jlso cannot be opened!"
+println("Loading: norclozapine_regressor_model.jlso")
+nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
+@assert isfile("models/scaler_clo.jld") "File models/scaler_clo.jld cannot be opened!"
+println("Loading: scaler_clo.jld")
+scaler_clo = JLD2.load_object("models/scaler_clo.jld")
+@assert isfile("models/scaler_nclo.jld") "File models/scaler_nclo.jld cannot be opened!"
+println("Loading: scaler_nclo.jld")
+scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
 
 println()
 println("Number of entries: $(nrows(test_data))")
@@ -196,4 +176,4 @@ p1 = Plots.scatter(clo_level .- clo_level_pred, ylims=(-500, 500), xlabel="patie
 p2 = Plots.scatter(nclo_level .- nclo_level_pred, ylims=(-200, 200), xlabel="patients", ylabel="error", title="norclozapine [ng/mL]", legend=false, xticks=(1:length(clo_level_pred), string.(1:length(clo_level_pred))))
 # p2 = Plots.plot!(nclo_level_pred, label="prediction", line=:dot, lw=2)
 p = Plots.plot(p1, p2, layout=(2, 1))
-savefig(p, "images/rr_testing_accuracy.png")
+savefig(p, "reports/rr_testing_accuracy.png")

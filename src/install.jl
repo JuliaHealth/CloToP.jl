@@ -1,19 +1,20 @@
 @info "Installing dependencies"
 
 using Pkg
-packages = ["HTTP",
-            "JSON3",
-            "CSV",
+packages = ["CSV",
             "DataFrames",
-            "JLD2",
+            "DSP",
+            "FFTW",
             "Flux",
+            "HTTP",
+            "JLD2",
+            "JSON3",
             "MLJ",
             "MLJFlux",
             "NNlib",
             "Optimisers",
             "Plots",
-            "Sockets",
+            "ProgressMeter",
+            "Random",
             "StatsBase"]
 Pkg.add(packages)
-
-@info "Done"

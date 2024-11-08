@@ -35,13 +35,9 @@ println()
 @info "Loading data"
 
 # load training data
-if isfile("data/clozapine_train.csv")
-    println("Loading: clozapine_train.csv")
-    train_raw_data = CSV.read("data/clozapine_train.csv", header=true, DataFrame)
-else
-    error("File data/clozapine_train.csv cannot be opened!")
-    exit(-1)
-end
+@assert isfile("data/clozapine_train.csv") "File data/clozapine_train.csv cannot be opened!"
+println("Loading: clozapine_train.csv")
+train_raw_data = CSV.read("data/clozapine_train.csv", header=true, DataFrame)
 
 println()
 println("Number of entries: $(nrows(train_raw_data))")
@@ -662,4 +658,4 @@ JLD2.save_object("models/scaler_nclo.jld", scaler_nclo)
 println()
 
 p = Plots.plot(p1, p2, layout=(2, 1))
-savefig(p, "images/rr_training_accuracy.png")
+savefig(p, "reports/rr_training_accuracy.png")
