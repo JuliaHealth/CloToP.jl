@@ -30,30 +30,16 @@ println()
 @info "Loading data"
 
 # load models
-if isfile("models/clozapine_regressor_model.jlso")
-    println("Loading: clozapine_regressor_model.jlso")
-    clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
-else
-    error("File models/clozapine_regressor_model.jlso cannot be opened!")
-end
-if isfile("models/norclozapine_regressor_model.jlso")
-    println("Loading: norclozapine_regressor_model.jlso")
-    nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
-else
-    error("File models/norclozapine_regressor_model.jlso cannot be opened!")
-end
-if isfile("models/scaler_clo.jld")
-    println("Loading: scaler_clo.jld")
-    scaler_clo = JLD2.load_object("models/scaler_clo.jld")
-else
-    error("File models/scaler_clo.jld cannot be opened!")
-end
-if isfile("models/scaler_nclo.jld")
-    println("Loading: scaler_nclo.jld")
-    scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
-else
-    error("File models/scaler_nclo.jld cannot be opened!")
-end
+@assert isfile("models/clozapine_regressor_model.jlso") "File models/clozapine_regressor_model.jlso cannot be opened!"
+println("Loading: clozapine_regressor_model.jlso")
+clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
+@assert isfile("models/norclozapine_regressor_model.jlso") "File models/norclozapine_regressor_model.jlso cannot be opened!"
+println("Loading: norclozapine_regressor_model.jlso")
+nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
+@assert isfile("models/scaler_clo.jld") "File models/scaler_clo.jld cannot be opened!"
+println("Loading: scaler_clo.jld")
+scaler_clo = JLD2.load_object("models/scaler_clo.jld")
+@assert isfile("models/scaler_nclo.jld") "File models/scaler_nclo.jld cannot be opened!"
 println()
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
@@ -197,6 +183,8 @@ function handle(req)
         @info "Query: sex: $sex, age: $age, clo_dose: $clo_dose, bmi: $bmi, crp: $crp, a4_ind: $a4_ind, a4_inh: $a4_inh, a4_s: $a4_s, a2_ind: $a2_ind, a2_inh: $a2_inh, a2_s: $a2_s"
         @info "Calculating predictions"
         clo_group, clo_group_adj, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler_clo, scaler_nclo)
+        clo_dose == 0 && (clo_level = 0)
+        clo_dose == 0 && (nclo_level = 0)
         return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*", "Access-Control-Request-Method"=>"GET,POST", "mode"=>"no-cors"], "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
     end
     return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*", "Access-Control-Request-Method"=>"GET,POST", "mode"=>"no-cors"], read("./index.html"))
