@@ -15,84 +15,93 @@ The model are actively developed and we expect its accuracy to improve.
 ### Training
 
 ```
-[ Info: Loading packages
        CSV 0.10.14
-DataFrames 1.6.1
-      JLD2 0.4.48
-       MLJ 0.20.5
-   MLJFlux 0.4.0
-      Flux 0.14.15
-     NNlib 0.4.0
-     Plots 1.40.4
+DataFrames 1.7.0
+      JLD2 0.5.8
+      Flux 0.14.25
+       MLJ 0.20.7
+   MLJFlux 0.6.0
+     NNlib 0.9.24
+Optimisers 0.3.4
+     Plots 1.40.8
  StatsBase 0.34.3
 
-[ Info: Loading data
 Loading: clozapine_train.csv
 
-Number of entries: 69
+Number of entries: 87
 Number of features: 11
 
-[ Info: Preprocessing
 Standardizing
 Splitting: 70:30
 
-[ Info: Creating regressor model: clozapine
+Initial RMSE: 79.7404
+Final RMSE: 74.1407
+Model parameters:
+  n_hidden: 170
+  dropout: 0.07
+  η: 0.01
+  epochs: 5600
+  batch_size: 2
+  λ: 0.1
+  α: 0.0
+
 Regressor accuracy: training
   R²: 1.0
-  RMSE: 13.98
+  RMSE: 16.03
 Regressor accuracy: validating
-  R²: 0.92
-  RMSE: 85.23
-[ Info: Training final model
+  R²: 0.9
+  RMSE: 89.49
 Regressor accuracy:
   R²: 1.0
-  RMSE: 18.42
+  RMSE: 17.39
 
-[ Info: Creating regressor model: norclozapine
+Initial RMSE: 61.3673
+Final RMSE: 61.4346
+Model parameters:
+  n_hidden: 64
+  dropout: 0.16
+  η: 0.01
+  epochs: 1000
+  batch_size: 2
+  λ: 0.1
+  α: 0.0
+
 Regressor accuracy: training
-  R²: 0.99
-  RMSE: 19.32
+  R²: 0.98
+  RMSE: 22.76
 Regressor accuracy: validating
-  R²: 0.8
-  RMSE: 62.76
-[ Info: Training final model
+  R²: 0.85
+  RMSE: 54.89
 Regressor accuracy:
   R²: 0.98
-  RMSE: 21.04
+  RMSE: 20.37
 
-[ Info: Classifying into groups
 Classification based on predicted clozapine level:
 Confusion matrix:
-  misclassification rate: 0.01
-  accuracy: 0.99
+  misclassification rate: 0.02
+  accuracy: 0.98
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  108 │    1 │
+           norm │  143 │    3 │
 prediction      ├──────┼──────┤
-           high │    0 │   29 │
+           high │    0 │   28 │
                 └──────┴──────┘
          
 Classification adjusted for predicted norclozapine level:
 Confusion matrix:
-  misclassification rate: 0.07
-  accuracy: 0.93
+  misclassification rate: 0.06
+  accuracy: 0.94
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  100 │    1 │
+           norm │  134 │    2 │
 prediction      ├──────┼──────┤
-           high │    8 │   29 │
+           high │    9 │   29 │
                 └──────┴──────┘
-         
-[ Info: Saving models
-Saving: clozapine_regressor_model.jlso
-Saving: norclozapine_regressor_model.jlso
-Saving: scaler_clo.jld
-Saving: scaler_nclo.jld
 ```
 
-![](images/rr_training_accuracy.png)
+![](reports/rr_training_accuracy.png)
 
 In the figure above, patients are sorted by increasing CLO or NCLO measured level.
 
@@ -103,18 +112,17 @@ Toxic clozapine level has been defined as > 550 ng/mL, recommended therapeutic c
 ### Testing
 
 ```
-[ Info: Loading packages
        CSV 0.10.14
-DataFrames 1.6.1
-      JLD2 0.4.48
-       MLJ 0.20.0
-   MLJFlux 0.5.1
-      Flux 0.14.15
-     NNlib 0.5.1
-     Plots 1.40.4
- StatsBase 0.33.21
+DataFrames 1.7.0
+      JLD2 0.5.8
+       MLJ 0.20.7
+   MLJFlux 0.6.0
+      Flux 0.14.25
+     NNlib 0.9.24
+Optimisers 0.3.4
+     Plots 1.40.8
+ StatsBase 0.34.3
 
-[ Info: Loading data
 Loading: clozapine_test.csv
 Loading: clozapine_regressor_model.jlso
 Loading: norclozapine_regressor_model.jlso
@@ -124,55 +132,49 @@ Loading: scaler_nclo.jld
 Number of entries: 3
 Number of features: 11
 
-[ Info: Predicting norclozapine level
-
-[ Info: Predicting clozapine level
-
-[ Info: Regressor accuracy
 Predicted levels:
-Subject ID: 1    CLO level: 806.4   prediction: 641.4   error: -165.0
-Subject ID: 1   NCLO level: 317.7   prediction: 306.0   error: -11.7
+Subject ID: 1     CLO level: 806.4   prediction: 395.6   error: -410.8
+Subject ID: 1    NCLO level: 317.7   prediction: 211.3   error: -106.4
 
-Subject ID: 2    CLO level: 300.5   prediction: 415.2   error: 114.7
-Subject ID: 2   NCLO level: 138.3   prediction: 227.3   error: 89.0
+Subject ID: 2     CLO level: 300.5   prediction: 410.5   error: 110.0
+Subject ID: 2    NCLO level: 138.3   prediction: 238.6   error: 100.3
 
-Subject ID: 3    CLO level: 264.5   prediction: 233.3   error: -31.2
-Subject ID: 3   NCLO level: 161.1   prediction: 148.5   error: -12.6
+Subject ID: 3     CLO level: 264.5   prediction: 269.0   error: 4.5
+Subject ID: 3    NCLO level: 161.1   prediction: 170.5   error: 9.4
 
 Predicting: CLOZAPINE
-  R²: 0.77
-  RMSE: 117.41
+  R²: 0.01
+  RMSE: 245.54
 Predicting: NORCLOZAPINE
-  R²: 0.57
-  RMSE: 52.33
+  R²: -0.13
+  RMSE: 84.6
 
-[ Info: Classifying into groups
 Classification based on predicted clozapine level:
 Confusion matrix:
-  misclassification rate: 0.0
-  accuracy: 1.0
+  misclassification rate: 0.33
+  accuracy: 0.67
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │    2 │    0 │
+           norm │    2 │    1 │
 prediction      ├──────┼──────┤
-           high │    0 │    1 │
+           high │    0 │    0 │
                 └──────┴──────┘
          
 Classification adjusted for predicted norclozapine level:
 Confusion matrix:
-  misclassification rate: 0.0
-  accuracy: 1.0
+  misclassification rate: 0.33
+  accuracy: 0.67
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │    2 │    0 │
+           norm │    2 │    1 │
 prediction      ├──────┼──────┤
-           high │    0 │    1 │
+           high │    0 │    0 │
                 └──────┴──────┘
 ```
 
-![](images/rr_testing_accuracy.png)
+![](reports/rr_testing_accuracy.png)
 
 ## Quickstart
 
