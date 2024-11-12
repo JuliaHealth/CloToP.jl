@@ -1,6 +1,9 @@
 @info "Loading packages"
 
 using Pkg
+
+Pkg.activate(".")
+
 using HTTP
 using JSON3
 using Base64
@@ -40,6 +43,7 @@ nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
 println("Loading: scaler_clo.jld")
 scaler_clo = JLD2.load_object("models/scaler_clo.jld")
 @assert isfile("models/scaler_nclo.jld") "File models/scaler_nclo.jld cannot be opened!"
+scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
 println()
 
 vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
@@ -108,7 +112,7 @@ function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
     clo_group_adjusted= zeros(Int64, length(doses))
 
     for idx in eachindex(doses)
-        data = deepcopy(paitent_data)
+        data = deepcopy(patient_data)
         data = vcat(data[1:2], doses[idx], data[3:end])
         clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler_clo, scaler_nclo)
     end

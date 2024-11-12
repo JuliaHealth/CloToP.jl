@@ -4,10 +4,13 @@ authors = ["Adam Wysokinski <adam.wysokinski@umed.lodz.pl>"]
 version = "1.0.0"
 
 [deps]
+Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
@@ -17,10 +20,13 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+Base64 = "1.11.0"
 CSV = "0.10.15"
 DataFrames = "1.7"
 Flux = "0.14.10"
+HTTP = "1.10.10"
 JLD2 = "0.5"
+JSON3 = "1.14.1"
 MLJ = "0.20"
 MLJFlux = "0.6"
 NNlib = "0.9.10"
