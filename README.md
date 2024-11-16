@@ -198,6 +198,8 @@ The server is listening on port 8080. With your web browser, go to [http://local
 
 Alternatively, the server is also available online at [https://csk.umed.pl/clotop](https://csk.umed.pl/clotop).
 
+Conversion factors from ng/mL to nmol/L for clozapine and norclozapine are 3.06 and 3.20, respectively (source: [https://testguide.adhb.govt.nz/EGuide/?elv=1&name=Clozapine&pn=1672&mn=833&sd=3&ts=148a090cbe5](https://testguide.adhb.govt.nz/EGuide/?elv=1&name=Clozapine&pn=1672&mn=833&sd=3&ts=148a090cbe5)).
+
 ## How to Cite
 
 If you use this tool, please acknowledge us by citing our [paper](https://doi.org/10.1016/j.psychres.2024.116256).
