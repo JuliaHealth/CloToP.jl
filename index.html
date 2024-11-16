@@ -137,6 +137,12 @@
           <td id="nclo_level" style="font-weight:bold"></td>
         </tr>
         <tr>
+          <td style="text-align:right">Clozapine [nmol/L]:</td>
+          <td id="clo_level_nmol" style="font-weight:bold"></td>
+          <td style="text-align:right">Norclozapine [nmol/L]:</td>
+          <td id="nclo_level_nmol" style="font-weight:bold"></td>
+        </tr>
+        <tr>
           <td style="text-align:right">Clozapine level:</td>
           <td id="clo_group" style="font-weight:bold"></td>
           <td style="text-align:right">Clozapine level (adjusted):</td>
@@ -199,6 +205,8 @@
       dose1 = clo_prediction_response.split(" ")[4];
       dose2 = clo_prediction_response.split(" ")[5];
       plot = clo_prediction_response.split(" ")[6];
+      clo_level_nmol = clo_level * 3.06
+      nclo_level_nmol = nclo_level * 3.20
       console.log(clo_group);
       console.log(clo_group_adj);
       if (clo_group == 0) {
