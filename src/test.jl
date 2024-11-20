@@ -1,10 +1,13 @@
 @info "Loading packages"
 
+# config
 standardize_data = true
 
 using Pkg
-# packages = ["CSV", "DataFrames", "JLD2", "MLJ", "MLJFlux", "NNlib", "Flux" "Plots", "StatsBase"]
+# packages = ["CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", Plots", "StatsBase"]
 # Pkg.add(packages)
+
+Pkg.activate(".")
 
 using CSV
 using DataFrames
