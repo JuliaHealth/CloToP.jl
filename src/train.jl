@@ -117,12 +117,12 @@ if standardize_data
     # model parameters for standardized data
     init_n_hidden= 84
     init_dropout = 0.07
-    init_η = 0.013
+    init_η = 0.07
     init_η = 0.01
-    init_epochs = 5600
+    init_epochs = 9900
     init_batch_size = 2
     init_λ = 0.1
-    init_α = 0.0
+    init_α = 0.69
 else
     # model parameters for non-standardized data
     init_n_hidden = 84
@@ -350,7 +350,7 @@ println()
 if standardize_data
     # model parameters for standardized data
     init_n_hidden = 64
-    init_dropout = 0.1
+    init_dropout = 0.05
     init_η = 0.01
     init_epochs = 1000
     init_batch_size = 2
@@ -485,7 +485,7 @@ if optimize_nclo_regressor
         model_nclo.optimiser = Optimisers.Adam(init_η, (0.9, 0.999), 1.0e-8)
     end
 
-    @info "Optimizing: lambda"
+    @info "Optimizing: λ"
     lambda = 0.0:0.1:10
     training_error = zeros(length(lambda))
     progbar = Progress(length(lambda), dt=1, barlen=20, color=:white)
