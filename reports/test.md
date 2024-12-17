@@ -21,21 +21,21 @@ Number of features: 11
 
 
 Predicted levels:
-Subject ID: 1 	  CLO level: 806.4 	 prediction: 396.0 	 error: -410.4
-Subject ID: 1 	 NCLO level: 317.7 	 prediction: 200.9 	 error: -116.8
+Subject ID: 1 	  CLO level: 806.4 	 prediction: 467.6 	 error: -338.8
+Subject ID: 1 	 NCLO level: 317.7 	 prediction: 242.2 	 error: -75.5
 
-Subject ID: 2 	  CLO level: 300.5 	 prediction: 391.4 	 error: 90.9
-Subject ID: 2 	 NCLO level: 138.3 	 prediction: 229.4 	 error: 91.1
+Subject ID: 2 	  CLO level: 300.5 	 prediction: 390.5 	 error: 90.0
+Subject ID: 2 	 NCLO level: 138.3 	 prediction: 232.6 	 error: 94.3
 
-Subject ID: 3 	  CLO level: 264.5 	 prediction: 281.2 	 error: 16.7
-Subject ID: 3 	 NCLO level: 161.1 	 prediction: 163.5 	 error: 2.4
+Subject ID: 3 	  CLO level: 264.5 	 prediction: 265.1 	 error: 0.6
+Subject ID: 3 	 NCLO level: 161.1 	 prediction: 152.7 	 error: -8.4
 
 Predicting: CLOZAPINE
-  R²:	0.04
-  RMSE:	242.88
+  R²:	0.33
+  RMSE:	202.39
 Predicting: NORCLOZAPINE
-  R²:	-0.15
-  RMSE:	85.53
+  R²:	0.23
+  RMSE:	69.91
 
 Classification based on predicted clozapine level:
 Confusion matrix:
