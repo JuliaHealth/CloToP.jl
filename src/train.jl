@@ -548,7 +548,7 @@ if optimize_nclo_regressor
                          epochs = init_epochs, 
                          batch_size = init_batch_size, 
                          lambda = init_λ, 
-                         alpha = init_α) 
+                         alpha = init_α)
     end
 end
 
