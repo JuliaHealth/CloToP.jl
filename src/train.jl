@@ -116,10 +116,9 @@ println()
 if standardize_data
     # model parameters for standardized data
     init_n_hidden= 84
-    init_dropout = 0.07
-    init_η = 0.07
+    init_dropout = 0.26
     init_η = 0.01
-    init_epochs = 9900
+    init_epochs = 2900
     init_batch_size = 2
     init_λ = 0.1
     init_α = 0.69
@@ -349,10 +348,10 @@ println()
 
 if standardize_data
     # model parameters for standardized data
-    init_n_hidden = 64
-    init_dropout = 0.05
+    init_n_hidden = 118
+    init_dropout = 0.64
     init_η = 0.01
-    init_epochs = 1000
+    init_epochs = 700
     init_batch_size = 2
     init_λ = 0.1
     init_α = 0.0

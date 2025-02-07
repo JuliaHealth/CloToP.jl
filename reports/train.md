@@ -17,25 +17,47 @@ Number of features: 11
 Standardizing
 Splitting: 70:30
 
+Initial RMSE: 91.3994
+Final RMSE: 95.3455
+Model parameters:
+  n_hidden: 84
+  dropout: 0.26
+  η: 0.01
+  epochs: 2900
+  batch_size: 2
+  λ: 0.1
+  α: 0.69
+
 Regressor accuracy: training
   R²: 1.0
-  RMSE: 14.02
+  RMSE: 15.59
 Regressor accuracy: validating
-  R²: 0.84
-  RMSE: 131.13
+  R²: 0.88
+  RMSE: 93.29
 Regressor accuracy:
   R²: 1.0
-  RMSE: 15.98
+  RMSE: 14.76
+
+Initial RMSE: 103.397
+Final RMSE: 82.8903
+Model parameters:
+  n_hidden: 118
+  dropout: 0.64
+  η: 0.01
+  epochs: 700
+  batch_size: 2
+  λ: 0.1
+  α: 0.0
 
 Regressor accuracy: training
   R²: 0.99
-  RMSE: 17.82
+  RMSE: 16.35
 Regressor accuracy: validating
-  R²: 0.63
-  RMSE: 111.42
+  R²: 0.57
+  RMSE: 95.78
 Regressor accuracy:
-  R²: 0.99
-  RMSE: 19.23
+  R²: 0.98
+  RMSE: 20.38
 
 Classification based on predicted clozapine level:
 Confusion matrix:
@@ -44,21 +66,21 @@ Confusion matrix:
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  193 │    2 │
+           norm │  194 │    3 │
 prediction      ├──────┼──────┤
-           high │    1 │   42 │
+           high │    0 │   41 │
                 └──────┴──────┘
          
 Classification adjusted for predicted norclozapine level:
 Confusion matrix:
-  misclassification rate: 0.06
-  accuracy: 0.94
+  misclassification rate: 0.05
+  accuracy: 0.95
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  182 │    2 │
+           norm │  184 │    1 │
 prediction      ├──────┼──────┤
-           high │   12 │   42 │
+           high │   10 │   43 │
                 └──────┴──────┘
          
 Saving: clozapine_regressor_model.jlso
