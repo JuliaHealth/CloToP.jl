@@ -11,7 +11,7 @@ Optimisers 0.3.4
 
 Loading: clozapine_train.csv
 
-Number of entries: 110
+Number of entries: 119
 Number of features: 11
 
 Standardizing
@@ -19,23 +19,23 @@ Splitting: 70:30
 
 Regressor accuracy: training
   R²: 1.0
-  RMSE: 15.35
+  RMSE: 14.02
 Regressor accuracy: validating
-  R²: 0.87
-  RMSE: 116.83
+  R²: 0.84
+  RMSE: 131.13
 Regressor accuracy:
   R²: 1.0
-  RMSE: 17.14
+  RMSE: 15.98
 
 Regressor accuracy: training
-  R²: 0.98
-  RMSE: 20.03
+  R²: 0.99
+  RMSE: 17.82
 Regressor accuracy: validating
-  R²: 0.87
-  RMSE: 53.48
+  R²: 0.63
+  RMSE: 111.42
 Regressor accuracy:
   R²: 0.99
-  RMSE: 17.32
+  RMSE: 19.23
 
 Classification based on predicted clozapine level:
 Confusion matrix:
@@ -44,24 +44,25 @@ Confusion matrix:
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  179 │    2 │
+           norm │  193 │    2 │
 prediction      ├──────┼──────┤
-           high │    1 │   38 │
+           high │    1 │   42 │
                 └──────┴──────┘
-
+         
 Classification adjusted for predicted norclozapine level:
 Confusion matrix:
-  misclassification rate: 0.05
-  accuracy: 0.95
+  misclassification rate: 0.06
+  accuracy: 0.94
                      group
                   norm   high   
                 ┌──────┬──────┐
-           norm │  172 │    2 │
+           norm │  182 │    2 │
 prediction      ├──────┼──────┤
-           high │    8 │   38 │
+           high │   12 │   42 │
                 └──────┴──────┘
-
+         
 Saving: clozapine_regressor_model.jlso
 Saving: norclozapine_regressor_model.jlso
 Saving: scaler_clo.jld
 Saving: scaler_nclo.jld
+
