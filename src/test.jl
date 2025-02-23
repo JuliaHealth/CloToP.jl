@@ -7,7 +7,7 @@ using Pkg
 # packages = ["CSV", "DataFrames", "JLD2", "Flux", "MLJ", "MLJFlux", "NNlib", "Optimisers", Plots", "StatsBase"]
 # Pkg.add(packages)
 
-# Pkg.activate(".")
+Pkg.activate(".")
 
 using CSV
 using DataFrames
