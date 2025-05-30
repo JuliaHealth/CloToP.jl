@@ -117,7 +117,7 @@ println()
 
 if standardize_data
     # model parameters for standardized data
-    init_n_hidden= 46
+    init_n_hidden = 46
     init_dropout = 0.26
     init_η = 0.01
     init_epochs = 2900
