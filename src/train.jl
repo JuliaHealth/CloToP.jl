@@ -21,8 +21,8 @@ using Optimisers
 using Flux
 using Random
 using Plots
-using ProgressMeter
 using StatsBase
+using ProgressMeter
 
 BLAS.set_num_threads(1)
 

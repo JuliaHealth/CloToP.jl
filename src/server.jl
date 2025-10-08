@@ -12,6 +12,7 @@ using JLD2
 using MLJ
 using MLJFlux
 using NNlib
+using Optimisers
 using Flux
 using Random
 using Plots
@@ -26,6 +27,7 @@ println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
 println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
 println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
 println("     NNlib $(m[findfirst(v -> v.name == "NNlib", m)].version)")
+println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
 println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
 println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
 println()

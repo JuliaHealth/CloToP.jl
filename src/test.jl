@@ -15,6 +15,7 @@ using JLD2
 using MLJ
 using MLJFlux
 using NNlib
+using Optimisers
 using Flux
 using Random
 using Plots
