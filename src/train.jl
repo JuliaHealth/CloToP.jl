@@ -1,8 +1,8 @@
 @info "Loading packages"
 
 # config
-optimize_clo_regressor = true
-optimize_nclo_regressor = true
+optimize_clo_regressor = false
+optimize_nclo_regressor = false
 standardize_data = true
 
 using Pkg
@@ -121,7 +121,7 @@ if standardize_data
     init_dropout = 0.26
     init_η = 0.01
     init_epochs = 2900
-    init_batch_size = 2
+    init_batch_size = 6
     init_λ = 0.1
     init_α = 0.69
 else
@@ -350,12 +350,12 @@ println()
 
 if standardize_data
     # model parameters for standardized data
-    init_n_hidden = 118
+    init_n_hidden = 170
     init_dropout = 0.64
     init_η = 0.01
-    init_epochs = 10000
-    init_batch_size = 2
-    init_λ = 0.1
+    init_epochs = 800
+    init_batch_size = 10
+    init_λ = 9.6
     init_α = 0.0
 else
     # model parameters for non-standardized data
