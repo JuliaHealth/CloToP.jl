@@ -26,8 +26,8 @@ Version 2.0 is the default branch ([`2.0`](https://codeberg.org/AdamWysokinski/C
 - **Dosing schedule**: morning, midday, and evening doses are entered separately. Four representations of the dose were compared (three doses; total dose; total dose + MM index; total dose + morning and midday doses). The deployed model uses the **total daily dose, morning dose, and midday dose**.
 - **Independent CLO and NCLO models**: version 1.0 predicted NCLO first and used it as an input of the CLO model.
 - **Network**: three hidden layers (128, 64, 32 neurons, Swish activation, dropout), mean absolute error loss, AdamW optimizer with an elastic net penalty; sex and numbers of CYP inducers/inhibitors/substrates enter the network as categorical features (entity embeddings).
-- **Validation without information leakage**: 80:20 split at the patient level with a fixed random seed; hyperparameters selected by 6-fold patient-level cross-validation within the training group; the testing group is never used for model selection.
-- **Low doses** (≤ 100 mg/day, not represented in the training data): concentrations are predicted by polynomial models through the origin (order selected by BIC; currently quadratic) instead of the neural network.
+- **Validation without information leakage**: 80:20 split at the patient level with a fixed random seed; hyperparameters selected by 6-fold patient-level cross-validation within the training group; the testing group is never used for hyperparameter selection.
+- **Low doses** (≤ 100 mg/day, not represented in the training data): concentrations are predicted by polynomial models through the origin (order selected by BIC; currently quadratic) instead of the neural network; between 100 and 200 mg/day, the polynomial and neural network predictions are blended linearly to ensure a continuous transition.
 - Larger dataset: 123 patients, one observation per patient.
 
 ---
@@ -50,14 +50,16 @@ Tobacco smoking counts as one CYP1A2 inducer. None of the patients in the traini
 
 # Performance
 
-Performance of the deployed model (total dose + morning/midday doses) in the testing group (24 patients not used for training or model selection):
+Performance of the deployed model (total dose + morning/midday doses) in the testing group (24 patients not used for training or hyperparameter selection):
 
 | Target | RMSE [ng/mL] | R²    | MAE [ng/mL] |
 | ------ | ------------ | ----- | ----------- |
-| CLO    | 274.6        | −0.12 | 189.7       |
-| NCLO   | 85.7         | 0.19  | 58.3        |
+| CLO    | 240.3        | 0.15  | 172.0       |
+| NCLO   | 83.5         | 0.23  | 56.4        |
 
-**Prediction errors are large.** For CLO, none of the neural network models outperformed a simple quadratic model of the total daily dose in the testing group (RMSE 209.3 ng/mL), so individual predictions may differ from measured concentrations by several hundred ng/mL. The tool does not replace therapeutic drug monitoring.
+This dose representation was chosen because it had the lowest testing error for NCLO and a testing error for CLO close to the lowest one (RMSE 235.1 ng/mL for total dose + MM); as the choice was based on the testing group, these values may be slightly optimistic.
+
+**Prediction errors are large.** For CLO, none of the neural network models had a lower RMSE than a simple quadratic model of the total daily dose in the testing group (RMSE 209.3 ng/mL), so individual predictions may differ from measured concentrations by several hundred ng/mL. The tool does not replace therapeutic drug monitoring.
 
 All performance measures (training, testing, and final models for all four dose representations) are in [`reports/performance.csv`](reports/performance.csv); the training log is in [`reports/report.txt`](reports/report.txt). The models are under active development and we expect their accuracy to improve as more data are collected.
 

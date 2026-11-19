@@ -74,9 +74,14 @@ const FEATURES = vcat(["male", "age", "total_dose", "morning_dose", "midday_dose
 feature_row(male, age, morning, midday, evening, bmi, crp, cyp) =
     Matrix{Float64}(reshape([male, age, morning + midday + evening, morning, midday, bmi, crp, cyp...], 1, :))
 
-# polynomial models are used for total doses ≤ LOW_DOSE_MAX mg/day (must match src/train.jl)
+# polynomial models are used for total doses ≤ LOW_DOSE_MAX mg/day (must match src/train.jl),
+# neural network models for total doses ≥ BLEND_MAX mg/day; in between, the predictions are
+# blended linearly (weight of the neural network rising from 0 to 1)
 const LOW_DOSE_MAX = 100
+const BLEND_MAX = 200
 polynomial(c, dose) = round(sum(c[i] * dose^i for i in eachindex(c)), digits = 1)
+nn_weight(dose) = clamp((dose - LOW_DOSE_MAX) / (BLEND_MAX - LOW_DOSE_MAX), 0, 1)
+blend(poly, nn, dose) = (1 - nn_weight(dose)) * poly + nn_weight(dose) * nn
 
 # clozapine: therapeutic 250-550 ng/mL, toxic > 550 ng/mL
 # source: Northwood et al. 2023, https://doi.org/10.1192/bjp.2023.27
@@ -171,7 +176,8 @@ function ctp(patient_data::Vector{<:Real}, clo_regressor_machine, norclo_regress
     X = feature_row(p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8:13])
     clo, nclo = predict_levels(X, FEATURES, clo_regressor_machine, norclo_regressor_machine,
                                scaler_features, scaler_clo_level, scaler_norclo_level)
-    clo_level, nclo_level = clo[1], nclo[1]
+    clo_level = round(blend(polynomial(CLO_POLY, total_dose), clo[1], total_dose), digits = 1)
+    nclo_level = round(blend(polynomial(NCLO_POLY, total_dose), nclo[1], total_dose), digits = 1)
 
     return clo_toxic(clo_level), clo_toxic_adj(clo_level, nclo_level), clo_level, nclo_level
 
@@ -226,27 +232,25 @@ function recommended_dose(patient_data::Vector{<:Real}, clo_regressor_machine, n
 
     length(patient_data) == 13 || throw(ArgumentError("Patient data vector must have 13 elements."))
 
-    doses_low = 0:6.25:LOW_DOSE_MAX
-    clo_concentration_poly = polynomial.(Ref(CLO_POLY), doses_low)
-    nclo_concentration_poly = polynomial.(Ref(NCLO_POLY), doses_low)
+    doses = collect(0:6.25:800)
+    clo_concentration = polynomial.(Ref(CLO_POLY), doses)
+    nclo_concentration = polynomial.(Ref(NCLO_POLY), doses)
 
-    # neural network predictions for all doses in a single batch
-    doses_high = (LOW_DOSE_MAX + 6.25):6.25:800
+    # neural network predictions for doses > LOW_DOSE_MAX in a single batch
+    nn_idx = findall(>(LOW_DOSE_MAX), doses)
     p = Float64.(patient_data)
     patient_total = sum(p[3:5])
     fractions = patient_total > 0 ? p[3:5] ./ patient_total : [0.0, 0.0, 1.0]
-    X = reduce(vcat, [feature_row(p[1], p[2], (dose .* fractions)..., p[6], p[7], p[8:13]) for dose in doses_high])
-    clo_concentration, nclo_concentration = predict_levels(X, FEATURES, clo_regressor_machine, norclo_regressor_machine,
-                                                           scaler_features, scaler_clo_level, scaler_norclo_level)
+    X = reduce(vcat, [feature_row(p[1], p[2], (dose .* fractions)..., p[6], p[7], p[8:13]) for dose in doses[nn_idx]])
+    clo_nn, nclo_nn = predict_levels(X, FEATURES, clo_regressor_machine, norclo_regressor_machine,
+                                     scaler_features, scaler_clo_level, scaler_norclo_level)
 
-    doses = collect(0:6.25:800)
-    clo_concentration = vcat(clo_concentration_poly, clo_concentration)
-    nclo_concentration = vcat(nclo_concentration_poly, nclo_concentration)
+    # polynomial models up to LOW_DOSE_MAX, linear blend up to BLEND_MAX, neural networks above
+    clo_concentration[nn_idx] = blend.(clo_concentration[nn_idx], clo_nn, doses[nn_idx])
+    nclo_concentration[nn_idx] = blend.(nclo_concentration[nn_idx], nclo_nn, doses[nn_idx])
 
-    # smooth the transition between the polynomial and neural network models
-    clo_concentration[2:33] = filter_mavg(clo_concentration[2:33], k = 4)
+    # gentle smoothing of the whole curve
     clo_concentration = filter_mavg(clo_concentration, k = 2)
-    nclo_concentration[2:33] = filter_mavg(nclo_concentration[2:33], k = 4)
     nclo_concentration = filter_mavg(nclo_concentration, k = 2)
 
     clo_groups = clo_toxic.(clo_concentration)

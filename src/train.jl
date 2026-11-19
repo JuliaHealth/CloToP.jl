@@ -18,7 +18,7 @@ const NFOLDS = 6      # cross-validation folds used for tuning
 const SEED = 42
 const MM_MIDDAY_WEIGHT = 0.5861325
 const POLY_MAX_ORDER = 4 # polynomial dose-concentration models: orders 1:POLY_MAX_ORDER
-const LOW_DOSE_MAX = 100 # src/server.jl uses the polynomial models for total doses ≤ LOW_DOSE_MAX
+const LOW_DOSE_MAX = 100 # src/server.jl uses the polynomial models for total doses ≤ LOW_DOSE_MAX (blended with the neural networks up to 200 mg/day)
 
 !isdir("reports") && mkdir("reports")
 !isdir("models") && mkdir("models")
