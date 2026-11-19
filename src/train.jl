@@ -460,8 +460,8 @@ clo_outliers_idx = raw_data.clozapine .> clo_outlier
 println("Number of extreme clozapine outliers removed: $(count(clo_outliers_idx))")
 raw_data = raw_data[.!clo_outliers_idx, :]
 
-# derived dose features (computed from the three doses; data/clozapine.csv columns
-# total_dose / mm_ratio are not used)
+# derived dose features (computed from the three doses; the total_dose column of
+# data/clozapine.csv is not used)
 raw_data.total_dose = raw_data.morning_dose .+ raw_data.midday_dose .+ raw_data.evening_dose
 all(>(0), raw_data.total_dose) || error("Total dose must be > 0 for all observations!")
 raw_data.mm = (raw_data.morning_dose .+ MM_MIDDAY_WEIGHT .* raw_data.midday_dose) ./ raw_data.total_dose
