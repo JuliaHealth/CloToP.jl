@@ -1,0 +1,151 @@
+Loading: packages
+         CSV: 0.10.17
+  DataFrames: 1.8.3
+        JLD2: 0.6.7
+        Flux: 0.16.15
+         MLJ: 0.23.3
+     MLJFlux: 0.6.9
+  Optimisers: 0.4.11
+       Plots: 1.41.8
+   StatsBase: 0.34.13
+     Threads: 6
+Loading: NeuralNetworkRegressor
+Loading: clozapine.csv
+
+Polynomial models: concentration ~ total dose
+============================================================
+  clozapine, order 1: BIC = 1751.97, adj. R² = 0.7513, RSE = 289.4
+  clozapine, order 2: BIC = 1743.73, adj. R² = 0.7745, RSE = 275.6  ← selected
+  clozapine, order 3: BIC = 1747.94, adj. R² = 0.7738, RSE = 276.1
+  clozapine, order 4: BIC = 1752.71, adj. R² = 0.7719, RSE = 277.2
+  clozapine: conc = 2.071226086567558 × td + -0.0015498429168550054 × td^2
+  norclozapine, order 1: BIC = 1671.27, adj. R² = 0.5779, RSE = 208.5
+  norclozapine, order 2: BIC = 1666.24, adj. R² = 0.6071, RSE = 201.1  ← selected
+  norclozapine, order 3: BIC = 1670.62, adj. R² = 0.6053, RSE = 201.6
+  norclozapine, order 4: BIC = 1674.89, adj. R² = 0.6037, RSE = 202.0
+  norclozapine: conc = 1.1096755967617462 × td + -0.0009752539513817932 × td^2
+Saving: reports/polynomial_models.csv
+Saving: models/polynomial_models.jld
+Number of extreme clozapine outliers removed: 1
+  Levels of inducers_3a4 in training data: [0]
+  Levels of inhibitors_3a4 in training data: [0, 1, 2]
+  Levels of substrates_3a4 in training data: [0, 1, 2, 3, 5]
+  Levels of inducers_1a2 in training data: [0, 1]
+  Levels of inhibitors_1a2 in training data: [0]
+  Levels of substrates_1a2 in training data: [0, 1, 2, 3]
+Number of real observations: 122
+Number of synthetic observations added: 122
+Splitting 80:20 (by patient)
+
+Model variant: threedoses
+Features: male, age, morning_dose, midday_dose, evening_dose, bmi, crp, inducers_3a4, inhibitors_3a4, substrates_3a4, inducers_1a2, inhibitors_1a2, substrates_1a2
+============================================================
+  Number of observations: 366
+  Number of features: 13
+
+Creating regressor model: clozapine (threedoses)
+------------------------------------------------------------
+  Initial model (testing)
+    R²:   -0.31
+    RMSE: 297.0194
+Running MLJ grid search
+  Initial model CV MAE: 0.652
+  Optimizing: eta
+    Best CV MAE: 0.6311
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+    Best CV MAE: 0.5587
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+    Best CV MAE: 0.5411
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.001
+    alpha:      0.0
+    lambda:     0.1
+    epochs:     1600
+    batch_size: 8
+  Tuned model (training)
+    R²:   0.67
+    RMSE: 159.825
+  Tuned model (testing)
+    R²:   -1.4
+    RMSE: 402.4246
+  Clozapine level groups (testing)
+    Accuracy: 0.83
+    Misclassification rate: 0.17
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  14  │  1   │
+├─────────┼──────┼──────┤
+│  high   │  3   │  6   │
+└─────────┴──────┴──────┘
+
+
+Training the final model
+  Final model (all observations, in-sample)
+    R²:   0.64
+    RMSE: 166.74
+  Clozapine level groups (all observations, in-sample)
+    Accuracy: 0.87
+    Misclassification rate: 0.13
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  71  │  9   │
+├─────────┼──────┼──────┤
+│  high   │  7   │  35  │
+└─────────┴──────┴──────┘
+
+
+
+Creating regressor model: norclozapine (threedoses)
+------------------------------------------------------------
+  Initial model (testing)
+    R²:   -2.57
+    RMSE: 179.4116
+Running MLJ grid search
+  Initial model CV MAE: 0.5256
+  Optimizing: eta
+    Best CV MAE: 0.5091
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+    Best CV MAE: 0.4615
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+    Best CV MAE: 0.4502
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.0001
+    alpha:      1.0
+    lambda:     0.01
+    epochs:     6400
+    batch_size: 16
+  Tuned model (training)
+    R²:   0.28
+    RMSE: 181.8864
+  Tuned model (testing)
+    R²:   -0.29
+    RMSE: 107.8491
+Training the final model
+  Final model (all observations, in-sample)
+    R²:   0.32
+    RMSE: 162.6355
+
+Saving: clozapine_regressor_machine.jlso
+Saving: scaler_clozapine_level.jld
+Saving: norclozapine_regressor_machine.jlso
+Saving: scaler_nclozapine_level.jld
+Saving: scaler_features.jld
+Saving: reports/performance.csv
+Saving: cyp_levels.jld
+
+Training completed
+
