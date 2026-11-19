@@ -1,8 +1,4 @@
-@info "Loading packages"
-
-using Pkg
-
-Pkg.activate(".")
+println("Loading: packages")
 
 using HTTP
 using JSON3
@@ -11,196 +7,377 @@ using DataFrames
 using JLD2
 using MLJ
 using MLJFlux
-using NNlib
 using Optimisers
 using Flux
-using Random
 using Plots
 using StatsBase
 
-m = Pkg.Operations.Context().env.manifest
-println("      HTTP $(m[findfirst(v -> v.name == "HTTP", m)].version)")
-println("     JSON3 $(m[findfirst(v -> v.name == "JSON3", m)].version)")
-println("DataFrames $(m[findfirst(v -> v.name == "DataFrames", m)].version)")
-println("      JLD2 $(m[findfirst(v -> v.name == "JLD2", m)].version)")
-println("       MLJ $(m[findfirst(v -> v.name == "MLJ", m)].version)")
-println("   MLJFlux $(m[findfirst(v -> v.name == "MLJFlux", m)].version)")
-println("      Flux $(m[findfirst(v -> v.name == "Flux", m)].version)")
-println("     NNlib $(m[findfirst(v -> v.name == "NNlib", m)].version)")
-println("Optimisers $(m[findfirst(v -> v.name == "Optimisers", m)].version)")
-println("     Plots $(m[findfirst(v -> v.name == "Plots", m)].version)")
-println(" StatsBase $(m[findfirst(v -> v.name == "StatsBase", m)].version)")
-println()
+# do not display plots
+ENV["GKSwstype"] = "100"
 
-@info "Loading data"
+println("        HTTP: $(string(pkgversion(HTTP)))")
+println("       JSON3: $(string(pkgversion(JSON3)))")
+println("  DataFrames: $(string(pkgversion(DataFrames)))")
+println("        JLD2: $(string(pkgversion(JLD2)))")
+println("        Flux: $(string(pkgversion(Flux)))")
+println("         MLJ: $(string(pkgversion(MLJ)))")
+println("     MLJFlux: $(string(pkgversion(MLJFlux)))")
+println("  Optimisers: $(string(pkgversion(Optimisers)))")
+println("       Plots: $(string(pkgversion(Plots)))")
+println("   StatsBase: $(string(pkgversion(StatsBase)))")
 
-# load models
-@assert isfile("models/clozapine_regressor_model.jlso") "File models/clozapine_regressor_model.jlso cannot be opened!"
-println("Loading: clozapine_regressor_model.jlso")
-clo_model_regressor = machine("models/clozapine_regressor_model.jlso")
-@assert isfile("models/norclozapine_regressor_model.jlso") "File models/norclozapine_regressor_model.jlso cannot be opened!"
-println("Loading: norclozapine_regressor_model.jlso")
-nclo_model_regressor = machine("models/norclozapine_regressor_model.jlso")
-@assert isfile("models/scaler_clo.jld") "File models/scaler_clo.jld cannot be opened!"
-println("Loading: scaler_clo.jld")
-scaler_clo = JLD2.load_object("models/scaler_clo.jld")
-@assert isfile("models/scaler_nclo.jld") "File models/scaler_nclo.jld cannot be opened!"
-scaler_nclo = JLD2.load_object("models/scaler_nclo.jld")
-println()
+# ---------------------------------------------------------------------------
+# models and scalers (written by src/train.jl)
+# ---------------------------------------------------------------------------
 
-vsearch(y::Real, x::AbstractVector) = findmin(abs.(x .- y))[2]
+function load_file(f, loader)
+    isfile(f) || error("File $f cannot be opened!")
+    println("  Loading: $f")
+    return loader(f)
+end
+load_machine(f) = load_file(f, MLJ.machine)
+load_jld(f) = load_file(f, JLD2.load_object)
 
-function ctp(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
+println("Loading models and scalers")
 
-    data_nclo = deepcopy(patient_data)
-    # standaridize
-    data_nclo[2:5] = StatsBase.transform(scaler_nclo, reshape(data_nclo[2:5], 1, length(data_nclo[2:5])))
-    data_nclo[isnan.(data_nclo)] .= 0
+# total dose + morning/midday doses model (variant totaldose_morn_midday of src/train.jl),
+# used both for the patient's dosing schedule and for the recommended dose range
+const MODEL_SUFFIX = "_totaldose_morn_midday"
+clozapine_regressor_machine = load_machine("models/clozapine_regressor_machine$(MODEL_SUFFIX).jlso")
+norclozapine_regressor_machine = load_machine("models/norclozapine_regressor_machine$(MODEL_SUFFIX).jlso")
+scaler_features = load_jld("models/scaler_features$(MODEL_SUFFIX).jld")
+scaler_clozapine_level = load_jld("models/scaler_clozapine_level$(MODEL_SUFFIX).jld")
+scaler_norclozapine_level = load_jld("models/scaler_nclozapine_level$(MODEL_SUFFIX).jld")
 
-    # create DataFrame
-    x1 = DataFrame(:male=>data_nclo[1])
-    x2 = DataFrame(reshape(data_nclo[2:5], 1, length(data_nclo[2:5])), ["age", "dose", "bmi", "crp"])
-    x3 = DataFrame(reshape(data_nclo[6:end], 1, length(data_nclo[6:end])), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
-    data_nclo = Float32.(hcat(x1, x2, x3))
-    data_nclo = coerce(data_nclo, :male=>OrderedFactor{2}, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+# CYP levels present in the training data
+cyp_levels_seen = load_jld("models/cyp_levels.jld")
 
-    # predict
-    nclo_level_pred = MLJ.predict(nclo_model_regressor, data_nclo)
+# polynomial dose-concentration models through the origin (coefficients of td, td², …),
+# see reports/polynomial_models.csv
+polynomial_models = load_jld("models/polynomial_models.jld")
+const CLO_POLY = polynomial_models["clozapine"]
+const NCLO_POLY = polynomial_models["norclozapine"]
+println("  Clozapine polynomial coefficients:    $CLO_POLY")
+println("  Norclozapine polynomial coefficients: $NCLO_POLY")
 
-    data_clo = deepcopy(patient_data)
-    data_clo = vcat(data_clo[1], nclo_level_pred, data_clo[2:end])
+# ---------------------------------------------------------------------------
+# features; must match src/train.jl
+# ---------------------------------------------------------------------------
 
-    # standardize
-    data_clo[2:6] = StatsBase.transform(scaler_clo, reshape(data_clo[2:6], 1, length(data_clo[2:6])))
-    data_clo[isnan.(data_clo)] .= 0
+const CYP_FEATURES = ["inducers_3a4", "inhibitors_3a4", "substrates_3a4",
+                      "inducers_1a2", "inhibitors_1a2", "substrates_1a2"]
+const CYP_LEVELS = 0:5
+const MALE_LEVELS = 0:1
+const FEATURES = vcat(["male", "age", "total_dose", "morning_dose", "midday_dose", "bmi", "crp"], CYP_FEATURES)
 
-    # create DataFrame
-    x1 = DataFrame(:male=>data_clo[1])
-    x2 = DataFrame(reshape(data_clo[2:6], 1, length(data_clo[2:6])), ["nclo", "age", "dose", "bmi", "crp"])
-    x3 = DataFrame(reshape(data_clo[7:end], 1, length(data_clo[7:end])), ["inducers_3a4", "inhibitors_3a4", "substrates_3a4", "inducers_1a2", "inhibitors_1a2", "substrates_1a2"])
-    data_clo = Float32.(hcat(x1, x2, x3))
-    data_clo = coerce(data_clo, :male=>OrderedFactor{2}, :nclo=>Continuous, :age=>Continuous, :dose=>Continuous, :bmi=>Continuous, :crp=>Continuous, :inducers_3a4=>Continuous, :inhibitors_3a4=>Continuous, :substrates_3a4=>Continuous, :inducers_1a2=>Continuous, :inhibitors_1a2=>Continuous, :substrates_1a2=>Continuous)
+# model input row: male, age, total dose, morning dose, midday dose, bmi, crp, CYP counts
+feature_row(male, age, morning, midday, evening, bmi, crp, cyp) =
+    Matrix{Float64}(reshape([male, age, morning + midday + evening, morning, midday, bmi, crp, cyp...], 1, :))
 
-    clo_level_pred = MLJ.predict(clo_model_regressor, data_clo)
+# polynomial models are used for total doses ≤ LOW_DOSE_MAX mg/day (must match src/train.jl)
+const LOW_DOSE_MAX = 100
+polynomial(c, dose) = round(sum(c[i] * dose^i for i in eachindex(c)), digits = 1)
 
-    clo_level = round.(Float64(clo_level_pred[1]), digits=1)
-    clo_level < 0 && (clo_level = 0)
-    nclo_level = round.(Float64(nclo_level_pred[1]), digits=1)[1]
-    nclo_level < 0 && (nclo_level = 0)
+# clozapine: therapeutic 250-550 ng/mL, toxic > 550 ng/mL
+# source: Northwood et al. 2023, https://doi.org/10.1192/bjp.2023.27
+const CLO_MIN = 250
+const CLO_MAX = 550
+# norclozapine: no established toxicity threshold exists (AGNP 2026 guideline:
+# https://doi.org/10.1055/a-2860-7861); the threshold is the norclozapine level
+# corresponding to CLO_MAX at the mean clozapine/norclozapine ratio of 1.73
+# (meta-analysis, n = 2317; Schoretsanitis et al. 2019, https://doi.org/10.1080/17512433.2019.1617695,
+# cited in Meyer 2024, https://doi.org/10.1016/j.schres.2023.10.041): 550 / 1.73 ≈ 320 ng/mL
+const NCLO_MAX = 320
 
-    if clo_level > 550
-        clo_group = 1
-    else
-        clo_group = 0
+# Map CYP counts to levels present in training data (embeddings of absent levels are
+# untrained): clamp to 0:5, then use the nearest lower level seen in training.
+function map_cyp_levels!(X::Matrix{Float64}, colnames::Vector{String})
+    for c in CYP_FEATURES
+        j = findfirst(==(c), colnames)
+        seen = cyp_levels_seen[c]
+        mapped = Set{Pair{Float64,Int}}()
+        for i in axes(X, 1)
+            v = clamp(round(Int, X[i, j]), first(CYP_LEVELS), last(CYP_LEVELS))
+            lower = filter(<=(v), seen)
+            v_mapped = isempty(lower) ? minimum(seen) : maximum(lower)
+            v_mapped != X[i, j] && push!(mapped, X[i, j] => v_mapped)
+            X[i, j] = v_mapped
+        end
+        for (v, v_mapped) in mapped
+            @warn "$c = $v not present in training data, using $v_mapped"
+        end
     end
-    if clo_level > 550 || nclo_level > 270
-        clo_group_adj = 1
-    else
-        clo_group_adj = 0
-    end
-
-    return clo_group, clo_group_adj, clo_level, nclo_level
+    return X
 end
 
-function recommended_dose(patient_data::Vector{<:Real}, scaler_clo, scaler_nclo)
-
-    # 250-550 ng/mL
-    # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
-
-    doses = 0:12.5:800
-    clo_concentration = zeros(length(doses))
-    nclo_concentration = zeros(length(doses))
-    clo_group = zeros(Int64, length(doses))
-    clo_group_adjusted= zeros(Int64, length(doses))
-
-    for idx in eachindex(doses)
-        data = deepcopy(patient_data)
-        data = vcat(data[1:2], doses[idx], data[3:end])
-        clo_group[idx], clo_group_adjusted[idx], clo_concentration[idx], nclo_concentration[idx] = ctp(data, scaler_clo, scaler_nclo)
+# Build the model input exactly as src/train.jl does: male → Multiclass, CYP counts →
+# OrderedFactor with fixed levels, continuous columns Z-score standardized.
+function make_df(X::Matrix{Float64}, colnames::Vector{String}, scaler)
+    X = map_cyp_levels!(copy(X), colnames)
+    cont = findall(c -> c != "male" && !(c in CYP_FEATURES), colnames)
+    df = DataFrame()
+    for (j, c) in enumerate(colnames)
+        if c == "male"
+            df[!, c] = categorical(round.(Int, X[:, j]), levels = MALE_LEVELS)
+        elseif c in CYP_FEATURES
+            df[!, c] = categorical(round.(Int, X[:, j]), levels = CYP_LEVELS, ordered = true)
+        else
+            k = findfirst(==(j), cont)
+            col = (X[:, j] .- scaler.mean[k]) ./ scaler.scale[k]
+            col[isnan.(col)] .= 0 # constant column (std = 0)
+            df[!, c] = col
+        end
     end
-
-    clo_concentration[1] = 0
-    nclo_concentration[1] = 0
-
-    if minimum(clo_concentration) < 250
-        min_dose_idx = findfirst(x -> x > 250, clo_concentration)
-    else
-        min_dose_idx = 1
-    end
-
-    if maximum(clo_concentration) > 550
-        max_dose_idx = findfirst(x -> x > 550, clo_concentration)
-    else
-        max_dose_idx = length(doses)
-    end
-
-    dose_range = (doses[min_dose_idx], doses[max_dose_idx])
-
-    return dose_range, collect(doses), clo_concentration, nclo_concentration, clo_group, clo_group_adjusted
+    return df
 end
 
-function plot_recommended_dose(doses, clo_level)
+# Predict clozapine and norclozapine levels for each row of X.
+function predict_levels(X::Matrix{Float64}, colnames, clo_mach, nclo_mach, scaler_features, scaler_clo, scaler_nclo)
+    df = make_df(X, colnames, scaler_features)
+    clo = StatsBase.reconstruct(scaler_clo, MLJ.predict(clo_mach, df))
+    nclo = StatsBase.reconstruct(scaler_nclo, MLJ.predict(nclo_mach, df))
+    clo = max.(round.(Float64.(clo), digits = 1), 0.0)
+    nclo = max.(round.(Float64.(nclo), digits = 1), 0.0)
+    return clo, nclo
+end
 
-    # 250-550
-    # source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10201335/
+clo_toxic(clo) = clo > CLO_MAX ? 1 : 0
+clo_toxic_adj(clo, nclo) = (clo > CLO_MAX || nclo > NCLO_MAX) ? 1 : 0
 
-    if minimum(clo_level) < 250
-        min_dose_idx = findfirst(x -> x >= 250, clo_level)
-    else
-        min_dose_idx = 1
+# Patient's data:
+# - male: 0/1
+# - age: Float
+# - morning dose: Float
+# - midday dose: Float
+# - evening dose: Float
+# - bmi: Float
+# - crp: Float
+# - inducers_3a4: Int
+# - inhibitors_3a4: Int
+# - substrates_3a4: Int
+# - inducers_1a2: Int
+# - inhibitors_1a2: Int
+# - substrates_1a2: Int
+function ctp(patient_data::Vector{<:Real}, clo_regressor_machine, norclo_regressor_machine, scaler_features, scaler_clo_level, scaler_norclo_level)
+
+    length(patient_data) == 13 || throw(ArgumentError("Patient data vector must have 13 elements."))
+
+    total_dose = sum(patient_data[3:5])
+    if total_dose <= LOW_DOSE_MAX
+        return 0, 0, polynomial(CLO_POLY, total_dose), polynomial(NCLO_POLY, total_dose)
     end
 
-    if maximum(clo_level) > 550
-        max_dose_idx = findfirst(x -> x >= 550, clo_level)
-    else
-        max_dose_idx = length(doses)
+    p = Float64.(patient_data)
+    X = feature_row(p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8:13])
+    clo, nclo = predict_levels(X, FEATURES, clo_regressor_machine, norclo_regressor_machine,
+                               scaler_features, scaler_clo_level, scaler_norclo_level)
+    clo_level, nclo_level = clo[1], nclo[1]
+
+    return clo_toxic(clo_level), clo_toxic_adj(clo_level, nclo_level), clo_level, nclo_level
+
+end
+
+# Moving average filter
+function filter_mavg(
+    s::AbstractVector;
+    k::Int64 = 8,
+)::Vector{Float64}
+    # unfiltered samples stay at their original value
+    s_filtered = copy(s) .* 1.0 # convert to floats
+
+    # left edge: truncated window [1 … idx]
+    @inbounds for idx in 1:k
+        s_tmp = @view s[1:idx]
+        s_filtered[idx] = mean(s_tmp)
     end
 
-    p = plot(doses, clo_level, ylims=(0, 1000), xlims=(0, 800), legend=false, xlabel="dose [mg/day]", ylabel="clozapine concentration [ng/mL]", margins=20Plots.px)
-    p = hline!([250], lc=:green, ls=:dot)
-    p = hline!([550], lc=:red, ls=:dot)
-    p = vline!([doses[min_dose_idx]], lc=:green, ls=:dot)
-    p = vline!([doses[max_dose_idx]], lc=:red, ls=:dot)
+    # interior: full centered window [idx-k … idx+k]
+    @inbounds for idx in (k + 1):(length(s) - k)
+        s_tmp = @view s[(idx - k):(idx + k)]
+        s_filtered[idx] = mean(s_tmp)
+    end
+
+    # right edge: truncated window [idx … end]
+    @inbounds for idx in (length(s) - k + 1):length(s)
+        s_tmp = @view s[idx:end]
+        s_filtered[idx] = mean(s_tmp)
+    end
+
+    return s_filtered
+end
+
+# Index of the first dose with clozapine level ≥ CLO_MIN (nothing if never reached)
+# and of the first dose with level > CLO_MAX (last dose if never exceeded).
+function dose_range_idx(clo_concentration)
+    min_idx = findfirst(>=(CLO_MIN), clo_concentration)
+    max_idx = something(findfirst(>(CLO_MAX), clo_concentration), length(clo_concentration))
+    return min_idx, max_idx
+end
+
+# Patient's data: as for ctp() (13 elements, including morning, midday and evening doses).
+#
+# The dose range is predicted for total doses 0-800 mg/day, keeping the patient's
+# distribution of the total dose into morning, midday and evening doses; if all doses
+# are 0, the whole dose is assumed to be taken in the evening.
+#
+# Returns the recommended dose range (minimum is nothing if CLO_MIN is not reached at
+# the maximum dose), doses, predicted concentrations and groups.
+function recommended_dose(patient_data::Vector{<:Real}, clo_regressor_machine, norclo_regressor_machine, scaler_features, scaler_clo_level, scaler_norclo_level)
+
+    length(patient_data) == 13 || throw(ArgumentError("Patient data vector must have 13 elements."))
+
+    doses_low = 0:6.25:LOW_DOSE_MAX
+    clo_concentration_poly = polynomial.(Ref(CLO_POLY), doses_low)
+    nclo_concentration_poly = polynomial.(Ref(NCLO_POLY), doses_low)
+
+    # neural network predictions for all doses in a single batch
+    doses_high = (LOW_DOSE_MAX + 6.25):6.25:800
+    p = Float64.(patient_data)
+    patient_total = sum(p[3:5])
+    fractions = patient_total > 0 ? p[3:5] ./ patient_total : [0.0, 0.0, 1.0]
+    X = reduce(vcat, [feature_row(p[1], p[2], (dose .* fractions)..., p[6], p[7], p[8:13]) for dose in doses_high])
+    clo_concentration, nclo_concentration = predict_levels(X, FEATURES, clo_regressor_machine, norclo_regressor_machine,
+                                                           scaler_features, scaler_clo_level, scaler_norclo_level)
+
+    doses = collect(0:6.25:800)
+    clo_concentration = vcat(clo_concentration_poly, clo_concentration)
+    nclo_concentration = vcat(nclo_concentration_poly, nclo_concentration)
+
+    # smooth the transition between the polynomial and neural network models
+    clo_concentration[2:33] = filter_mavg(clo_concentration[2:33], k = 4)
+    clo_concentration = filter_mavg(clo_concentration, k = 2)
+    nclo_concentration[2:33] = filter_mavg(nclo_concentration[2:33], k = 4)
+    nclo_concentration = filter_mavg(nclo_concentration, k = 2)
+
+    clo_groups = clo_toxic.(clo_concentration)
+    clo_groups_adjusted = clo_toxic_adj.(clo_concentration, nclo_concentration)
+
+    min_idx, max_idx = dose_range_idx(clo_concentration)
+    dose_range = (isnothing(min_idx) ? nothing : doses[min_idx], doses[max_idx])
+
+    return dose_range,
+           doses,
+           clo_concentration,
+           nclo_concentration,
+           clo_groups,
+           clo_groups_adjusted
+
+end
+
+function plot_recommended_dose(doses, clo_concentration)
+
+    min_idx, max_idx = dose_range_idx(clo_concentration)
+
+    p = plot(ylims = (0, 1000),
+             xlims = (0, 800),
+             legend = false,
+             xlabel = "Total clozapine dose [mg/day]",
+             ylabel = "Clozapine concentration [ng/mL]",
+             margins = 40Plots.px,
+             guidefontsize = 14,
+             tickfontsize = 12,
+             size = (1200, 600))
+    p = hline!([CLO_MIN],
+               lc = :green,
+               ls = :dot,
+               lw = 1)
+    p = hline!([CLO_MAX],
+               lc = :red,
+               ls = :dot,
+               lw = 1)
+    if !isnothing(min_idx)
+        p = vline!([doses[min_idx]],
+                   lc = :green,
+                   ls = :dot,
+                   lw = 1)
+    end
+    p = vline!([doses[max_idx]],
+               lc = :red,
+               ls = :dot,
+               lw = 1)
+    p = plot!(doses,
+              clo_concentration,
+              lc = :black,
+              lw = 2)
 
     return p
+
 end
+
+const HEADERS = ["Access-Control-Allow-Origin"  => "*",
+                 "Access-Control-Allow-Methods" => "GET, POST"]
 
 function handle(req)
     if req.method == "POST"
-        form = JSON3.read(String(req.body))
-        sex = form.sex
-        age = form.age
-        clo_dose = Float64(form.clo_dose)
-        bmi = Float64(form.bmi)
-        crp = Float64(form.crp)
-        a4_ind = Float64(form.a4_ind)
-        a4_inh = Float64(form.a4_inh)
-        a4_s = Float64(form.a4_s)
-        a2_ind = Float64(form.a2_ind)
-        a2_inh = Float64(form.a2_inh)
-        a2_s = Float64(form.a2_s)
-        dose_range, doses, clo_level, nclo_level, clo_group, clo_group_adj = recommended_dose([sex, age, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler_clo, scaler_nclo)
-        p = plot_recommended_dose(doses, clo_level)
+
+        local sex, age, morning_dose, midday_dose, evening_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s
+        try
+            form = JSON3.read(String(req.body))
+            sex          = Int64(form.sex)
+            age          = Float64(form.age)
+            morning_dose = Float64(form.clo_dose_morning)
+            midday_dose  = Float64(form.clo_dose_midday)
+            evening_dose = Float64(form.clo_dose_evening)
+            bmi          = Float64(form.bmi)
+            crp          = Float64(form.crp)
+            a4_ind       = Int64(form.a4_ind)
+            a4_inh       = Int64(form.a4_inh)
+            a4_s         = Int64(form.a4_s)
+            a2_ind       = Int64(form.a2_ind)
+            a2_inh       = Int64(form.a2_inh)
+            a2_s         = Int64(form.a2_s)
+            sex in MALE_LEVELS || throw(ArgumentError("sex must be 0 or 1"))
+            all(>=(0), (morning_dose, midday_dose, evening_dose)) || throw(ArgumentError("doses must be ≥ 0"))
+        catch e
+            @warn "Invalid query" exception = e
+            return HTTP.Response(400, HEADERS, "Invalid query: $(sprint(showerror, e))")
+        end
+
+        @info "Query: sex=$sex age=$age morning=$morning_dose midday=$midday_dose evening=$evening_dose bmi=$bmi crp=$crp"
+
+        patient = [sex, age, morning_dose, midday_dose, evening_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s]
+
+        dose_range, doses, clo_conc, _, _, _ = recommended_dose(
+            patient,
+            clozapine_regressor_machine,
+            norclozapine_regressor_machine,
+            scaler_features,
+            scaler_clozapine_level,
+            scaler_norclozapine_level
+        )
+
+        p = plot_recommended_dose(doses, clo_conc)
         io = IOBuffer()
         iob64_encode = Base64EncodePipe(io)
         show(iob64_encode, MIME("image/png"), p)
         close(iob64_encode)
-        p = String(take!(io))
-        @info "Query: sex: $sex, age: $age, clo_dose: $clo_dose, bmi: $bmi, crp: $crp, a4_ind: $a4_ind, a4_inh: $a4_inh, a4_s: $a4_s, a2_ind: $a2_ind, a2_inh: $a2_inh, a2_s: $a2_s"
-        @info "Calculating predictions"
-        clo_group, clo_group_adj, clo_level, nclo_level = ctp([sex, age, clo_dose, bmi, crp, a4_ind, a4_inh, a4_s, a2_ind, a2_inh, a2_s], scaler_clo, scaler_nclo)
-        clo_dose == 0 && (clo_level = 0)
-        clo_dose == 0 && (nclo_level = 0)
-        return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*", "Access-Control-Request-Method"=>"GET,POST", "mode"=>"no-cors"], "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_range[1]) $(dose_range[2]) $(p)")
+        plot_b64 = String(take!(io))
+
+        @info "Calculating per-dose predictions"
+        clo_group, clo_group_adj, clo_level, nclo_level = ctp(
+            patient,
+            clozapine_regressor_machine,
+            norclozapine_regressor_machine,
+            scaler_features,
+            scaler_clozapine_level,
+            scaler_norclozapine_level)
+
+        # minimum dose not reached within the dose range: no spaces, the client splits on " "
+        dose_min = isnothing(dose_range[1]) ? ">$(Int(doses[end]))" : string(dose_range[1])
+
+        return HTTP.Response(200,
+            HEADERS,
+            "$(clo_group) $(clo_group_adj) $(clo_level) $(nclo_level) $(dose_min) $(dose_range[2]) $(plot_b64)")
     end
-    return HTTP.Response(200, ["Access-Control-Allow-Origin"=>"*", "Access-Control-Request-Method"=>"GET,POST", "mode"=>"no-cors"], read("./index.html"))
+    return HTTP.Response(200,
+        HEADERS,
+        read("./index.html"))
 end
 
-@info "Precompiling"
-dose_range, doses, clo_level, nclo_level, clo_group, clo_group_adj = recommended_dose([0, 18, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler_clo, scaler_nclo)
+println("Precompiling")
+dose_range, doses, clo_level, nclo_level, clo_group, clo_group_adj = recommended_dose([0, 18, 50, 50, 50, 25, 0.0, 0, 0, 0, 0, 0, 0], clozapine_regressor_machine, norclozapine_regressor_machine, scaler_features, scaler_clozapine_level, scaler_norclozapine_level)
 p = plot_recommended_dose(doses, clo_level)
-clo_group, clo_group_adj, clo_level, nclo_level = ctp([0, 18, 100, 25, 0.0, 0, 0, 0, 0, 0, 0], scaler_clo, scaler_nclo)
-println()
+clo_group, clo_group_adj, clo_level, nclo_level = ctp([0, 18, 50, 50, 50, 25, 0.0, 0, 0, 0, 0, 0, 0], clozapine_regressor_machine, norclozapine_regressor_machine, scaler_features, scaler_clozapine_level, scaler_norclozapine_level)
 
-@info "Starting server"
-HTTP.serve(handle, "0.0.0.0", 8080, verbose=true)
+println("Starting server")
+HTTP.serve(handle, "0.0.0.0", 8080, verbose = true)

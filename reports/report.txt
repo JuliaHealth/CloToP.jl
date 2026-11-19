@@ -1,0 +1,513 @@
+Loading: packages
+         CSV: 0.10.17
+  DataFrames: 1.8.3
+        JLD2: 0.6.7
+        Flux: 0.16.15
+         MLJ: 0.23.3
+     MLJFlux: 0.6.9
+  Optimisers: 0.4.11
+       Plots: 1.41.8
+   StatsBase: 0.34.13
+     Threads: 48
+Loading: NeuralNetworkRegressor
+Loading: clozapine.csv
+
+Polynomial models: concentration ~ total dose
+============================================================
+  clozapine, order 1: BIC = 1751.97, adj. R² = 0.7513, RSE = 289.4
+  clozapine, order 2: BIC = 1743.73, adj. R² = 0.7745, RSE = 275.6  ← selected
+  clozapine, order 3: BIC = 1747.94, adj. R² = 0.7738, RSE = 276.1
+  clozapine, order 4: BIC = 1752.71, adj. R² = 0.7719, RSE = 277.2
+  clozapine: conc = 2.071226086567558 × td + -0.0015498429168550054 × td^2
+  norclozapine, order 1: BIC = 1671.27, adj. R² = 0.5779, RSE = 208.5
+  norclozapine, order 2: BIC = 1666.24, adj. R² = 0.6071, RSE = 201.1  ← selected
+  norclozapine, order 3: BIC = 1670.62, adj. R² = 0.6053, RSE = 201.6
+  norclozapine, order 4: BIC = 1674.89, adj. R² = 0.6037, RSE = 202.0
+  norclozapine: conc = 1.1096755967617462 × td + -0.0009752539513817932 × td^2
+Saving: reports/polynomial_models.csv
+Saving: models/polynomial_models.jld
+Number of extreme clozapine outliers removed: 1
+  Levels of inducers_3a4 in training data: [0]
+  Levels of inhibitors_3a4 in training data: [0, 1, 2]
+  Levels of substrates_3a4 in training data: [0, 1, 2, 3, 5]
+  Levels of inducers_1a2 in training data: [0, 1]
+  Levels of inhibitors_1a2 in training data: [0]
+  Levels of substrates_1a2 in training data: [0, 1, 2, 3]
+Number of real observations: 122
+Number of synthetic observations added: 122
+Splitting 80:20 (by patient)
+
+Model variant: threedoses
+Features: male, age, morning_dose, midday_dose, evening_dose, bmi, crp, inducers_3a4, inhibitors_3a4, substrates_3a4, inducers_1a2, inhibitors_1a2, substrates_1a2
+============================================================
+  Number of observations: 366
+  Number of features: 13
+
+Creating regressor model: clozapine (threedoses)
+------------------------------------------------------------
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Initial model (testing)
+    R²:   -0.25
+    RMSE: 290.2877
+Running MLJ grid search
+  Initial model CV MAE: 0.6653
+  Optimizing: eta
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 4 models.
+    Best CV MAE: 0.584
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 35 models.
+    Best CV MAE: 0.5763
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 49 models.
+    Best CV MAE: 0.5575
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.003
+    alpha:      0.25
+    lambda:     0.1
+    epochs:     200
+    batch_size: 4
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Tuned model (training)
+    R²:   0.7
+    RMSE: 152.8333
+  Tuned model (testing)
+    R²:   -0.27
+    RMSE: 293.2641
+  Clozapine level groups (testing)
+    Accuracy: 0.83
+    Misclassification rate: 0.17
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  14  │  1   │
+├─────────┼──────┼──────┤
+│  high   │  3   │  6   │
+└─────────┴──────┴──────┘
+
+Training the final model
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Final model (all observations, in-sample)
+    R²:   0.68
+    RMSE: 156.8627
+  Clozapine level groups (all observations, in-sample)
+    Accuracy: 0.89
+    Misclassification rate: 0.11
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  71  │  7   │
+├─────────┼──────┼──────┤
+│  high   │  7   │  37  │
+└─────────┴──────┴──────┘
+
+Creating regressor model: norclozapine (threedoses)
+------------------------------------------------------------
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Initial model (testing)
+    R²:   -0.59
+    RMSE: 119.5159
+Running MLJ grid search
+  Initial model CV MAE: 0.5668
+  Optimizing: eta
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 4 models.
+    Best CV MAE: 0.4926
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 35 models.
+    Best CV MAE: 0.465
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 49 models.
+    Best CV MAE: 0.4478
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.001
+    alpha:      0.25
+    lambda:     0.1
+    epochs:     3200
+    batch_size: 8
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Tuned model (training)
+    R²:   0.22
+    RMSE: 189.4457
+  Tuned model (testing)
+    R²:   -0.4
+    RMSE: 112.4286
+Training the final model
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Final model (all observations, in-sample)
+    R²:   0.25
+    RMSE: 171.6291
+
+Saving: clozapine_regressor_machine.jlso
+Saving: scaler_clozapine_level.jld
+Saving: norclozapine_regressor_machine.jlso
+Saving: scaler_nclozapine_level.jld
+Saving: scaler_features.jld
+Saving: reports/performance.csv
+
+Model variant: totaldose
+Features: male, age, total_dose, bmi, crp, inducers_3a4, inhibitors_3a4, substrates_3a4, inducers_1a2, inhibitors_1a2, substrates_1a2
+============================================================
+  Number of observations: 366
+  Number of features: 11
+
+Creating regressor model: clozapine (totaldose)
+------------------------------------------------------------
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Initial model (testing)
+    R²:   -0.16
+    RMSE: 280.3219
+Running MLJ grid search
+  Initial model CV MAE: 0.5757
+  Optimizing: eta
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 4 models.
+    Best CV MAE: 0.5786
+    No improvement, keeping the model parameters
+  Optimizing: lambda, alpha
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 35 models.
+    Best CV MAE: 0.5723
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 49 models.
+    Best CV MAE: 0.5904
+    No improvement, keeping the model parameters
+  Tuned model parameters:
+    eta:        0.003
+    alpha:      1.0
+    lambda:     0.001
+    epochs:     2000
+    batch_size: 8
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Tuned model (training)
+    R²:   0.97
+    RMSE: 46.9778
+  Tuned model (testing)
+    R²:   -0.19
+    RMSE: 283.1047
+  Clozapine level groups (testing)
+    Accuracy: 0.79
+    Misclassification rate: 0.21
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  16  │  4   │
+├─────────┼──────┼──────┤
+│  high   │  1   │  3   │
+└─────────┴──────┴──────┘
+
+Training the final model
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Final model (all observations, in-sample)
+    R²:   0.92
+    RMSE: 77.1392
+  Clozapine level groups (all observations, in-sample)
+    Accuracy: 0.94
+    Misclassification rate: 0.06
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  71  │  0   │
+├─────────┼──────┼──────┤
+│  high   │  7   │  44  │
+└─────────┴──────┴──────┘
+
+Creating regressor model: norclozapine (totaldose)
+------------------------------------------------------------
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Initial model (testing)
+    R²:   -4.3
+    RMSE: 218.5893
+Running MLJ grid search
+  Initial model CV MAE: 0.5558
+  Optimizing: eta
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 4 models.
+    Best CV MAE: 0.5211
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 35 models.
+
+    Best CV MAE: 0.518
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 49 models.
+    Best CV MAE: 0.5052
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.001
+    alpha:      0.75
+    lambda:     0.001
+    epochs:     6400
+    batch_size: 2
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Tuned model (training)
+    R²:   0.99
+    RMSE: 23.4694
+  Tuned model (testing)
+    R²:   -1.42
+    RMSE: 147.6261
+Training the final model
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Final model (all observations, in-sample)
+    R²:   0.98
+    RMSE: 30.697
+
+Saving: clozapine_regressor_machine_totaldose.jlso
+Saving: scaler_clozapine_level_totaldose.jld
+Saving: norclozapine_regressor_machine_totaldose.jlso
+Saving: scaler_nclozapine_level_totaldose.jld
+Saving: scaler_features_totaldose.jld
+Saving: reports/performance.csv
+
+Model variant: totaldose_mm
+Features: male, age, total_dose, mm, bmi, crp, inducers_3a4, inhibitors_3a4, substrates_3a4, inducers_1a2, inhibitors_1a2, substrates_1a2
+============================================================
+  Number of observations: 366
+  Number of features: 12
+
+Creating regressor model: clozapine (totaldose_mm)
+------------------------------------------------------------
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Initial model (testing)
+    R²:   0.16
+    RMSE: 237.5946
+Running MLJ grid search
+  Initial model CV MAE: 0.6098
+  Optimizing: eta
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 4 models.
+    Best CV MAE: 0.5991
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 35 models.
+    Best CV MAE: 0.5886
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 49 models.
+    Best CV MAE: 0.5534
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.001
+    alpha:      1.0
+    lambda:     0.001
+    epochs:     6400
+    batch_size: 8
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Tuned model (training)
+    R²:   0.99
+    RMSE: 28.8279
+  Tuned model (testing)
+    R²:   -0.32
+    RMSE: 298.3979
+  Clozapine level groups (testing)
+    Accuracy: 0.75
+    Misclassification rate: 0.25
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  14  │  3   │
+├─────────┼──────┼──────┤
+│  high   │  3   │  4   │
+└─────────┴──────┴──────┘
+
+Training the final model
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Final model (all observations, in-sample)
+    R²:   0.98
+    RMSE: 39.4371
+  Clozapine level groups (all observations, in-sample)
+    Accuracy: 1.0
+    Misclassification rate: 0.0
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  78  │  0   │
+├─────────┼──────┼──────┤
+│  high   │  0   │  44  │
+└─────────┴──────┴──────┘
+
+Creating regressor model: norclozapine (totaldose_mm)
+------------------------------------------------------------
+[ Info: Training machine(NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …).
+[ Info: MLJFlux: converting input data to Float32
+  Initial model (testing)
+    R²:   -0.34
+    RMSE: 109.7037
+Running MLJ grid search
+  Initial model CV MAE: 0.5238
+  Optimizing: eta
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 4 models.
+    Best CV MAE: 0.5278
+    No improvement, keeping the model parameters
+  Optimizing: lambda, alpha
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 35 models.
+    Best CV MAE: 0.5409
+    No improvement, keeping the model parameters
+  Optimizing: epochs, batch_size
+[ Info: Training machine(DeterministicTunedModel(model = NeuralNetworkRegressor(builder = GenericBuilder(apply = #build_model##0), …), …), …).
+[ Info: Attempting to evaluate 49 models.
+
+[NOTE: the remaining output of the totaldose_mm norclozapine model (epochs/batch_size step,
+ tuned and final model results, saving of the totaldose_mm models) was lost from the log;
+ the corresponding performance measures are in reports/performance.csv.]
+
+Model variant: totaldose_morn_midday
+Features: male, age, total_dose, morning_dose, midday_dose, bmi, crp, inducers_3a4, inhibitors_3a4, substrates_3a4, inducers_1a2, inhibitors_1a2, substrates_1a2
+============================================================
+  Number of observations: 366
+  Number of features: 13
+
+Creating regressor model: clozapine (totaldose_morn_midday)
+------------------------------------------------------------
+  Initial model (testing)
+    R²:   0.23
+    RMSE: 227.8198
+Running MLJ grid search
+  Initial model CV MAE: 0.653
+  Optimizing: eta
+    Best CV MAE: 0.6162
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+    Best CV MAE: 0.5651
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+    Best CV MAE: 0.5383
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.001
+    alpha:      0.5
+    lambda:     0.1
+    epochs:     800
+    batch_size: 8
+  Tuned model (training)
+    R²:   0.39
+    RMSE: 219.293
+  Tuned model (testing)
+    R²:   -2.68
+    RMSE: 498.9599
+  Clozapine level groups (testing)
+    Accuracy: 0.75
+    Misclassification rate: 0.25
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  15  │  4   │
+├─────────┼──────┼──────┤
+│  high   │  2   │  3   │
+└─────────┴──────┴──────┘
+
+Training the final model
+  Final model (all observations, in-sample)
+    R²:   0.41
+    RMSE: 212.9257
+  Clozapine level groups (all observations, in-sample)
+    Accuracy: 0.84
+    Misclassification rate: 0.16
+    Confusion matrix:
+          ┌─────────────┐
+          │Ground Truth │
+┌─────────┼──────┬──────┤
+│Predicted│ norm │ high │
+├─────────┼──────┼──────┤
+│  norm   │  78  │  20  │
+├─────────┼──────┼──────┤
+│  high   │  0   │  24  │
+└─────────┴──────┴──────┘
+
+Creating regressor model: norclozapine (totaldose_morn_midday)
+------------------------------------------------------------
+  Initial model (testing)
+    R²:   -2.78
+    RMSE: 184.6259
+Running MLJ grid search
+  Initial model CV MAE: 0.5725
+  Optimizing: eta
+    Best CV MAE: 0.499
+    Improvement, modifying the model parameters
+  Optimizing: lambda, alpha
+    Best CV MAE: 0.4562
+    Improvement, modifying the model parameters
+  Optimizing: epochs, batch_size
+    Best CV MAE: 0.4394
+    Improvement, modifying the model parameters
+  Tuned model parameters:
+    eta:        0.0001
+    alpha:      1.0
+    lambda:     0.01
+    epochs:     6400
+    batch_size: 16
+  Tuned model (training)
+    R²:   0.27
+    RMSE: 183.793
+  Tuned model (testing)
+    R²:   0.26
+    RMSE: 81.7412
+Training the final model
+  Final model (all observations, in-sample)
+    R²:   0.3
+    RMSE: 165.9554
+
+Saving: clozapine_regressor_machine_totaldose_morn_midday.jlso
+Saving: scaler_clozapine_level_totaldose_morn_midday.jld
+Saving: norclozapine_regressor_machine_totaldose_morn_midday.jlso
+Saving: scaler_nclozapine_level_totaldose_morn_midday.jld
+Saving: scaler_features_totaldose_morn_midday.jld
+Saving: reports/performance.csv
+Saving: cyp_levels.jld
+
+Training completed

@@ -1,2281 +1,2541 @@
-<br>
-<center>
-  <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for medication..">
-  <br>
-  <table id="myTable" class="center" style="text-align: center; vertical-align: middle; border-spacing: 10px; padding: 10px; width: 60%">
-    <tr class="header">
-      <th style="width: 40%">Name</th>
-      <th style="width: 10%">CYP1A2<br>inducers</th>
-      <th style="width: 10%">CYP1A2<br>inhibitors</th>
-      <th style="width: 10%">CYP1A2<br>substrates</th>
-      <th style="width: 10%">CYP3A4<br>inducers</th>
-      <th style="width: 10%">CYP3A4<br>inhibitors</th>
-      <th style="width: 10%">CYP3A4<br>substrates</th>
-    </tr>
-  <tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYP Substrates, Inhibitors &amp; Inducers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #f5f7fa;
+      --border: #d0d7de;
+      --border-subtle: #e8ecf0;
+      --text-primary: #1a1f27;
+      --text-secondary: #57606a;
+      --text-muted: #8c959f;
+      --accent: #0969da;
+      --accent-dim: rgba(9, 105, 218, 0.10);
+      --accent-glow: rgba(9, 105, 218, 0.20);
+      --green: #1a7f37;
+      --green-dim: rgba(26, 127, 55, 0.12);
+      --red: #cf222e;
+      --red-dim: rgba(207, 34, 46, 0.08);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+      background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(9,105,218,0.04) 0%, transparent 60%);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border-subtle);
+      position: relative;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 50%;
+      transform: translateX(-50%);
+      width: 60px; height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .header-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(20px, 3.5vw, 28px);
+      letter-spacing: -0.02em;
+    }
+    .header p {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Search */
+    .search-wrap {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .search-wrap::before {
+      content: '⌕';
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    #myInput {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 300;
+      padding: 11px 14px 11px 38px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #myInput::placeholder { color: var(--text-muted); }
+    #myInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+    }
+    .stats-bar .legend {
+      display: flex;
+      gap: 16px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+
+    /* Table wrapper */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .scroll-hint {
+      overflow-x: auto;
+    }
+
+    #myTable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    #myTable th {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 10px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    #myTable th:first-child {
+      text-align: left;
+      padding-left: 20px;
+      min-width: 160px;
+    }
+
+    /* Column group headers via th data */
+    #myTable th.cyp1a2 { color: #0550ae; border-top: 2px solid #0550ae; }
+    #myTable th.cyp3a4 { color: #1a7f37; border-top: 2px solid #1a7f37; }
+
+    #myTable td {
+      padding: 9px 10px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.1s;
+    }
+    #myTable td:first-child {
+      text-align: left;
+      padding-left: 20px;
+      color: var(--text-primary);
+      font-weight: 400;
+      font-size: 15px; { border-bottom: none; }
+    #myTable tr:hover td { background: rgba(9,105,218,0.04); }
+
+    .cell-pos {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      background: var(--green-dim);
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .cell-neg {
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+    }
+
+    /* Row count */
+    #row-count { font-variant-numeric: tabular-nums; }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .footer a { color: var(--text-secondary); text-decoration: none; }
+    .footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-label">Clinical Reference Table</div>
+    <h1>CYP Enzyme Interactions</h1>
+    <p>Substrates, inhibitors, and inducers for CYP1A2 and CYP3A4</p>
+  </div>
+
+  <div class="search-wrap">
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for medication…">
+  </div>
+
+  <div class="stats-bar">
+    <span><span id="row-count">250</span> medications</span>
+    <span class="legend">
+      <span class="legend-item"><span class="cell-pos">+</span> active</span>
+      <span class="legend-item"><span class="cell-neg">−</span> inactive</span>
+    </span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="scroll-hint">
+      <table id="myTable">
+        <tr class="header">
+          <th rowspan="1">Medication</th>
+          <th class="cyp1a2">Inducers</th>
+          <th class="cyp1a2">Inhibitors</th>
+          <th class="cyp1a2">Substrates</th>
+          <th class="cyp3a4">Inducers</th>
+          <th class="cyp3a4">Inhibitors</th>
+          <th class="cyp3a4">Substrates</th>
+        </tr>
+        <tr class="subheader" style="background:var(--surface-2);border-bottom:1px solid var(--border)">
+          <td style="border:none"></td>
+          <td colspan="3" style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#79b8ff;padding:5px 10px;border:none">CYP1A2</td>
+          <td colspan="3" style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#85e89d;padding:5px 10px;border:none">CYP3A4</td>
+        </tr>
+        <tr>
     <td>St. John's wort</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>acyclovir</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>agomelatine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>albendazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>alfentanil</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>allopurinol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>alosetron</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>alprazolam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>amiodarone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>amitriptyline</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>amlodipine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>anastrozole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>apalutamide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>apigenin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>aprepitant</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>aripiprazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>astemizole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>atorvastatin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>azithromycin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>bactericidals</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>berberine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>bergamottin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>bicalutamide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>boceprevir</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>brigatinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>budesonide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>buprenorphine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>buspirone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>butalbital</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>caffeine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cannabidiol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>capsaicin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>carbamazepine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ceritinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cerivastatin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>chloramphenicol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>chlorphenamine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cilostazol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cimetidine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ciprofloxacin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cisapride</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>citalopram</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>clarithromycin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>clobazam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>clomipramine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>clonazepam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>clopidogrel</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>clozapine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cobicistat</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cocaine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>codeine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>conivaptan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>crizotinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cumin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cyclobenzaprine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cyclophosphamide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cyclosporin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>cyclosporine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dabrafenib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dapsone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>delavirdine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dexamethasone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dextromethorphan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>diazepam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dillapiole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>diltiazem</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dithiocarbamate</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>docetaxel</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>domperidone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>donedarone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>donepezil</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>doxorubicin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>dronedarone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>duloxetine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>echinacea</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>efavirenz</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>elagolix</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>enoxacin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>enzalutamide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>eplerenone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>erlotinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>erythromycin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>eslicarbazepine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>estradiol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ethinylestradiol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>etoposide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>etravirine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>felodipine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>fentanyl</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>finasteride</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>fluconazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>fluticasone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>fluvoxamine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>fosaprepitant</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>gefitinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>gestodene</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ginkgo biloba</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>glucocorticoids</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>grape seed extract</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>grapefruit juice</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>green tea extract</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>haloperidol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>hydrocodone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>hydrocortisone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ifosfamide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>imatinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>imipramine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>indinavir</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>insuline</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>interferon</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>irbesartan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>irinotecan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>isoniazid</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>itraconazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ketoconazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>kinins</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lansoprazole</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lercanidipin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>letermovir</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>levacetylmethadol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lidocaine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>liquorice</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lomitapide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lorlatinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>losartan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lovastatin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>lurasidone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>melatonin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>methadone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>methoxetamine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>methoxsalen</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>methylcholanthren</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>mexiletine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>mibefradil</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>miconazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>midazolam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>mifepristone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>milk thistle</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>mirtazapine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>modafinil</td>
     <td><font size="5">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>montelukast</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nafcilli</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>naphthoflavon</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>naproxen</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>naringenin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>naringin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nateglinide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nefazodone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nelfinavir</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nevirapine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>niacin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nifedipine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nisoldipin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>nitrendipin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>norfloxacin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>norfluoxetine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>olanzapine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>omeprazole</td>
     <td><font size="5">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ondansetron</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>oral contraceptives</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>oritavancin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>orphenadrine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>oxcarbazepine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>paclitaxel</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>paracetamol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>peginterferon</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>perampanel</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>phenacetin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>phenobarbital</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>phenytoin</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>pimozide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>piperine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>posaconazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>progesterone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>propranolol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>quercetin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>quetiapine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>quinidine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ramelteon</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ranitidine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ranolazine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>reboxetine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ribociclib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>rifabutin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>rifampicin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>rifampin</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>rilpivirine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>riluzole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>risperidone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ritonavir</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ropivacaine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>rutin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>salmeterol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>saquinavir</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>serenoa</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>sertraline</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>sesamin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>sildenafil</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>simvastatin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>sirolimus</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>sorafenib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>star fruit</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>steroid sex hormones</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>sunitinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tacrine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tacrolimus</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tadalafil</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tamoxifen</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tasimelteon</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>telithromycin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>telotristat</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>temsirolimus</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>teniposide</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>terfenadine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>teriflunomide</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>testosterone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tetrahydropalmatine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>theophylline</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ticagrelor</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tizanidine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tobacco smoking</td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tofisopam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>topiramate</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>toremifene</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tramadol</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>trazodone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>triazolam</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>troglitazone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>tucatinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>turmeric</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>upadacitinib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>valerian</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>valproic acid</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>vemurafenib</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>venlafaxine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>verapamil</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>vilaprisan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>vilazodone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>vinblastine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>vincristine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>vindesine</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>voriconazole</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>warfarin</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>zaleplon</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>zileuton</td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>ziprasidone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>zolmitriptan</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>zolpidem</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  <tr>
+        <tr>
     <td>zopiclone</td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="5">-</font></td>
-    <td><font size="6">+</font></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-neg">−</span></td>
+    <td><span class="cell-pos">+</span></td>
   </tr>
-  </table>
-</center>
+      </table>
+    </div>
+  </div>
 
+  <div class="footer">
+    <p>Source: <a href="https://codeberg.org/AdamWysokinski/CloToP2.jl" target="_blank">codeberg.org/AdamWysokinski/CloToP2.jl</a></p>
+  </div>
+
+</div>
 <script>
 function myFunction() {
-  // Declare variables
-  var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("myInput");
-  filter = input.value.toUpperCase();
-  table = document.getElementById("myTable");
-  tr = table.getElementsByTagName("tr");
-
-  // Loop through all table rows, and hide those who don't match the search query
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[0];
+  var input = document.getElementById("myInput");
+  var filter = input.value.toUpperCase();
+  var table = document.getElementById("myTable");
+  var tr = table.getElementsByTagName("tr");
+  var visible = 0;
+  for (var i = 0; i < tr.length; i++) {
+    if (tr[i].classList.contains("subheader")) continue;
+    var td = tr[i].getElementsByTagName("td")[0];
     if (td) {
-      txtValue = td.textContent || td.innerText;
+      var txtValue = td.textContent || td.innerText;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
         tr[i].style.display = "";
+        visible++;
       } else {
         tr[i].style.display = "none";
       }
     }
   }
+  document.getElementById("row-count").textContent = filter ? visible : 250;
 }
 </script>
+</body>
+</html>

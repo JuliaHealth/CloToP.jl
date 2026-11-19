@@ -1,9 +1,0 @@
-[Unit]
-Description=Start CloToP server.
-
-[Service]
-Type=simple
-ExecStart=/bin/bash /home/ctp/ctp_server.sh
-
-[Install]
-WantedBy=multi-user.target
