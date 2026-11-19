@@ -12,7 +12,7 @@ The web application is available online at [https://csk.umed.pl/clotop](https://
 
 Concentrations are classified as follows:
 
-- **therapeutic** CLO concentration: 250–550 ng/mL; **toxic**: > 550 ng/mL ([source](https://doi.org/10.1192/bjp.2023.27));
+- **therapeutic** CLO concentration: 250–550 ng/mL; **toxic**: > 550 ng/mL ([Northwood et al., 2023](https://doi.org/10.1192/bjp.2023.27));
 - **adjusted** classification: toxic if CLO > 550 ng/mL or NCLO > 320 ng/mL. No toxicity threshold has been established for NCLO ([AGNP 2026](https://doi.org/10.1055/a-2860-7861)); 320 ng/mL is the NCLO concentration corresponding to CLO = 550 ng/mL at the mean CLO/NCLO ratio of 1.73 ([Schoretsanitis et al., 2019](https://doi.org/10.1080/17512433.2019.1617695); [Meyer, 2024](https://doi.org/10.1016/j.schres.2023.10.041)).
 
 The **recommended dose range** is the range of total daily doses (0–800 mg/day) for which the predicted CLO concentration is within 250–550 ng/mL. It is calculated for the patient's current distribution of the dose over the day (e.g., 1/6 in the morning and 5/6 in the evening for 50 + 250 mg); a different distribution may result in a different range.
@@ -87,7 +87,7 @@ The server listens on port 8080. Open [http://localhost:8080](http://localhost:8
 The models are trained from [`data/clozapine.csv`](data/clozapine.csv):
 
 ```sh
-julia -t auto src/train.jl 2>&1 | tee reports/report.txt              # all four dose representations
+julia -t auto src/train.jl 2>&1 | tee reports/report.txt               # all four dose representations
 julia -t auto src/train.jl totaldose_morn_midday                       # selected representation(s) only
 ```
 
@@ -107,7 +107,7 @@ Available representations: `threedoses`, `totaldose`, `totaldose_mm`, `totaldose
 
 # Unit conversion
 
-Conversion factors from ng/mL to nmol/L ([source](https://testguide.adhb.govt.nz/EGuide/?elv=1&name=Clozapine&pn=1672&mn=833&sd=3&ts=148a090cbe5)):
+Conversion factors from ng/mL to nmol/L ([LabPLUS, Te Whatu Ora Auckland](https://testguide.adhb.govt.nz/EGuide/?elv=1&name=Clozapine&pn=1672&mn=833&sd=3&ts=148a090cbe5)):
 
 - clozapine: 3.06
 - norclozapine: 3.20
