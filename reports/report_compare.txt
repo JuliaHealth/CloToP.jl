@@ -2,63 +2,89 @@ Loading: packages
      Threads: 12
 Patients: 122
 Repeated cross-validation: 5 × 5-fold, by patient
-Fitting 200 neural networks
-  20/200 fitted (8 min)
-  40/200 fitted (15 min)
-  60/200 fitted (22 min)
-  80/200 fitted (30 min)
-  100/200 fitted (41 min)
-  120/200 fitted (50 min)
-  140/200 fitted (60 min)
-  160/200 fitted (72 min)
-  180/200 fitted (88 min)
-  200/200 fitted (116 min)
+Reading neural network predictions: reports/compare_predictions.csv
 Saving: reports/compare_predictions.csv
 Saving: reports/compare_summary.csv
 Saving: reports/compare_pairs.csv
 
 clozapine: out-of-fold performance, mean (SD) over 5 repeats of 5-fold CV
-  threedoses             RMSE  257.4 (10.2)  MAE  188.0 ( 2.9)  R²  0.13 (0.07)  acc 0.76 sens 0.57 spec 0.87
-  totaldose              RMSE  258.8 (11.8)  MAE  199.2 (12.1)  R²  0.12 (0.08)  acc 0.70 sens 0.47 spec 0.84
-  totaldose_mm           RMSE  250.0 (12.1)  MAE  188.5 ( 8.9)  R²  0.18 (0.08)  acc 0.73 sens 0.55 spec 0.84
-  totaldose_morn_midday  RMSE  261.4 ( 9.9)  MAE  193.6 ( 6.3)  R²  0.10 (0.07)  acc 0.77 sens 0.61 spec 0.86
-  reference_mean         RMSE  278.0 ( 0.9)  MAE  222.0 ( 1.2)  R² -0.01 (0.01)  acc 0.64 sens 0.00 spec 1.00
-  reference_quadratic    RMSE  251.7 ( 4.1)  MAE  205.5 ( 3.9)  R²  0.17 (0.03)  acc 0.69 sens 0.54 spec 0.78
+  threedoses                   RMSE  257.4 (10.2)  MAE  188.0 ( 2.9)  R²  0.13 (0.07)  acc 0.76 sens 0.57 spec 0.87
+  totaldose                    RMSE  258.8 (11.8)  MAE  199.2 (12.1)  R²  0.12 (0.08)  acc 0.70 sens 0.47 spec 0.84
+  totaldose_mm                 RMSE  250.0 (12.1)  MAE  188.5 ( 8.9)  R²  0.18 (0.08)  acc 0.73 sens 0.55 spec 0.84
+  totaldose_morn_midday        RMSE  261.4 ( 9.9)  MAE  193.6 ( 6.3)  R²  0.10 (0.07)  acc 0.77 sens 0.61 spec 0.86
+  reference_mean               RMSE  278.0 ( 0.9)  MAE  222.0 ( 1.2)  R² -0.01 (0.01)  acc 0.64 sens 0.00 spec 1.00
+  reference_quadratic          RMSE  251.7 ( 4.1)  MAE  205.5 ( 3.9)  R²  0.17 (0.03)  acc 0.69 sens 0.54 spec 0.78
+  linear_totaldose             RMSE  242.4 ( 4.5)  MAE  191.5 ( 4.1)  R²  0.23 (0.03)  acc 0.70 sens 0.55 spec 0.78
+  linear_totaldose_mm          RMSE  243.6 ( 5.2)  MAE  191.3 ( 4.6)  R²  0.22 (0.03)  acc 0.70 sens 0.56 spec 0.78
+  linear_totaldose_morn_midday RMSE  239.3 ( 5.6)  MAE  182.2 ( 5.2)  R²  0.25 (0.04)  acc 0.75 sens 0.59 spec 0.84
+  linear_totaldose_shares      RMSE  242.0 ( 5.9)  MAE  186.8 ( 5.9)  R²  0.23 (0.04)  acc 0.72 sens 0.58 spec 0.81
   paired differences (model 1 − model 2), 95% bootstrap CI, permutation p
-  threedoses             vs totaldose              ΔMAE  -11.2 [ -31.7,    9.7] p=0.296  ΔRMSE   -1.5 [ -32.7,   30.2] p=0.928  better in 68/122
-  threedoses             vs totaldose_mm           ΔMAE   -0.5 [ -18.2,   17.4] p=0.954  ΔRMSE    7.3 [ -20.1,   34.9] p=0.647  better in 68/122
-  threedoses             vs totaldose_morn_midday  ΔMAE   -5.5 [ -12.1,    0.8] p=0.104  ΔRMSE   -4.0 [ -12.2,    3.3] p=0.306  better in 68/122
-  totaldose              vs totaldose_mm           ΔMAE   10.7 [  -5.4,   25.8] p=0.178  ΔRMSE    8.8 [  -7.8,   25.8] p=0.302  better in 54/122
-  totaldose              vs totaldose_morn_midday  ΔMAE    5.7 [ -14.7,   26.3] p=0.594  ΔRMSE   -2.5 [ -32.7,   27.4] p=0.881  better in 60/122
-  totaldose_mm           vs totaldose_morn_midday  ΔMAE   -5.0 [ -23.9,   13.6] p=0.600  ΔRMSE  -11.3 [ -38.9,   16.6] p=0.475  better in 57/122
-  threedoses             vs reference_quadratic    ΔMAE  -17.5 [ -39.8,    6.0] p=0.139  ΔRMSE    5.8 [ -27.1,   42.3] p=0.784  better in 71/122
-  threedoses             vs reference_mean         ΔMAE  -33.9 [ -60.5,   -5.6] p=0.022  ΔRMSE  -20.4 [ -57.9,   17.8] p=0.299  better in 73/122
-  totaldose              vs reference_quadratic    ΔMAE   -6.3 [ -28.7,   16.6] p=0.586  ΔRMSE    7.3 [ -19.1,   32.9] p=0.588  better in 61/122
-  totaldose              vs reference_mean         ΔMAE  -22.7 [ -50.1,    5.4] p=0.116  ΔRMSE  -18.9 [ -48.2,    9.9] p=0.212  better in 69/122
-  totaldose_mm           vs reference_quadratic    ΔMAE  -17.0 [ -41.0,    7.2] p=0.167  ΔRMSE   -1.5 [ -29.1,   26.1] p=0.911  better in 68/122
-  totaldose_mm           vs reference_mean         ΔMAE  -33.4 [ -61.2,   -4.9] p=0.025  ΔRMSE  -27.7 [ -59.5,    4.0] p=0.096  better in 66/122
-  totaldose_morn_midday  vs reference_quadratic    ΔMAE  -11.9 [ -34.3,   11.3] p=0.311  ΔRMSE    9.8 [ -21.9,   45.1] p=0.635  better in 67/122
-  totaldose_morn_midday  vs reference_mean         ΔMAE  -28.4 [ -55.1,   -0.4] p=0.051  ΔRMSE  -16.4 [ -52.7,   20.6] p=0.396  better in 72/122
+  threedoses                   vs totaldose                    ΔMAE  -11.2 [ -31.7,    9.7] p=0.296  ΔRMSE   -1.5 [ -32.7,   30.2] p=0.928  better in 68/122
+  threedoses                   vs totaldose_mm                 ΔMAE   -0.5 [ -18.2,   17.4] p=0.954  ΔRMSE    7.3 [ -20.1,   34.9] p=0.647  better in 68/122
+  threedoses                   vs totaldose_morn_midday        ΔMAE   -5.5 [ -12.1,    0.8] p=0.104  ΔRMSE   -4.0 [ -12.2,    3.3] p=0.306  better in 68/122
+  totaldose                    vs totaldose_mm                 ΔMAE   10.7 [  -5.4,   25.8] p=0.178  ΔRMSE    8.8 [  -7.8,   25.8] p=0.302  better in 54/122
+  totaldose                    vs totaldose_morn_midday        ΔMAE    5.7 [ -14.7,   26.3] p=0.594  ΔRMSE   -2.5 [ -32.7,   27.4] p=0.881  better in 60/122
+  totaldose_mm                 vs totaldose_morn_midday        ΔMAE   -5.0 [ -23.9,   13.6] p=0.600  ΔRMSE  -11.3 [ -38.9,   16.6] p=0.475  better in 57/122
+  threedoses                   vs reference_quadratic          ΔMAE  -17.5 [ -39.8,    6.0] p=0.139  ΔRMSE    5.8 [ -27.1,   42.3] p=0.784  better in 71/122
+  threedoses                   vs reference_mean               ΔMAE  -33.9 [ -60.5,   -5.6] p=0.022  ΔRMSE  -20.4 [ -57.9,   17.8] p=0.299  better in 73/122
+  totaldose                    vs reference_quadratic          ΔMAE   -6.3 [ -28.7,   16.6] p=0.586  ΔRMSE    7.3 [ -19.1,   32.9] p=0.588  better in 61/122
+  totaldose                    vs reference_mean               ΔMAE  -22.7 [ -50.1,    5.4] p=0.116  ΔRMSE  -18.9 [ -48.2,    9.9] p=0.212  better in 69/122
+  totaldose_mm                 vs reference_quadratic          ΔMAE  -17.0 [ -41.0,    7.2] p=0.167  ΔRMSE   -1.5 [ -29.1,   26.1] p=0.911  better in 68/122
+  totaldose_mm                 vs reference_mean               ΔMAE  -33.4 [ -61.2,   -4.9] p=0.025  ΔRMSE  -27.7 [ -59.5,    4.0] p=0.096  better in 66/122
+  totaldose_morn_midday        vs reference_quadratic          ΔMAE  -11.9 [ -34.3,   11.3] p=0.311  ΔRMSE    9.8 [ -21.9,   45.1] p=0.635  better in 67/122
+  totaldose_morn_midday        vs reference_mean               ΔMAE  -28.4 [ -55.1,   -0.4] p=0.051  ΔRMSE  -16.4 [ -52.7,   20.6] p=0.396  better in 72/122
+  linear_totaldose             vs linear_totaldose_mm          ΔMAE    0.2 [  -2.4,    2.7] p=0.862  ΔRMSE   -1.1 [  -4.0,    1.6] p=0.425  better in 54/122
+  linear_totaldose             vs linear_totaldose_morn_midday ΔMAE    9.3 [   0.4,   18.2] p=0.044  ΔRMSE    3.2 [  -7.2,   13.5] p=0.551  better in 47/122
+  linear_totaldose             vs linear_totaldose_shares      ΔMAE    4.7 [  -2.9,   12.2] p=0.229  ΔRMSE    0.4 [  -7.8,    8.6] p=0.916  better in 55/122
+  linear_totaldose_mm          vs linear_totaldose_morn_midday ΔMAE    9.1 [   0.2,   18.1] p=0.049  ΔRMSE    4.3 [  -5.6,   14.3] p=0.392  better in 45/122
+  linear_totaldose_mm          vs linear_totaldose_shares      ΔMAE    4.5 [  -3.0,   11.7] p=0.248  ΔRMSE    1.6 [  -6.3,    9.3] p=0.697  better in 45/122
+  linear_totaldose_morn_midday vs linear_totaldose_shares      ΔMAE   -4.6 [  -8.5,   -0.9] p=0.017  ΔRMSE   -2.7 [  -6.4,    0.8] p=0.130  better in 69/122
+  linear_totaldose             vs reference_quadratic          ΔMAE  -14.0 [ -30.7,    2.4] p=0.099  ΔRMSE   -9.3 [ -26.3,    7.4] p=0.295  better in 63/122
+  linear_totaldose_mm          vs reference_quadratic          ΔMAE  -14.2 [ -31.0,    2.5] p=0.101  ΔRMSE   -8.1 [ -25.5,    9.1] p=0.373  better in 64/122
+  linear_totaldose_morn_midday vs reference_quadratic          ΔMAE  -23.3 [ -41.0,   -5.0] p=0.013  ΔRMSE  -12.4 [ -31.5,    6.8] p=0.211  better in 75/122
+  linear_totaldose_shares      vs reference_quadratic          ΔMAE  -18.7 [ -36.4,   -0.5] p=0.041  ΔRMSE   -9.7 [ -27.7,    8.3] p=0.303  better in 73/122
+  threedoses                   vs linear_totaldose_morn_midday ΔMAE    5.9 [ -10.7,   23.9] p=0.517  ΔRMSE   18.2 [  -7.3,   48.8] p=0.260  better in 61/122
+  totaldose                    vs linear_totaldose             ΔMAE    7.7 [ -16.2,   31.0] p=0.525  ΔRMSE   16.6 [  -9.9,   43.1] p=0.225  better in 60/122
+  totaldose_mm                 vs linear_totaldose_mm          ΔMAE   -2.7 [ -25.8,   19.4] p=0.816  ΔRMSE    6.6 [ -19.7,   32.4] p=0.619  better in 58/122
+  totaldose_morn_midday        vs linear_totaldose_morn_midday ΔMAE   11.4 [  -5.2,   29.2] p=0.210  ΔRMSE   22.3 [  -2.5,   52.4] p=0.125  better in 53/122
 
 norclozapine: out-of-fold performance, mean (SD) over 5 repeats of 5-fold CV
-  threedoses             RMSE  186.1 ( 2.0)  MAE   89.3 ( 2.5)  R²  0.12 (0.02)
-  totaldose              RMSE  233.3 (20.7)  MAE  113.5 ( 5.3)  R² -0.40 (0.25)
-  totaldose_mm           RMSE  229.9 (15.0)  MAE  104.6 ( 5.5)  R² -0.35 (0.17)
-  totaldose_morn_midday  RMSE  185.7 ( 3.2)  MAE   88.2 ( 2.6)  R²  0.12 (0.03)
-  reference_mean         RMSE  199.8 ( 0.7)  MAE  123.1 ( 0.6)  R² -0.02 (0.01)
-  reference_quadratic    RMSE  197.6 ( 1.0)  MAE  109.8 ( 1.1)  R²  0.00 (0.01)
+  threedoses                   RMSE  186.1 ( 2.0)  MAE   89.3 ( 2.5)  R²  0.12 (0.02)
+  totaldose                    RMSE  233.3 (20.7)  MAE  113.5 ( 5.3)  R² -0.40 (0.25)
+  totaldose_mm                 RMSE  229.9 (15.0)  MAE  104.6 ( 5.5)  R² -0.35 (0.17)
+  totaldose_morn_midday        RMSE  185.7 ( 3.2)  MAE   88.2 ( 2.6)  R²  0.12 (0.03)
+  reference_mean               RMSE  199.8 ( 0.7)  MAE  123.1 ( 0.6)  R² -0.02 (0.01)
+  reference_quadratic          RMSE  197.6 ( 1.0)  MAE  109.8 ( 1.1)  R²  0.00 (0.01)
+  linear_totaldose             RMSE  216.9 ( 2.6)  MAE  128.8 ( 4.2)  R² -0.20 (0.03)
+  linear_totaldose_mm          RMSE  216.7 ( 3.1)  MAE  130.2 ( 3.5)  R² -0.20 (0.03)
+  linear_totaldose_morn_midday RMSE  213.7 ( 3.8)  MAE  126.7 ( 4.0)  R² -0.17 (0.04)
+  linear_totaldose_shares      RMSE  215.9 ( 3.4)  MAE  129.8 ( 3.8)  R² -0.19 (0.04)
   paired differences (model 1 − model 2), 95% bootstrap CI, permutation p
-  threedoses             vs totaldose              ΔMAE  -24.2 [ -46.8,   -9.0] p=0.000  ΔRMSE  -47.9 [-138.6,   -5.3] p=0.001  better in 75/122
-  threedoses             vs totaldose_mm           ΔMAE  -15.2 [ -41.6,    1.2] p=0.122  ΔRMSE  -44.2 [-147.6,    4.7] p=0.388  better in 69/122
-  threedoses             vs totaldose_morn_midday  ΔMAE    1.1 [  -0.9,    3.2] p=0.289  ΔRMSE    0.4 [  -2.0,    5.0] p=0.902  better in 59/122
-  totaldose              vs totaldose_mm           ΔMAE    9.0 [  -0.0,   17.8] p=0.041  ΔRMSE    3.7 [ -10.4,   23.5] p=0.802  better in 52/122
-  totaldose              vs totaldose_morn_midday  ΔMAE   25.3 [   9.6,   48.4] p=0.000  ΔRMSE   48.3 [   3.9,  141.9] p=0.006  better in 45/122
-  totaldose_mm           vs totaldose_morn_midday  ΔMAE   16.3 [  -0.4,   43.1] p=0.083  ΔRMSE   44.6 [  -5.6,  151.0] p=0.405  better in 54/122
-  threedoses             vs reference_quadratic    ΔMAE  -20.5 [ -33.3,   -7.8] p=0.002  ΔRMSE  -11.4 [ -40.3,    3.8] p=0.166  better in 68/122
-  threedoses             vs reference_mean         ΔMAE  -33.7 [ -48.9,  -18.3] p=0.000  ΔRMSE  -13.7 [ -57.5,   13.9] p=0.484  better in 77/122
-  totaldose              vs reference_quadratic    ΔMAE    3.7 [ -16.4,   30.6] p=0.826  ΔRMSE   36.5 [ -10.3,  117.1] p=0.395  better in 61/122
-  totaldose              vs reference_mean         ΔMAE   -9.5 [ -31.8,   20.0] p=0.540  ΔRMSE   34.2 [ -26.4,  107.3] p=0.510  better in 71/122
-  totaldose_mm           vs reference_quadratic    ΔMAE   -5.3 [ -27.6,   25.3] p=0.801  ΔRMSE   32.8 [ -29.8,  126.7] p=0.924  better in 66/122
-  totaldose_mm           vs reference_mean         ΔMAE  -18.5 [ -42.4,   14.7] p=0.216  ΔRMSE   30.5 [ -46.3,  117.2] p=0.811  better in 73/122
-  totaldose_morn_midday  vs reference_quadratic    ΔMAE  -21.6 [ -34.5,   -8.8] p=0.002  ΔRMSE  -11.8 [ -43.7,    5.2] p=0.217  better in 69/122
-  totaldose_morn_midday  vs reference_mean         ΔMAE  -34.8 [ -50.3,  -19.3] p=0.000  ΔRMSE  -14.1 [ -60.8,   15.6] p=0.528  better in 78/122
+  threedoses                   vs totaldose                    ΔMAE  -24.2 [ -46.8,   -9.0] p=0.000  ΔRMSE  -47.9 [-138.6,   -5.3] p=0.001  better in 75/122
+  threedoses                   vs totaldose_mm                 ΔMAE  -15.2 [ -41.6,    1.2] p=0.122  ΔRMSE  -44.2 [-147.6,    4.7] p=0.388  better in 69/122
+  threedoses                   vs totaldose_morn_midday        ΔMAE    1.1 [  -0.9,    3.2] p=0.289  ΔRMSE    0.4 [  -2.0,    5.0] p=0.902  better in 59/122
+  totaldose                    vs totaldose_mm                 ΔMAE    9.0 [  -0.0,   17.8] p=0.041  ΔRMSE    3.7 [ -10.4,   23.5] p=0.802  better in 52/122
+  totaldose                    vs totaldose_morn_midday        ΔMAE   25.3 [   9.6,   48.4] p=0.000  ΔRMSE   48.3 [   3.9,  141.9] p=0.006  better in 45/122
+  totaldose_mm                 vs totaldose_morn_midday        ΔMAE   16.3 [  -0.4,   43.1] p=0.083  ΔRMSE   44.6 [  -5.6,  151.0] p=0.405  better in 54/122
+  threedoses                   vs reference_quadratic          ΔMAE  -20.5 [ -33.3,   -7.8] p=0.002  ΔRMSE  -11.4 [ -40.3,    3.8] p=0.166  better in 68/122
+  threedoses                   vs reference_mean               ΔMAE  -33.7 [ -48.9,  -18.3] p=0.000  ΔRMSE  -13.7 [ -57.5,   13.9] p=0.484  better in 77/122
+  totaldose                    vs reference_quadratic          ΔMAE    3.7 [ -16.4,   30.6] p=0.826  ΔRMSE   36.5 [ -10.3,  117.1] p=0.395  better in 61/122
+  totaldose                    vs reference_mean               ΔMAE   -9.5 [ -31.8,   20.0] p=0.540  ΔRMSE   34.2 [ -26.4,  107.3] p=0.510  better in 71/122
+  totaldose_mm                 vs reference_quadratic          ΔMAE   -5.3 [ -27.6,   25.3] p=0.801  ΔRMSE   32.8 [ -29.8,  126.7] p=0.924  better in 66/122
+  totaldose_mm                 vs reference_mean               ΔMAE  -18.5 [ -42.4,   14.7] p=0.216  ΔRMSE   30.5 [ -46.3,  117.2] p=0.811  better in 73/122
+  totaldose_morn_midday        vs reference_quadratic          ΔMAE  -21.6 [ -34.5,   -8.8] p=0.002  ΔRMSE  -11.8 [ -43.7,    5.2] p=0.217  better in 69/122
+  totaldose_morn_midday        vs reference_mean               ΔMAE  -34.8 [ -50.3,  -19.3] p=0.000  ΔRMSE  -14.1 [ -60.8,   15.6] p=0.528  better in 78/122
+  linear_totaldose             vs linear_totaldose_mm          ΔMAE   -1.4 [  -7.2,    4.3] p=0.638  ΔRMSE    0.2 [  -6.1,    4.7] p=0.932  better in 59/122
+  linear_totaldose             vs linear_totaldose_morn_midday ΔMAE    2.2 [  -4.8,    9.3] p=0.554  ΔRMSE    3.2 [  -2.1,   10.8] p=0.242  better in 58/122
+  linear_totaldose             vs linear_totaldose_shares      ΔMAE   -1.0 [  -7.9,    5.9] p=0.778  ΔRMSE    0.9 [  -4.8,    7.0] p=0.718  better in 57/122
+  linear_totaldose_mm          vs linear_totaldose_morn_midday ΔMAE    3.6 [  -2.4,    9.4] p=0.236  ΔRMSE    2.9 [  -2.4,   11.2] p=0.319  better in 51/122
+  linear_totaldose_mm          vs linear_totaldose_shares      ΔMAE    0.5 [  -3.7,    4.4] p=0.827  ΔRMSE    0.7 [  -2.4,    5.6] p=0.701  better in 57/122
+  linear_totaldose_morn_midday vs linear_totaldose_shares      ΔMAE   -3.1 [  -6.6,    0.3] p=0.080  ΔRMSE   -2.2 [  -6.9,    0.6] p=0.149  better in 64/122
+  linear_totaldose             vs reference_quadratic          ΔMAE   19.0 [   8.2,   30.2] p=0.001  ΔRMSE   19.3 [   9.6,   28.9] p=0.001  better in 44/122
+  linear_totaldose_mm          vs reference_quadratic          ΔMAE   20.4 [   8.4,   32.6] p=0.001  ΔRMSE   19.1 [   9.4,   30.6] p=0.001  better in 44/122
+  linear_totaldose_morn_midday vs reference_quadratic          ΔMAE   16.8 [   4.8,   28.9] p=0.007  ΔRMSE   16.2 [   2.9,   26.7] p=0.027  better in 47/122
+  linear_totaldose_shares      vs reference_quadratic          ΔMAE   20.0 [   7.8,   32.4] p=0.002  ΔRMSE   18.4 [   6.7,   29.4] p=0.006  better in 47/122
+  threedoses                   vs linear_totaldose_morn_midday ΔMAE  -37.3 [ -50.1,  -24.4] p=0.000  ΔRMSE  -27.6 [ -52.1,  -17.5] p=0.000  better in 88/122
+  totaldose                    vs linear_totaldose             ΔMAE  -15.3 [ -37.0,   13.8] p=0.255  ΔRMSE   17.1 [ -30.2,   98.7] p=0.994  better in 71/122
+  totaldose_mm                 vs linear_totaldose_mm          ΔMAE  -25.7 [ -47.9,    6.1] p=0.033  ΔRMSE   13.6 [ -48.8,  107.9] p=1.000  better in 82/122
+  totaldose_morn_midday        vs linear_totaldose_morn_midday ΔMAE  -38.4 [ -51.3,  -25.7] p=0.000  ΔRMSE  -28.0 [ -55.2,  -16.4] p=0.000  better in 90/122

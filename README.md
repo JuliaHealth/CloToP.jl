@@ -57,9 +57,11 @@ Performance of the deployed model (total dose + morning/midday doses) in the tes
 | CLO    | 240.3        | 0.15  | 172.0       |
 | NCLO   | 83.5         | 0.23  | 56.4        |
 
-This dose representation was chosen because it had the lowest testing error for NCLO and a testing error for CLO close to the lowest one (RMSE 235.1 ng/mL for total dose + MM); as the choice was based on the testing group, these values may be slightly optimistic.
+This dose representation was chosen because it had the lowest testing error for NCLO and a testing error for CLO close to the lowest one (RMSE 235.1 ng/mL for total dose + MM); as the choice was based partly on the testing group, these values may be slightly optimistic. Repeated cross-validation (below) supports the choice for NCLO, but not a ranking of the representations for CLO, for which they performed similarly.
 
 **Prediction errors are large.** For CLO, none of the neural network models had a lower RMSE than a simple quadratic model of the total daily dose in the testing group (RMSE 209.3 ng/mL), so individual predictions may differ from measured concentrations by several hundred ng/mL. The tool does not replace therapeutic drug monitoring.
+
+In repeated patient-level cross-validation (5 × 5-fold, 122 patients; `src/compare.jl`), the four dose representations did not differ significantly for CLO (RMSE 250.0–261.4 ng/mL; deployed model 261.4 ng/mL, MAE 193.6 ng/mL), and none was significantly better than the quadratic model of the total dose (RMSE 251.7 ng/mL) or than multiple linear regression with the same features (best: total dose + morning/midday doses, RMSE 239.3 ng/mL, MAE 182.2 ng/mL). For NCLO, the representations with the individual doses (three doses; total dose + morning/midday doses: MAE 88.2 ng/mL) had a significantly lower MAE than the total dose model (113.5 ng/mL), the quadratic model (109.8 ng/mL), and linear regression (126.7–130.2 ng/mL). Results: [`reports/compare_summary.csv`](reports/compare_summary.csv) and [`reports/compare_pairs.csv`](reports/compare_pairs.csv).
 
 All performance measures (training, testing, and final models for all four dose representations) are in [`reports/performance.csv`](reports/performance.csv); the training log is in [`reports/report.txt`](reports/report.txt). The models are under active development and we expect their accuracy to improve as more data are collected.
 
@@ -96,10 +98,19 @@ julia -t auto src/train.jl totaldose_morn_midday                       # selecte
 
 Available representations: `threedoses`, `totaldose`, `totaldose_mm`, `totaldose_morn_midday`. Hyperparameter tuning takes several hours per representation. On a multi-core machine, `src/train_parallel.sh` is the fastest option: it trains each representation in a separate Julia process (by default with the number of physical cores / 4 threads each; pass another number of threads as an argument), writes the logs to `reports/report_<representation>.txt`, and merges them into `reports/report.txt`. Training is reproducible (fixed random seeds), so the results do not depend on the number of threads or processes. A GPU does not speed up training of these small networks. The script writes the models and scalers to [`models`](models), and performance measures, prediction errors, and figures to [`reports`](reports). Restart the server after retraining to load the new models.
 
+To compare the dose representations in repeated patient-level cross-validation (with the hyperparameters selected by `src/train.jl`; about 2 hours on 12 threads):
+
+```sh
+julia -t auto src/compare.jl 2>&1 | tee reports/report_compare.txt   # 5 repeats × 5 folds (or: src/compare.jl R K)
+julia -t auto src/compare.jl verify                                  # reproduce the single-split testing results
+julia -t auto src/compare.jl reuse                                   # refit only the reference models (minutes), reusing the saved network predictions
+```
+
 | Path               | Contents                                                     |
 | ------------------ | ------------------------------------------------------------ |
 | `src/train.jl`     | model training and evaluation                                |
 | `src/train_parallel.sh` | parallel training of all dose representations          |
+| `src/compare.jl`   | cross-validated comparison of the dose representations       |
 | `src/server.jl`    | prediction server (web application backend)                  |
 | `src/install.jl`   | installation of the required packages                        |
 | `index.html`       | web application frontend                                     |
