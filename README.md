@@ -87,15 +87,17 @@ The server listens on port 8080. Open [http://localhost:8080](http://localhost:8
 The models are trained from [`data/clozapine.csv`](data/clozapine.csv):
 
 ```sh
-julia -t auto src/train.jl 2>&1 | tee reports/report.txt               # all four dose representations
+sh src/train_parallel.sh                                               # all four dose representations in parallel
+julia -t auto src/train.jl 2>&1 | tee reports/report.txt               # all four dose representations, one after another
 julia -t auto src/train.jl totaldose_morn_midday                       # selected representation(s) only
 ```
 
-Available representations: `threedoses`, `totaldose`, `totaldose_mm`, `totaldose_morn_midday`. Hyperparameter tuning takes several hours per representation. The script writes the models and scalers to [`models`](models), and performance measures, prediction errors, and figures to [`reports`](reports). Restart the server after retraining to load the new models.
+Available representations: `threedoses`, `totaldose`, `totaldose_mm`, `totaldose_morn_midday`. Hyperparameter tuning takes several hours per representation. On a multi-core machine, `src/train_parallel.sh` is the fastest option: it trains each representation in a separate Julia process (by default with the number of physical cores / 4 threads each; pass another number of threads as an argument), writes the logs to `reports/report_<representation>.txt`, and merges them into `reports/report.txt`. Training is reproducible (fixed random seeds), so the results do not depend on the number of threads or processes. A GPU does not speed up training of these small networks. The script writes the models and scalers to [`models`](models), and performance measures, prediction errors, and figures to [`reports`](reports). Restart the server after retraining to load the new models.
 
 | Path               | Contents                                                     |
 | ------------------ | ------------------------------------------------------------ |
 | `src/train.jl`     | model training and evaluation                                |
+| `src/train_parallel.sh` | parallel training of all dose representations          |
 | `src/server.jl`    | prediction server (web application backend)                  |
 | `src/install.jl`   | installation of the required packages                        |
 | `index.html`       | web application frontend                                     |

@@ -3,6 +3,7 @@
 # Usage:
 #   julia -t 4 src/train.jl 2>&1 | tee reports/report.txt    # train all variants
 #   julia -t 4 src/train.jl totaldose_mm                     # train selected variant(s) only
+#   sh src/train_parallel.sh                                 # all variants in parallel, one process each
 #
 # Model variants (dose-related features, each a separate input of the model):
 #   threedoses             3 features: morning dose, midday dose, evening dose
@@ -32,12 +33,25 @@ using MLJFlux
 using Optimisers
 using Flux
 using LinearAlgebra
+using FileWatching.Pidfile: mkpidlock
 using Random
 using Plots
 using StatsBase
 import Distributions
 
 ENV["GKSwstype"] = "100" # do not display plots
+
+# the matrices are tiny: multithreaded BLAS only competes with the Julia threads running
+# the cross-validation folds and grid points
+BLAS.set_num_threads(1)
+
+# write to a temporary file in the same directory and rename it, so that a file shared by
+# processes running in parallel (src/train_parallel.sh) is never partially written
+function atomic_save(save, path)
+    tmp = "$(path).$(getpid()).tmp"
+    save(tmp)
+    mv(tmp, path, force = true)
+end
 
 println("         CSV: $(string(pkgversion(CSV)))")
 println("  DataFrames: $(string(pkgversion(DataFrames)))")
@@ -109,16 +123,19 @@ function record_performance!(variant, target, model_label, dataset, model, ŷ, y
                         model.optimiser.eta, model.lambda, model.alpha, model.epochs, model.batch_size))
 end
 
-# keep rows of variants not retrained in this run
+# keep rows of variants not retrained in this run; the lock prevents parallel processes
+# from overwriting each other's rows
 function save_performance()
-    perf = PERFORMANCE
-    if isfile(PERFORMANCE_FILE)
-        old = CSV.read(PERFORMANCE_FILE, DataFrame, stringtype = String)
-        perf = vcat(old[.!in(Set(PERFORMANCE.variant)).(old.variant), :], PERFORMANCE)
+    mkpidlock(PERFORMANCE_FILE * ".lock", stale_age = 60) do
+        perf = PERFORMANCE
+        if isfile(PERFORMANCE_FILE)
+            old = CSV.read(PERFORMANCE_FILE, DataFrame, stringtype = String)
+            perf = vcat(old[.!in(Set(PERFORMANCE.variant)).(old.variant), :], PERFORMANCE)
+        end
+        rank = Dict(name => i for (i, name) in enumerate(first.(VARIANTS)))
+        sort!(perf, [order(:variant, by = v -> get(rank, v, typemax(Int))), :target], alg = MergeSort)
+        atomic_save(f -> CSV.write(f, perf), PERFORMANCE_FILE)
     end
-    rank = Dict(name => i for (i, name) in enumerate(first.(VARIANTS)))
-    sort!(perf, [order(:variant, by = v -> get(rank, v, typemax(Int))), :target], alg = MergeSort)
-    CSV.write(PERFORMANCE_FILE, perf)
 end
 
 function error_plot(y, ŷ, title; kwargs...)
@@ -433,9 +450,9 @@ for var in ("clozapine", "norclozapine")
 end
 poly_df = DataFrame([poly_row(r, var) for (r, var) in zip(poly_rows, poly_vars)])
 println("Saving: reports/polynomial_models.csv")
-CSV.write("reports/polynomial_models.csv", poly_df)
+atomic_save(f -> CSV.write(f, poly_df), "reports/polynomial_models.csv")
 println("Saving: models/polynomial_models.jld")
-JLD2.save_object("models/polynomial_models.jld", poly_selected)
+atomic_save(f -> JLD2.save_object(f, poly_selected), "models/polynomial_models.jld")
 
 # remove extreme (> mean + 3×SD) clozapine outliers
 clo_outlier = mean(raw_data.clozapine) + 3 * std(raw_data.clozapine)
@@ -572,7 +589,7 @@ for (variant, (dose_features, suffix)) in VARIANTS
 end
 
 println("Saving: cyp_levels.jld")
-JLD2.save_object("models/cyp_levels.jld", cyp_levels_seen)
+atomic_save(f -> JLD2.save_object(f, cyp_levels_seen), "models/cyp_levels.jld")
 
 println()
 println("Training completed")
