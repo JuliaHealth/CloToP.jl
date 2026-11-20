@@ -848,7 +848,7 @@
 
       function badge(val) {
         const isNormal = val == 0;
-        return `<span class="result-badge ${isNormal ? 'normal' : 'toxic'}">${isNormal ? 'Normal' : 'Toxic'}</span>`;
+        return `<span class="result-badge ${isNormal ? 'normal' : 'toxic'}">${isNormal ? 'Non-toxic' : 'Toxic'}</span>`;
       }
 
       const rows = models.map(m => `
