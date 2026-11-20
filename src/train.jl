@@ -3,6 +3,7 @@
 # Usage:
 #   julia -t 4 src/train.jl 2>&1 | tee reports/report.txt    # train all variants
 #   julia -t 4 src/train.jl totaldose_mm                     # train selected variant(s) only
+#   julia src/train.jl none                                  # polynomial and linear models only
 #   sh src/train_parallel.sh                                 # all variants in parallel, one process each
 #
 # Model variants (dose-related features, each a separate input of the model):
@@ -88,9 +89,10 @@ const VARIANTS = [
 features(dose_features) = vcat(COMMON_FEATURES_PRE, dose_features, COMMON_FEATURES_POST)
 
 # variants requested on the command line (default: all)
-const requested = isempty(ARGS) ? first.(VARIANTS) : ARGS
+# ("none": no neural networks, only the polynomial and linear regression models)
+const requested = isempty(ARGS) ? first.(VARIANTS) : filter(!=("none"), ARGS)
 for v in requested
-    v in first.(VARIANTS) || error("Unknown variant: $v. Available: $(join(first.(VARIANTS), ", "))")
+    v in first.(VARIANTS) || error("Unknown variant: $v. Available: $(join(first.(VARIANTS), ", ")), none")
 end
 
 # categorical features; levels must match src/server.jl
@@ -477,6 +479,40 @@ cyp_levels_seen = Dict(c => sort(unique(Int.(raw_data[!, c]))) for c in CYP_FEAT
 for c in CYP_FEATURES
     println("  Levels of $c in training data: $(cyp_levels_seen[c])")
 end
+
+# ---------------------------------------------------------------------------
+# multiple linear regression models (real observations, outliers removed), used by
+# src/server.jl alongside the neural network and polynomial models; OLS with an intercept,
+# same features as the neural networks, CYP counts and sex as numeric covariates, columns
+# constant in the data dropped (as in src/compare.jl)
+# ---------------------------------------------------------------------------
+
+const LINEAR_DOSE_FEATURES = ["total_dose", "morning_dose", "midday_dose"]
+println()
+println("Linear regression models: total dose + morning/midday doses")
+println("=" ^ 60)
+linear_features = features(LINEAR_DOSE_FEATURES)
+X_lin = Matrix{Float64}(raw_data[!, linear_features])
+lin_keep = [j for j in axes(X_lin, 2) if length(unique(X_lin[:, j])) > 1]
+A_lin = hcat(ones(nrow(raw_data)), X_lin[:, lin_keep])
+lin_terms = vcat("intercept", linear_features[lin_keep])
+linear_models = Dict{String,Dict{String,Float64}}()
+for var in ("clozapine", "norclozapine")
+    y = Float64.(raw_data[!, var])
+    b = A_lin \ y
+    linear_models[var] = Dict(zip(lin_terms, b))
+    ŷ = A_lin * b
+    r2 = 1 - sum(abs2, y .- ŷ) / sum(abs2, y .- mean(y))
+    println("  $var: n = $(length(y)), R² = $(round(r2, digits = 3)), in-sample RMSE = $(round(sqrt(mean(abs2, y .- ŷ)), digits = 1))")
+end
+lin_df = DataFrame(term = lin_terms,
+                   clozapine = [linear_models["clozapine"][t] for t in lin_terms],
+                   norclozapine = [linear_models["norclozapine"][t] for t in lin_terms])
+println(lin_df)
+println("Saving: reports/linear_models.csv")
+atomic_save(f -> CSV.write(f, lin_df), "reports/linear_models.csv")
+println("Saving: models/linear_models.jld")
+atomic_save(f -> JLD2.save_object(f, linear_models), "models/linear_models.jld")
 
 # synthetic zero-dose observations (hard constraint: zero dose → zero level),
 # one per patient, same covariates; MM keeps the patient's value, as the dose

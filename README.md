@@ -2,7 +2,7 @@
 
 [![DOI](images/zenodo.11048224.png)](https://doi.org/10.5281/zenodo.11048224)
 
-This [Julia](https://julialang.org/) toolbox predicts serum [clozapine](https://en.wikipedia.org/wiki/Clozapine) (CLO) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) (NCLO) concentrations from basic clinical data, and estimates an individual recommended therapeutic dose range.
+This [Julia](https://julialang.org/) toolbox predicts serum [clozapine](https://en.wikipedia.org/wiki/Clozapine) (CLO) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) (NCLO) concentrations from basic clinical data, and estimates an individual recommended therapeutic dose range. Each prediction is made by three models: a neural network, multiple linear regression, and a polynomial model of the total daily dose; their differences indicate the uncertainty of the prediction.
 
 The web application is available online at [https://csk.umed.pl/clotop](https://csk.umed.pl/clotop), or it can be run locally (see [Quickstart](#quickstart)).
 
@@ -15,7 +15,7 @@ Concentrations are classified as follows:
 - **therapeutic** CLO concentration: 250–550 ng/mL; **toxic**: > 550 ng/mL ([Northwood et al., 2023](https://doi.org/10.1192/bjp.2023.27));
 - **adjusted** classification: toxic if CLO > 550 ng/mL or NCLO > 320 ng/mL. No toxicity threshold has been established for NCLO ([AGNP 2026](https://doi.org/10.1055/a-2860-7861)); 320 ng/mL is the NCLO concentration corresponding to CLO = 550 ng/mL at the mean CLO/NCLO ratio of 1.73 ([Schoretsanitis et al., 2019](https://doi.org/10.1080/17512433.2019.1617695); [Meyer, 2024](https://doi.org/10.1016/j.schres.2023.10.041)).
 
-The **recommended dose range** is the range of total daily doses (0–800 mg/day) for which the predicted CLO concentration is within 250–550 ng/mL. It is calculated for the patient's current distribution of the dose over the day (e.g., 1/6 in the morning and 5/6 in the evening for 50 + 250 mg); a different distribution may result in a different range.
+The **recommended dose range** is the range of total daily doses (0–800 mg/day) for which the predicted CLO concentration is within 250–550 ng/mL. It is calculated for the patient's current distribution of the dose over the day (e.g., 1/6 in the morning and 5/6 in the evening for 50 + 250 mg); a different distribution may result in a different range. The range is given separately for each of the three models, and the plot shows the predicted CLO concentration of each model over the dose range.
 
 ---
 
@@ -23,11 +23,12 @@ The **recommended dose range** is the range of total daily doses (0–800 mg/day
 
 Version 2.0 is the default branch ([`2.0`](https://codeberg.org/AdamWysokinski/CloToP.jl/src/branch/2.0)) of this repository. Version 1.0 ([Wysokiński & Dreczka, 2024](https://doi.org/10.1016/j.psychres.2024.116256)) is available in the [`1.0`](https://codeberg.org/AdamWysokinski/CloToP.jl/src/branch/1.0) branch. Changes in version 2.0:
 
-- **Dosing schedule**: morning, midday, and evening doses are entered separately. Four representations of the dose were compared (three doses; total dose; total dose + MM index; total dose + morning and midday doses). The deployed model uses the **total daily dose, morning dose, and midday dose**.
+- **Dosing schedule**: morning, midday, and evening doses are entered separately. Four representations of the dose were compared (three doses; total dose; total dose + MM index; total dose + morning and midday doses). The deployed neural networks use the **total daily dose, morning dose, and midday dose** for both CLO and NCLO: this representation had the lowest cross-validated error for NCLO; for CLO, the representations did not differ significantly, and this one gives far fewer non-monotonic dose–concentration curves than total dose + MM.
 - **Independent CLO and NCLO models**: version 1.0 predicted NCLO first and used it as an input of the CLO model.
 - **Network**: three hidden layers (128, 64, 32 neurons, Swish activation, dropout), mean absolute error loss, AdamW optimizer with an elastic net penalty; sex and numbers of CYP inducers/inhibitors/substrates enter the network as categorical features (entity embeddings).
 - **Validation without information leakage**: 80:20 split at the patient level with a fixed random seed; hyperparameters selected by 6-fold patient-level cross-validation within the training group; the testing group is never used for hyperparameter selection.
-- **Low doses** (≤ 100 mg/day, not represented in the training data): concentrations are predicted by polynomial models through the origin (order selected by BIC; currently quadratic) instead of the neural network; between 100 and 200 mg/day, the polynomial and neural network predictions are blended linearly to ensure a continuous transition.
+- **Three models**: the neural network predictions are shown together with multiple linear regression (same features, total dose + morning/midday doses) and the polynomial model of the total daily dose, each with its own recommended dose range. The predicted concentration–dose curves are constrained to be non-decreasing (running maximum), which does not change the recommended dose ranges.
+- **Low doses** (≤ 100 mg/day, not represented in the training data): concentrations are predicted by polynomial models through the origin (order selected by BIC; currently quadratic) instead of the neural network and linear regression models; between 100 and 200 mg/day, the polynomial predictions are blended linearly with those of the neural network and linear regression models to ensure a continuous transition.
 - Larger dataset: 123 patients, one observation per patient.
 
 ---
@@ -50,18 +51,22 @@ Tobacco smoking counts as one CYP1A2 inducer. None of the patients in the traini
 
 # Performance
 
-Performance of the deployed model (total dose + morning/midday doses) in the testing group (24 patients not used for training or hyperparameter selection):
+Performance of the deployed models in the testing group (24 patients not used for training or hyperparameter selection) and in repeated patient-level cross-validation (5 × 5-fold, 122 patients; `src/compare.jl`):
 
-| Target | RMSE [ng/mL] | R²    | MAE [ng/mL] |
-| ------ | ------------ | ----- | ----------- |
-| CLO    | 240.3        | 0.15  | 172.0       |
-| NCLO   | 83.5         | 0.23  | 56.4        |
+| Target | Model | Testing RMSE [ng/mL] | Testing R² | Testing MAE [ng/mL] | CV RMSE [ng/mL] | CV R² | CV MAE [ng/mL] |
+| ------ | ----- | -------------------- | ---------- | ------------------- | --------------- | ----- | -------------- |
+| CLO    | neural network, total dose + morning/midday doses | 240.3 | 0.15 | 172.0 | 261.4 | 0.10 | 193.6 |
+| CLO    | linear regression, total dose + morning/midday doses | – | – | – | 239.3 | 0.25 | 182.2 |
+| CLO    | polynomial (quadratic) of total dose | 209.3 | 0.35 | 178.4 | 251.7 | 0.17 | 205.5 |
+| NCLO   | neural network, total dose + morning/midday doses | 83.5 | 0.23 | 56.4 | 185.7 | 0.12 | 88.2 |
+| NCLO   | linear regression, total dose + morning/midday doses | – | – | – | 213.7 | −0.17 | 126.7 |
+| NCLO   | polynomial (quadratic) of total dose | 95.0 | 0.00 | 79.4 | 197.6 | 0.00 | 109.8 |
 
-This dose representation was chosen because it had the lowest testing error for NCLO and a testing error for CLO close to the lowest one (RMSE 235.1 ng/mL for total dose + MM); as the choice was based partly on the testing group, these values may be slightly optimistic. Repeated cross-validation (below) supports the choice for NCLO, but not a ranking of the representations for CLO, for which they performed similarly.
+For NCLO, the representations with the individual doses were significantly better than those without. For CLO, the differences between the representations were not statistically significant (total dose + MM had the lowest cross-validated RMSE, 250.0 ng/mL), so the representation was chosen for the plausibility of its dose–concentration curves: the concentration predicted by the total dose + MM network decreased with an increasing dose (by > 5 ng/mL) in 94 of 122 patients, that of the total dose + morning/midday doses network in 26. The testing and cross-validation results of the quadratic model refer to models fitted to the training data only; the deployed polynomial models are fitted to all observations.
 
 **Prediction errors are large.** For CLO, none of the neural network models had a lower RMSE than a simple quadratic model of the total daily dose in the testing group (RMSE 209.3 ng/mL), so individual predictions may differ from measured concentrations by several hundred ng/mL. The tool does not replace therapeutic drug monitoring.
 
-In repeated patient-level cross-validation (5 × 5-fold, 122 patients; `src/compare.jl`), the four dose representations did not differ significantly for CLO (RMSE 250.0–261.4 ng/mL; deployed model 261.4 ng/mL, MAE 193.6 ng/mL), and none was significantly better than the quadratic model of the total dose (RMSE 251.7 ng/mL) or than multiple linear regression with the same features (best: total dose + morning/midday doses, RMSE 239.3 ng/mL, MAE 182.2 ng/mL). For NCLO, the representations with the individual doses (three doses; total dose + morning/midday doses: MAE 88.2 ng/mL) had a significantly lower MAE than the total dose model (113.5 ng/mL), the quadratic model (109.8 ng/mL), and linear regression (126.7–130.2 ng/mL). Results: [`reports/compare_summary.csv`](reports/compare_summary.csv) and [`reports/compare_pairs.csv`](reports/compare_pairs.csv).
+In repeated patient-level cross-validation (5 × 5-fold, 122 patients; `src/compare.jl`), the four dose representations did not differ significantly for CLO (RMSE 250.0–261.4 ng/mL), and none was significantly better than the quadratic model of the total dose (RMSE 251.7 ng/mL) or than multiple linear regression with the same features (best: total dose + morning/midday doses, RMSE 239.3 ng/mL, MAE 182.2 ng/mL). For NCLO, the representations with the individual doses (three doses; total dose + morning/midday doses: MAE 88.2 ng/mL) had a significantly lower MAE than the total dose model (113.5 ng/mL), the quadratic model (109.8 ng/mL), and linear regression (126.7–130.2 ng/mL). Results: [`reports/compare_summary.csv`](reports/compare_summary.csv) and [`reports/compare_pairs.csv`](reports/compare_pairs.csv).
 
 All performance measures (training, testing, and final models for all four dose representations) are in [`reports/performance.csv`](reports/performance.csv); the training log is in [`reports/report.txt`](reports/report.txt). The models are under active development and we expect their accuracy to improve as more data are collected.
 
@@ -94,6 +99,7 @@ The models are trained from [`data/clozapine.csv`](data/clozapine.csv):
 sh src/train_parallel.sh                                               # all four dose representations in parallel
 julia -t auto src/train.jl 2>&1 | tee reports/report.txt               # all four dose representations, one after another
 julia -t auto src/train.jl totaldose_morn_midday                       # selected representation(s) only
+julia src/train.jl none                                                # polynomial and linear regression models only
 ```
 
 Available representations: `threedoses`, `totaldose`, `totaldose_mm`, `totaldose_morn_midday`. Hyperparameter tuning takes several hours per representation. On a multi-core machine, `src/train_parallel.sh` is the fastest option: it trains each representation in a separate Julia process (by default with the number of physical cores / 4 threads each; pass another number of threads as an argument), writes the logs to `reports/report_<representation>.txt`, and merges them into `reports/report.txt`. Training is reproducible (fixed random seeds), so the results do not depend on the number of threads or processes. A GPU does not speed up training of these small networks. The script writes the models and scalers to [`models`](models), and performance measures, prediction errors, and figures to [`reports`](reports). Restart the server after retraining to load the new models.
@@ -115,7 +121,7 @@ julia -t auto src/compare.jl reuse                                   # refit onl
 | `src/install.jl`   | installation of the required packages                        |
 | `index.html`       | web application frontend                                     |
 | `data/`            | training data                                                |
-| `models/`          | trained models, scalers, and polynomial low-dose models      |
+| `models/`          | trained models, scalers, polynomial and linear regression models |
 | `reports/`         | performance measures, prediction errors, figures, training log |
 
 ---
