@@ -4,6 +4,9 @@
 #   julia -t auto src/compare.jl verify      # reproduce the single-split testing results of src/train.jl
 #   julia -t auto src/compare.jl [R [K]]     # R × K-fold patient-level CV (default: 5 × 5)
 #   julia -t auto src/compare.jl [R [K]] reuse
+#   julia -t auto src/compare.jl [R [K]] sensitivity [reuse]
+#                                            # sensitivity analysis: also without extreme norclozapine
+#                                            # levels (> mean + 3 SD); outputs reports/compare_sensitivity_*
 #                                            # as above, but the neural network predictions are read
 #                                            # from reports/compare_predictions.csv (references refitted)
 #
@@ -119,6 +122,14 @@ end
 raw_data = CSV.read("data/clozapine.csv", DataFrame)
 clo_outlier = mean(raw_data.clozapine) + 3 * std(raw_data.clozapine)
 raw_data = raw_data[raw_data.clozapine .<= clo_outlier, :]
+const SENSITIVITY = "sensitivity" in ARGS
+const OUT = SENSITIVITY ? "reports/compare_sensitivity_" : "reports/compare_"
+if SENSITIVITY
+    nclo_outlier = mean(raw_data.norclozapine) + 3 * std(raw_data.norclozapine)
+    println("Sensitivity analysis: removing norclozapine > $(round(nclo_outlier, digits = 1)) ng/mL: ",
+            raw_data.norclozapine[raw_data.norclozapine .> nclo_outlier])
+    raw_data = raw_data[raw_data.norclozapine .<= nclo_outlier, :]
+end
 raw_data.total_dose = raw_data.morning_dose .+ raw_data.midday_dose .+ raw_data.evening_dose
 raw_data.mm = (raw_data.morning_dose .+ MM_MIDDAY_WEIGHT .* raw_data.midday_dose) ./ raw_data.total_dose
 zero_data = copy(raw_data)
@@ -213,7 +224,7 @@ end
 # ---------------------------------------------------------------------------
 
 const REUSE = "reuse" in ARGS
-const NUM_ARGS = filter(!=("reuse"), ARGS)
+const NUM_ARGS = filter(a -> !(a in ("reuse", "sensitivity")), ARGS)
 const R = parse(Int, get(NUM_ARGS, 1, "5"))
 const K = parse(Int, get(NUM_ARGS, 2, "5"))
 println("Repeated cross-validation: $R × $K-fold, by patient")
@@ -232,12 +243,12 @@ models = vcat(first.(VARIANTS), ["reference_mean", "reference_quadratic"], first
 pred = Dict((t, m) => fill(NaN, n, R) for t in TARGETS for m in models)
 
 if REUSE
-    println("Reading neural network predictions: reports/compare_predictions.csv")
-    old = CSV.read("reports/compare_predictions.csv", DataFrame, stringtype = String)
+    println("Reading neural network predictions: $(OUT)predictions.csv")
+    old = CSV.read("$(OUT)predictions.csv", DataFrame, stringtype = String)
     for row in eachrow(old)
         if row.model in first.(VARIANTS)
-            row.repeat <= R || error("reports/compare_predictions.csv has more repeats than R = $R")
-            row.observed == Y[row.target][row.patient] || error("reports/compare_predictions.csv does not match the data")
+            row.repeat <= R || error("$(OUT)predictions.csv has more repeats than R = $R")
+            row.observed == Y[row.target][row.patient] || error("$(OUT)predictions.csv does not match the data")
             pred[(row.target, row.model)][row.patient, row.repeat] = row.predicted
         end
     end
@@ -267,8 +278,8 @@ out = DataFrame(target = String[], model = String[], repeat = Int[], patient = I
 for t in TARGETS, m in models, r in 1:R, i in 1:n
     push!(out, (t, m, r, i, Y[t][i], pred[(t, m)][i, r]))
 end
-CSV.write("reports/compare_predictions.csv", out)
-println("Saving: reports/compare_predictions.csv")
+CSV.write("$(OUT)predictions.csv", out)
+println("Saving: $(OUT)predictions.csv")
 
 # ---------------------------------------------------------------------------
 # summary: metrics of the pooled out-of-fold predictions, mean (SD) over repeats
@@ -290,8 +301,8 @@ for t in TARGETS, m in models
     end
     push!(summary, (t, m, mean(rm), std(rm), mean(ma), std(ma), mean(rs), std(rs), acc, sens, spec))
 end
-CSV.write("reports/compare_summary.csv", summary)
-println("Saving: reports/compare_summary.csv")
+CSV.write("$(OUT)summary.csv", summary)
+println("Saving: $(OUT)summary.csv")
 
 # ---------------------------------------------------------------------------
 # paired comparisons on per-patient errors (averaged over repeats)
@@ -336,8 +347,8 @@ for t in TARGETS, (m1, m2) in comparisons
     lo2, hi2 = boot_ci((x, y) -> sqrt(mean(x)) - sqrt(mean(y)), s1, s2; rng)
     push!(pairs, (t, m1, m2, dmae, lo, hi, perm_p(a1 .- a2; rng), drmse, lo2, hi2, perm_p(s1 .- s2; rng), count(a1 .< a2)))
 end
-CSV.write("reports/compare_pairs.csv", pairs)
-println("Saving: reports/compare_pairs.csv")
+CSV.write("$(OUT)pairs.csv", pairs)
+println("Saving: $(OUT)pairs.csv")
 
 # ---------------------------------------------------------------------------
 # report

@@ -11,7 +11,7 @@ The web application is available online at [https://csk.umed.pl/clotop](https://
 *Example: man, 35 years, BMI 27 kg/m², CRP 0.7 mg/L, tobacco smoker (one CYP1A2 inducer), clozapine 50 mg in the morning and 250 mg in the evening.*
 
 Concentrations are classified as follows:
-
+ 
 - **therapeutic** CLO concentration: 250–550 ng/mL; **toxic**: > 550 ng/mL ([Northwood et al., 2023](https://doi.org/10.1192/bjp.2023.27));
 - **adjusted** classification: toxic if CLO > 550 ng/mL or NCLO > 320 ng/mL. No toxicity threshold has been established for NCLO ([AGNP 2026](https://doi.org/10.1055/a-2860-7861)); 320 ng/mL is the NCLO concentration corresponding to CLO = 550 ng/mL at the mean CLO/NCLO ratio of 1.73 ([Schoretsanitis et al., 2019](https://doi.org/10.1080/17512433.2019.1617695); [Meyer, 2024](https://doi.org/10.1016/j.schres.2023.10.041)).
 
@@ -117,6 +117,8 @@ julia -t auto src/compare.jl reuse                                   # refit onl
 | `src/train.jl`     | model training and evaluation                                |
 | `src/train_parallel.sh` | parallel training of all dose representations          |
 | `src/compare.jl`   | cross-validated comparison of the dose representations       |
+| `src/linear_stats.jl` | linear statistics of the dosing schedule (`julia src/linear_stats.jl 2>&1 \| tee reports/linear_stats.txt`) |
+| `src/plot_cv_errors.jl` | out-of-fold prediction errors of the neural network, linear regression, and quadratic models (manuscript Figure 1; run after `src/compare.jl`) |
 | `src/server.jl`    | prediction server (web application backend)                  |
 | `src/install.jl`   | installation of the required packages                        |
 | `index.html`       | web application frontend                                     |

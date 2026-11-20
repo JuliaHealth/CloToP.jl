@@ -1,0 +1,50 @@
+
+==============================================================================
+main analysis (n = 122); covariates: male, age, bmi, crp, inhibitors_3a4, substrates_3a4, inducers_1a2, substrates_1a2
+==============================================================================
+
+1. Concentration-to-dose ratio (C/D, [ng/mL]/[mg/day]) vs MM
+   Pearson r = -0.198 (p = 0.029); Spearman ρ = -0.214 (p = 0.018)
+   evening dose only (MM = 0, n = 21): median C/D 1.52 (IQR 1.03–2.12)
+   other schedules (MM > 0, n = 101):    median C/D 1.25 (IQR 0.87–1.95); Mann-Whitney U = 1226.5, p = 0.262
+
+2. Multiple linear regression on total dose + covariates, without and with MM
+   outcome      β(MM)  [95% CI]                p      R² without → with  (ΔR²)   adj. R² without → with
+   CLO        -84.38  [  -357.02,    188.27]   0.541   0.335 → 0.337 (+0.002)   0.282 → 0.278
+   NCLO      -221.43  [  -431.61,    -11.26]   0.039   0.203 → 0.234 (+0.030)   0.139 → 0.164
+   C/D         -0.55  [    -1.43,      0.33]   0.218   0.225 → 0.236 (+0.011)   0.163 → 0.167
+   MPR         -0.36  [    -0.73,      0.01]   0.054   0.245 → 0.270 (+0.025)   0.184 → 0.204
+   (β(MM): change in the outcome for MM increasing from 0 to 1, i.e. from evening-only to
+   morning-only dosing; MPR = NCLO / CLO)
+
+3. Total dose vs MM: Spearman ρ = 0.298 (p = 0.0008)
+
+4. ln(CLO) vs ln(total dose)
+   adjusted:   β = 0.721 (95% CI 0.478–0.964); test of β = 1: p = 0.0248; doubling the dose → CLO × 1.65
+   unadjusted: β = 0.636 (95% CI 0.392–0.880); test of β = 1: p = 0.0038
+
+==============================================================================
+sensitivity analysis: without extreme norclozapine (n = 121); covariates: male, age, bmi, crp, inhibitors_3a4, substrates_3a4, inducers_1a2, substrates_1a2
+==============================================================================
+
+1. Concentration-to-dose ratio (C/D, [ng/mL]/[mg/day]) vs MM
+   Pearson r = -0.169 (p = 0.063); Spearman ρ = -0.199 (p = 0.029)
+   evening dose only (MM = 0, n = 20): median C/D 1.51 (IQR 1.03–2.03)
+   other schedules (MM > 0, n = 101):    median C/D 1.25 (IQR 0.87–1.95); Mann-Whitney U = 1127.5, p = 0.414
+
+2. Multiple linear regression on total dose + covariates, without and with MM
+   outcome      β(MM)  [95% CI]                p      R² without → with  (ΔR²)   adj. R² without → with
+   CLO        -50.83  [  -326.34,    224.67]   0.715   0.348 → 0.349 (+0.001)   0.295 → 0.290
+   NCLO       -74.18  [  -213.41,     65.06]   0.293   0.374 → 0.381 (+0.006)   0.324 → 0.324
+   C/D         -0.35  [    -1.22,      0.52]   0.429   0.239 → 0.243 (+0.004)   0.177 → 0.174
+   MPR         -0.08  [    -0.29,      0.13]   0.445   0.158 → 0.163 (+0.004)   0.090 → 0.087
+   (β(MM): change in the outcome for MM increasing from 0 to 1, i.e. from evening-only to
+   morning-only dosing; MPR = NCLO / CLO)
+
+3. Total dose vs MM: Spearman ρ = 0.284 (p = 0.0016)
+
+4. ln(CLO) vs ln(total dose)
+   adjusted:   β = 0.786 (95% CI 0.541–1.031); test of β = 1: p = 0.0861; doubling the dose → CLO × 1.72
+   unadjusted: β = 0.664 (95% CI 0.415–0.912); test of β = 1: p = 0.0084
+
+Saving: reports/linear_stats.csv
