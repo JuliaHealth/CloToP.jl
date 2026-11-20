@@ -278,12 +278,26 @@ function filter_mavg(
     return s_filtered
 end
 
-# Index of the first dose with clozapine level ≥ CLO_MIN (nothing if never reached)
-# and of the first dose with level > CLO_MAX (last dose if never exceeded).
-function dose_range_idx(clo_concentration)
-    min_idx = findfirst(>=(CLO_MIN), clo_concentration)
-    max_idx = something(findfirst(>(CLO_MAX), clo_concentration), length(clo_concentration))
-    return min_idx, max_idx
+# recommended doses are rounded to multiples of the smallest dose that can be given
+# (half of a 25 mg tablet) [mg]
+const DOSE_ROUNDING = 12.5
+
+# Recommended dose range for the CLO curve `clo` over `doses`:
+# - minimum: lowest dose with CLO ≥ CLO_MIN, rounded up to a multiple of DOSE_ROUNDING
+#   (nothing if CLO_MIN is not reached within the dose range);
+# - maximum: highest dose with CLO ≤ CLO_MAX, rounded down to a multiple of DOSE_ROUNDING
+#   (the last dose if CLO_MAX is not exceeded; nothing if it is exceeded at every dose).
+# The curves are non-decreasing (running maximum), so the highest dose with CLO ≤ CLO_MAX is
+# the dose just before the first one exceeding it. Returns (minimum, maximum, empty), where
+# empty is true if no rounded dose lies within the range (minimum > maximum).
+function dose_range(doses, clo)
+    min_idx = findfirst(>=(CLO_MIN), clo)
+    over_idx = findfirst(>(CLO_MAX), clo)
+    max_dose = isnothing(over_idx) ? doses[end] : over_idx == 1 ? nothing : doses[over_idx - 1]
+    dmin = isnothing(min_idx) ? nothing : ceil(doses[min_idx] / DOSE_ROUNDING) * DOSE_ROUNDING
+    dmax = isnothing(max_dose) ? nothing : floor(max_dose / DOSE_ROUNDING) * DOSE_ROUNDING
+    empty = isnothing(dmax) || (!isnothing(dmin) && dmin > dmax)
+    return dmin, dmax, empty
 end
 
 # Patient's data: as for ctp() (13 elements, including morning, midday and evening doses).
@@ -292,8 +306,8 @@ end
 # distribution of the total dose into morning, midday and evening doses; if all doses
 # are 0, the whole dose is assumed to be taken in the evening.
 #
-# Returns the doses and, for each model (MODEL_NAMES), the recommended dose range (minimum is
-# nothing if CLO_MIN is not reached at the maximum dose) and the predicted CLO and NCLO curves.
+# Returns the doses and, for each model (MODEL_NAMES), the recommended dose range (see
+# dose_range()) and the predicted CLO and NCLO curves.
 function recommended_dose(patient_data::Vector{<:Real})
     length(patient_data) == 13 || throw(ArgumentError("Patient data vector must have 13 elements."))
     p = Float64.(patient_data)
@@ -302,9 +316,7 @@ function recommended_dose(patient_data::Vector{<:Real})
         # gentle smoothing of the whole curve, then the monotonicity constraint
         clo = monotone(filter_mavg(clo, k = 2))
         nclo = monotone(filter_mavg(nclo, k = 2))
-        min_idx, max_idx = dose_range_idx(clo)
-        dose_range = (isnothing(min_idx) ? nothing : doses[min_idx], doses[max_idx])
-        (dose_range = dose_range, clo = clo, nclo = nclo)
+        (dose_range = dose_range(doses, clo), clo = clo, nclo = nclo)
     end
     return doses, results
 end
@@ -372,10 +384,13 @@ function handle(req)
         @info "Calculating per-dose predictions"
         levels = ctp(patient)
 
-        # minimum dose not reached within the dose range
-        dose_min(r) = isnothing(r.dose_range[1]) ? ">$(Int(doses[end]))" : string(r.dose_range[1])
+        # dose range as text: ">800" if the minimum is not reached within the dose range;
+        # "none" for both if no rounded dose lies within the range
+        fmt(d) = isinteger(d) ? string(Int(d)) : string(d)
+        dose_min(r) = r.dose_range[3] ? "none" : isnothing(r.dose_range[1]) ? ">$(fmt(doses[end]))" : fmt(r.dose_range[1])
+        dose_max(r) = r.dose_range[3] ? "none" : fmt(r.dose_range[2])
         models = [Dict("name" => name, "clo_group" => g, "clo_group_adj" => ga, "clo" => c, "nclo" => n,
-                       "dose_min" => dose_min(r), "dose_max" => string(r.dose_range[2]))
+                       "dose_min" => dose_min(r), "dose_max" => dose_max(r))
                   for (name, (g, ga, c, n), r) in zip(MODEL_NAMES, levels, results)]
 
         return HTTP.Response(200,

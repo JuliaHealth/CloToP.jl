@@ -1,0 +1,22 @@
+1. Predicted concentration, morning fraction f of the patient's own total dose (rest in the evening),
+   relative to evening-only dosing: mean ratio (median; IQR) over 122 patients
+   clozapine    neural network      f = 0.25: 1.229 (1.159; 1.038–1.348)  f = 0.50: 1.243 (1.138; 0.937–1.500)
+   clozapine    linear regression   f = 0.25: 1.057 (1.054; 1.047–1.070)  f = 0.50: 1.115 (1.109; 1.095–1.140)
+   clozapine    PK AGNP 2026        f = 0.25: 0.875  f = 0.50: 0.749
+   clozapine    PK Li 2012          f = 0.25: 0.902  f = 0.50: 0.803
+   norclozapine neural network      f = 0.25: 1.224 (1.202; 1.061–1.385)  f = 0.50: 1.266 (1.230; 0.981–1.509)
+   norclozapine linear regression   f = 0.25: 0.974 (0.977; 0.970–0.980)  f = 0.50: 0.948 (0.953; 0.939–0.961)
+   linear regression coefficients (CLO): morning 0.356, midday -1.331, total 1.155 ng/mL per mg
+   linear regression coefficients (NCLO): morning -0.09, midday -1.059, total 0.632 ng/mL per mg
+
+2. Permutation importance (in-sample, final models): increase in MAE [ng/mL], mean [2.5–97.5%] over 200 permutations
+   clozapine    neural network     MAE  118.3; schedule   permuted:  +55.1 [ +39.8,  +71.1]
+   clozapine    neural network     MAE  118.3; total dose permuted: +121.4 [ +90.1, +149.7]
+   clozapine    linear regression  MAE  166.1; schedule   permuted:  +18.2 [  +7.6,  +27.7]
+   clozapine    linear regression  MAE  166.1; total dose permuted:  +78.7 [ +58.8, +100.2]
+   norclozapine neural network     MAE   54.8; schedule   permuted:  +37.5 [ +28.8,  +47.5]
+   norclozapine neural network     MAE   54.8; total dose permuted:  +85.6 [ +69.7, +103.4]
+   norclozapine linear regression  MAE  109.9; schedule   permuted:  +11.6 [  +2.1,  +20.0]
+   norclozapine linear regression  MAE  109.9; total dose permuted:  +33.7 [ +23.4,  +43.7]
+
+Saving: reports/schedule_effect.csv, reports/schedule_importance.csv

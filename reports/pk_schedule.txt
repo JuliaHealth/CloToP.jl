@@ -1,0 +1,15 @@
+1. Typical patient, 300 mg/day, trough before the morning dose [ng/mL]
+   AGNP 2026                    evening 593, midday 419, morning 296; morning/evening 0.499; midday weight 0.5861; t½ 12.0 h
+   Li 2012 (female non-smoker)  evening 566, midday 441, morning 343; morning/evening 0.607; midday weight 0.5621; t½ 16.6 h
+
+2. Simulation: real schedules of 122 patients (62 men, 43 smokers), Li 2012 PK parameters
+   real data: mean CLO 490.1 ng/mL, SD of ln(C/D) 0.621
+   n      β(MM) median [2.5–97.5%]      ΔR² median   power   P(β ≥ observed β = -84.38)   mean CLO   SD ln(C/D)
+   122     -190.1 [ -483.3,    71.8]      0.009    0.235    0.222                         463.0     0.729
+   250     -188.4 [ -386.2,     2.7]      0.009    0.439    0.148                         461.9     0.728
+   500     -190.7 [ -327.1,   -50.6]      0.009    0.737    0.066                         461.9     0.728
+   1000    -192.4 [ -290.0,   -99.3]      0.009    0.970    0.015                         461.8     0.731
+   (β(MM): change in the simulated trough [ng/mL] for MM increasing from 0 to 1 at a fixed total
+   dose, adjusted for sex and smoking; power: proportion of replicates with p < 0.05; 2000 replicates)
+
+Saving: reports/pk_schedule.csv, reports/pk_schedule_sims.csv, reports/pk_curves.csv

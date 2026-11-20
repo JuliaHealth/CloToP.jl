@@ -15,7 +15,7 @@ Concentrations are classified as follows:
 - **therapeutic** CLO concentration: 250–550 ng/mL; **toxic**: > 550 ng/mL ([Northwood et al., 2023](https://doi.org/10.1192/bjp.2023.27));
 - **adjusted** classification: toxic if CLO > 550 ng/mL or NCLO > 320 ng/mL. No toxicity threshold has been established for NCLO ([AGNP 2026](https://doi.org/10.1055/a-2860-7861)); 320 ng/mL is the NCLO concentration corresponding to CLO = 550 ng/mL at the mean CLO/NCLO ratio of 1.73 ([Schoretsanitis et al., 2019](https://doi.org/10.1080/17512433.2019.1617695); [Meyer, 2024](https://doi.org/10.1016/j.schres.2023.10.041)).
 
-The **recommended dose range** is the range of total daily doses (0–800 mg/day) for which the predicted CLO concentration is within 250–550 ng/mL. It is calculated for the patient's current distribution of the dose over the day (e.g., 1/6 in the morning and 5/6 in the evening for 50 + 250 mg); a different distribution may result in a different range. The range is given separately for each of the three models, and the plot shows the predicted CLO concentration of each model over the dose range.
+The **recommended dose range** is the range of total daily doses (0–800 mg/day) for which the predicted CLO concentration is within 250–550 ng/mL: from the lowest dose with CLO ≥ 250 ng/mL to the highest dose with CLO ≤ 550 ng/mL, rounded to doses that can be given (multiples of 12.5 mg; minimum rounded up, maximum rounded down). It is calculated for the patient's current distribution of the dose over the day (e.g., 1/6 in the morning and 5/6 in the evening for 50 + 250 mg); a different distribution may result in a different range. The range is given separately for each of the three models, and the plot shows the predicted CLO concentration of each model over the dose range.
 
 ---
 
@@ -119,6 +119,9 @@ julia -t auto src/compare.jl reuse                                   # refit onl
 | `src/compare.jl`   | cross-validated comparison of the dose representations       |
 | `src/linear_stats.jl` | linear statistics of the dosing schedule (`julia src/linear_stats.jl 2>&1 \| tee reports/linear_stats.txt`) |
 | `src/plot_cv_errors.jl` | out-of-fold prediction errors of the neural network, linear regression, and quadratic models (manuscript Figure 1; run after `src/compare.jl`) |
+| `src/pk_schedule.jl` | one-compartment PK model of the dosing schedule and simulation with the real schedules (Li et al. 2012 parameters; `julia src/pk_schedule.jl 2>&1 \| tee reports/pk_schedule.txt`) |
+| `src/schedule_effect.jl` | how the deployed neural network and linear regression use the dosing schedule (`julia src/schedule_effect.jl 2>&1 \| tee reports/schedule_effect.txt`) |
+| `src/plot_schedule.jl` | dosing schedule figure (manuscript Figure 3; run after the two scripts above) |
 | `src/server.jl`    | prediction server (web application backend)                  |
 | `src/install.jl`   | installation of the required packages                        |
 | `index.html`       | web application frontend                                     |

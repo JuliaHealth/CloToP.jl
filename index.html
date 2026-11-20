@@ -901,7 +901,7 @@
             <tbody>${rows}
             </tbody>
           </table>
-          <div class="model-table-note">Recommended dose range: total daily doses with a predicted clozapine concentration of 250–550 ng/mL, keeping the current distribution of the dose over the day. The polynomial model uses the total daily dose only. Differences between the models indicate the uncertainty of the prediction.</div>
+          <div class="model-table-note">Recommended dose range: total daily doses with a predicted clozapine concentration of 250–550 ng/mL, keeping the current distribution of the dose over the day, rounded to multiples of 12.5 mg (minimum up, maximum down); “none”: no such dose. The polynomial model uses the total daily dose only. Differences between the models indicate the uncertainty of the prediction.</div>
         </div>
         ${plot ? `<div class="plot-container visible"><img src="data:image/png;base64,${plot}" alt="Predicted clozapine concentration vs. total daily dose for the three models"></div>` : ''}
       `;
