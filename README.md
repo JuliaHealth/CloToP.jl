@@ -1,6 +1,6 @@
 # Clozapine Toxicity Predictor 2.0
 
-[![DOI](images/zenodo.11048224.png)](https://doi.org/10.5281/zenodo.11048224)
+[![DOI](images/zenodo.24413239.png)](https://doi.org/10.5281/zenodo.24413239)
 
 This [Julia](https://julialang.org/) toolbox predicts serum [clozapine](https://en.wikipedia.org/wiki/Clozapine) (CLO) and [norclozapine](https://en.wikipedia.org/wiki/Desmethylclozapine) (NCLO) concentrations from basic clinical data, and estimates an individual recommended therapeutic dose range. Each prediction is made by three models: a neural network, multiple linear regression, and a polynomial model of the total daily dose; their differences indicate the uncertainty of the prediction.
 
